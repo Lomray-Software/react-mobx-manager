@@ -1,0 +1,67 @@
+{
+  "name": "@lomray/react-mobx-manager",
+  "version": "1.0.0",
+  "description": "This package provides Mobx stores manager for react.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lomray-Software/react-mobx-manager"
+  },
+  "keywords": [
+    "react",
+    "types",
+    "typescript",
+    "lomray",
+    "javascript",
+    "mobx",
+    "store",
+    "manager",
+    "stores",
+    "state"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Mikhail Yarmaliuk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lomray-Software/react-mobx-manager/issues"
+  },
+  "homepage": "https://github.com/Lomray-Software/react-mobx-manager",
+  "scripts": {
+    "build": "rollup -c",
+    "prettier:format": "prettier --write 'src/**/*.{ts,tsx,*.ts,*tsx}'",
+    "prettier:check": "prettier --check --debug-check 'src/**/*.{ts,tsx,*.ts,*tsx}'",
+    "lint:check": "eslint --ext '.ts,.tsx' 'src/**/*.{ts,tsx,*.ts,*tsx}'",
+    "lint:format": "eslint --fix --ext '.ts,.tsx' 'src/**/*.{ts,tsx,*.ts,*tsx}'",
+    "ts:check": "tsc --project ./tsconfig.json --skipLibCheck --noemit",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
+    "@lomray/eslint-config-react": "^2.0.0",
+    "@lomray/prettier-config": "^1.2.0",
+    "@types/hoist-non-react-statics": "^3.3.1",
+    "@types/react": "^18.0.15",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jsx-a11y": "^6.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "rollup": "^2.77.0",
+    "rollup-plugin-ts": "^3.0.2",
+    "semantic-release": "^19.0.3",
+    "ttypescript": "^1.5.13",
+    "typescript": "^4.7.4"
+  },
+  "peerDependencies": {
+    "hoist-non-react-statics": "^3.3.2",
+    "mobx": "^6.6.1",
+    "mobx-react-lite": "^3.4.0",
+    "react": "^18 || ^17"
+  }
+}
