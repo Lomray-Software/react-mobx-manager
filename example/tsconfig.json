@@ -30,10 +30,6 @@
     "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
     "target": "esnext",
-    "baseUrl": "./src",
-    "paths": {
-      "@src/*": ["./src/*"]
-    }
   },
   "exclude": [
     "node_modules",

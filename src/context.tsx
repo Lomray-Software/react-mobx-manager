@@ -1,12 +1,12 @@
-import type { ReactElement } from 'react';
+import type { FC, ReactElement } from 'react';
 import React, { useContext, useEffect, useState } from 'react';
-import type { FCC } from '@interfaces/fc-with-children';
 import type Manager from './manager';
 
 interface IStoreManagerProvider {
   storeManager: Manager;
   shouldInit?: boolean;
   fallback?: ReactElement;
+  children?: React.ReactNode;
 }
 
 /**
@@ -18,7 +18,7 @@ const StoreManagerContext = React.createContext<Manager>({} as Manager);
  * Mobx store manager provider
  * @constructor
  */
-const StoreManagerProvider: FCC<IStoreManagerProvider> = ({
+const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   children,
   storeManager,
   fallback,
@@ -35,7 +35,7 @@ const StoreManagerProvider: FCC<IStoreManagerProvider> = ({
       .init()
       .then(() => setInit(true))
       .catch((e: Error) => {
-        console.error('Failed initiated store manager: ', e);
+        console.error('Failed initialized store manager: ', e);
       });
   }, [shouldInit, storeManager]);
 

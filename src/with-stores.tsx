@@ -1,7 +1,7 @@
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
+import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
-import type { FCC } from '@interfaces/fc-with-children';
 import { useStoreManagerContext } from './context';
 import type { TMapStores } from './types';
 
@@ -9,14 +9,14 @@ import type { TMapStores } from './types';
  * Make component observable and pass stores as props
  */
 const withStores = <T extends Record<string, any>, TS extends TMapStores>(
-  Component: FCC<T>,
+  Component: FC<T>,
   stores: TS,
-): FCC<Omit<T, keyof TS>> => {
+): FC<Omit<T, keyof TS>> => {
   const storesMap = Object.entries(stores);
-  const ObservableComponent = observer(Component) as FCC;
+  const ObservableComponent = observer(Component) as FC;
   const componentName = Component.displayName || Component.name;
 
-  const Element: FCC<Omit<T, keyof TS>> = React.memo(({ children, ...props }) => {
+  const Element: FC<Omit<T, keyof TS>> = React.memo(({ ...props }) => {
     const storeManager = useStoreManagerContext();
     const [initStores] = useState(() => storeManager.createStores(storesMap));
 
@@ -26,7 +26,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
      */
     useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
 
-    return <ObservableComponent children={children} {...initStores} {...props} />;
+    return <ObservableComponent {...initStores} {...props} />;
   });
 
   hoistNonReactStatics(Element, Component);

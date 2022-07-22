@@ -36,7 +36,7 @@ export type TStoreDefinition<TSto extends IStore | IStorePersisted = any> =
 export type TMapStores = Record<string, TStoreDefinition>;
 
 export interface IManagerParams {
-  storesParams: Omit<IConstructorParams, 'storeManager'>;
+  storesParams?: Omit<IConstructorParams, 'storeManager'>;
   storage?: IStorage;
   options?: IManagerOptions;
   initState?: Record<string, any>;
@@ -64,3 +64,15 @@ export interface IManagerOptions {
 }
 
 export type TStores = { [storeKey: string]: IStore | IStorePersisted };
+
+/**
+ * Convert class type to class constructor
+ */
+export type ClassReturnType<T> = T extends new (...args: any) => infer R ? R : never;
+
+/**
+ * Stores map to type
+ */
+export type StoresType<TSt> = {
+  [keys in keyof TSt]: ClassReturnType<TSt[keys]>;
+};

@@ -69,12 +69,12 @@ class Manager {
   /**
    * @constructor
    */
-  public constructor({ initState, storesParams, storage, options }: IManagerParams) {
+  public constructor({ initState, storesParams, storage, options }: IManagerParams = {}) {
     this.initState = initState || {};
-    this.storesParams = storesParams;
+    this.storesParams = storesParams || {};
     this.storage = storage;
 
-    Object.assign(this.options, options);
+    Object.assign(this.options, options || {});
 
     Manager.instance = this;
   }
