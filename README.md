@@ -7,18 +7,51 @@
 
 ## Table of contents
 
-- [Quick start](#quick-start)
+- [Getting started](#getting-started)
 - [Status](#status)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [Copyright](#copyright)
 
 
-## Quick start
+## Getting started
 
-Several quick start options are available:
+The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
-- Clone the repo: `git clone https://github.com/Lomray-Software/react-mobx-manager.git`
-- Install with npm: `npm i --save-dev @lomray/react-mobx-manager`
+```
+npm i --save-dev @lomray/react-mobx-manager
+```
+
+Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into your index file after wrap `<App/>` with `<StoreManagerProvider/>`
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import { Manager, StoreManagerProvider } from '@lomray/react-mobx-manager';
+import App from './app';
+
+const storeManager = new Manager();
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <StoreManagerProvider storeManager={storeManager} shouldInit>
+      <App />
+    </StoreManagerProvider>
+  </React.StrictMode>,
+);
+```
+
+Connection mobx store to manager and you're good to go!
+
+```jsx
+import { withStores } from '@lomray/react-mobx-manager';
+import stores from './index.stores';
+import User from './index';
+
+export default withStores(User, stores);
+```
 
 ## Status
 
