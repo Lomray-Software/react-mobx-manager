@@ -31,6 +31,7 @@
   "homepage": "https://github.com/Lomray-Software/react-mobx-manager",
   "scripts": {
     "build": "rollup -c",
+    "build:dev": "rollup -c --environment BUILD:development",
     "build:watch": "rollup -c -w --environment BUILD:development",
     "prettier:format": "prettier --write 'src/**/*.{ts,tsx,*.ts,*tsx}'",
     "prettier:check": "prettier --check --debug-check 'src/**/*.{ts,tsx,*.ts,*tsx}'",
