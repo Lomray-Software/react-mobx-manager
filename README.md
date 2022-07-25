@@ -65,7 +65,7 @@ export default withStores(User, stores);
 
 ## Bugs and feature requests
 
-Bug or a feature request, [please open a new issue](hhttps://github.com/Lomray-Software/react-mobx-manager/issues/new).
+Bug or a feature request, [please open a new issue](https://github.com/Lomray-Software/react-mobx-manager/issues/new).
 
 ## Copyright
 
