@@ -16,7 +16,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   const ObservableComponent = observer(Component) as FC;
   const componentName = Component.displayName || Component.name;
 
-  const Element: FC<Omit<T, keyof TS>> = React.memo(({ ...props }) => {
+  const Element: FC<Omit<T, keyof TS>> = ({ ...props }) => {
     const storeManager = useStoreManagerContext();
     const [initStores] = useState(() => storeManager.createStores(storesMap));
 
@@ -27,7 +27,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
 
     return <ObservableComponent {...initStores} {...props} />;
-  });
+  };
 
   hoistNonReactStatics(Element, Component);
   Element.displayName = `Mobx(${componentName})`;
