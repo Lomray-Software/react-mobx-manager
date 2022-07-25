@@ -43,7 +43,7 @@ root.render(
 );
 ```
 
-Connection mobx store to manager and you're good to go!
+Connect mobx store to manager and you're good to go!
 
 ```jsx
 import { withStores } from '@lomray/react-mobx-manager';
