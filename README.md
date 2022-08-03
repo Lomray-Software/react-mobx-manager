@@ -5,10 +5,17 @@
 
 <h3 align='center'>Mobx stores manager for React</h3>
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+
 ## Table of contents
 
 - [Getting started](#getting-started)
-- [Status](#status)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [Copyright](#copyright)
 
@@ -52,16 +59,6 @@ import User from './index';
 
 export default withStores(User, stores);
 ```
-
-## Status
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 
 ## Bugs and feature requests
 
