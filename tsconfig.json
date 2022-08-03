@@ -29,7 +29,7 @@
     "pretty": true,
     "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
-    "target": "esnext",
+    "target": "es2019",
     "baseUrl": "./src",
     "paths": {
       "@src/*": ["./src/*"]
