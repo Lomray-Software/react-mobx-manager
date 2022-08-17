@@ -25,7 +25,7 @@
 The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
 ```
-npm i --save-dev @lomray/react-mobx-manager
+npm i --save @lomray/react-mobx-manager
 ```
 
 Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into your index file after wrap `<App/>` with `<StoreManagerProvider/>`
@@ -54,9 +54,42 @@ Connect mobx store to manager and you're good to go!
 
 ```jsx
 import { withStores } from '@lomray/react-mobx-manager';
-import stores from './index.stores';
-import User from './index';
+import { makeAutoObservable } from 'mobx';
 
+/**
+ * Mobx user store
+ */
+class UserStore {
+  name = 'Matthew'
+
+  constructor() {
+    makeAutoObservable()
+  }
+}
+
+/**
+ * Define stores for component
+ */
+const stores = {
+  userStore: UserStore
+};
+
+type TProps = StoresType <typeof stores>;
+
+/**
+ * User component
+ * @returns {JSX.Element}
+ * @constructor
+ */
+const User: FC<TProps> = ({userStore: {name}}) => {
+  return (
+    <div>{name}</div>
+  )
+}
+
+/**
+ * Connect stores to component
+ */
 export default withStores(User, stores);
 ```
 

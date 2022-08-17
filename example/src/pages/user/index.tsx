@@ -23,6 +23,7 @@ const User: FC<Props> = ({ userId, userPage: { user, error, isLoading, getUser }
             <th>Name</th>
             <th>Email</th>
             <th>Avatar</th>
+            <th>Phone</th>
           </tr>
         </thead>
         <tbody>

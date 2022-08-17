@@ -92,7 +92,6 @@ class Manager {
 
   /**
    * Get manager instance
-   * NOTE: Need call 'init' before call this method
    */
   public static get(): Manager {
     if (!Manager.instance) {
@@ -190,6 +189,13 @@ class Manager {
     const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     Object.values(stores).forEach((store) => {
+      const id = Manager.getStoreKey(store);
+
+      // react 18 strict mode fix
+      if (!this.stores.has(id)) {
+        this.stores.set(id, store);
+      }
+
       if ('onMount' in store) {
         const unsubscribe = store.onMount?.();
 
