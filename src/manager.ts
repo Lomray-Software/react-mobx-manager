@@ -28,6 +28,12 @@ class Manager {
   private readonly stores = new Map<string, TInitStore>();
 
   /**
+   * Counters for multiple stores
+   * @private
+   */
+  private readonly counterStores = new Map<string, number>();
+
+  /**
    * Save persisted stores identities
    * @private
    */
@@ -64,6 +70,7 @@ class Manager {
   public readonly options: IManagerOptions = {
     shouldDisablePersist: false,
     shouldRemoveInitState: true,
+    isSSR: false,
   };
 
   /**
@@ -105,21 +112,27 @@ class Manager {
    * Get store identity
    * @protected
    */
-  protected static getStoreKey<T>(store: IConstructableStore<T> | TInitStore, id?: string): string {
-    return id || store.id || (store['name'] as string) || store.constructor.name;
+  protected static getStoreKey<T>(
+    store: IConstructableStore<T> | TInitStore,
+    id?: string,
+    index?: number,
+  ): string {
+    const storeId = id || store.id || (store['name'] as string) || store.constructor.name;
+
+    return index ? `${storeId}--index${index}` : storeId;
   }
 
   /**
    * Get exist store
    */
-  public getStore<T>(store: IConstructableStore<T>, id?: string): T | undefined {
-    const storeKey = Manager.getStoreKey(store, id);
+  public getStore<T>(store: IConstructableStore<T>, id?: string, index?: number): T | undefined {
+    const storeKey = Manager.getStoreKey(store, id, index);
 
     if (this.stores.has(storeKey)) {
       return this.stores.get(storeKey) as T;
     }
 
-    // in case get from another store
+    // in case with singleton (create if not exist)
     if (store.isSingleton) {
       return this.createStore(store, id);
     }
@@ -133,36 +146,43 @@ class Manager {
    */
   protected createStore<T>(store: IConstructableStore<T>, id?: string): T {
     const storeKey = Manager.getStoreKey(store, id);
-    const existStore = this.stores.get(storeKey);
 
-    if (existStore) {
-      return existStore as T;
+    // only for singleton store
+    if ((store.isSingleton || this.options.isSSR) && this.stores.has(storeKey)) {
+      return this.stores.get(storeKey) as T;
     }
 
+    const sameStoreCount = this.counterStores.get(storeKey) || 0;
+    const storeId = Manager.getStoreKey(
+      store,
+      id,
+      sameStoreCount > 0 ? sameStoreCount + 1 : undefined,
+    );
     const newStore = new store({ storeManager: this, ...this.storesParams });
 
     // assign id to new store
-    newStore.id = storeKey;
+    newStore.id = storeId;
     newStore.isSingleton = store.isSingleton;
 
-    const initState = this.initState[storeKey];
-    const persistedState = this.persistData[storeKey];
+    const initState = this.initState[storeId];
+    const persistedState = this.persistData[storeId];
 
     if (initState) {
       Object.assign(newStore, initState);
 
       if (this.options.shouldRemoveInitState) {
-        delete this.initState[storeKey];
+        delete this.initState[storeId];
       }
     }
 
     // Detect persisted store and restore state
-    if ('wakeup' in newStore && Manager.persistedStores.has(storeKey)) {
+    if ('wakeup' in newStore && Manager.persistedStores.has(storeId)) {
       newStore.wakeup?.(newStore, { initState, persistedState });
       newStore.addOnChangeListener?.(newStore, this);
     }
 
-    this.stores.set(storeKey, newStore);
+    this.stores.set(storeId, newStore);
+    this.counterStores.set(storeKey, sameStoreCount + 1);
     newStore.init?.();
 
     return newStore as T;
@@ -216,6 +236,10 @@ class Manager {
 
         if (!store.isSingleton) {
           this.stores.delete(storeKey);
+          this.counterStores.set(
+            storeKey.replace(/--index.+$/, ''),
+            (this.counterStores.get(storeKey) ?? 0) - 1,
+          );
         }
       });
     };
@@ -276,15 +300,13 @@ class Manager {
     store: IConstructableStore<TSt>,
     id: string,
   ): IConstructableStore<TSt> {
-    const storeKey = Manager.getStoreKey(store, id);
-
-    if (Manager.persistedStores.has(storeKey)) {
-      throw new Error(`Duplicate serializable store key: ${storeKey}`);
+    if (Manager.persistedStores.has(id)) {
+      throw new Error(`Duplicate serializable store key: ${id}`);
     }
 
     Manager.persistedStores.add(id);
 
-    store.id = storeKey;
+    store.id = id;
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {

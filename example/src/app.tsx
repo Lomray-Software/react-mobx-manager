@@ -7,7 +7,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <User userId="user-1" />
-        {/*<User userId="user-2" />*/}
+        <User userId="user-2" />
       </header>
     </div>
   );

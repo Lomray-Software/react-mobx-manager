@@ -29,9 +29,14 @@ export type IConstructableStore<TSto extends IStore = IStore> = (new (
 ) => TInitStore<TSto>) &
   Partial<IStorePersisted>;
 
+/**
+ * Store params
+ */
+export type IStoreConfig = { id?: string };
+
 export type TStoreDefinition<TSto extends IStore | IStorePersisted = any> =
   | IConstructableStore<TSto>
-  | { store: IConstructableStore<TSto>; id: string };
+  | ({ store: IConstructableStore<TSto> } & IStoreConfig);
 
 export type TMapStores = Record<string, TStoreDefinition>;
 
@@ -61,6 +66,7 @@ export interface IStorage {
 export interface IManagerOptions {
   shouldDisablePersist?: boolean; // e.g. in server side
   shouldRemoveInitState?: boolean; // remove init state for store after initialize
+  isSSR?: boolean;
 }
 
 export type TStores = { [storeKey: string]: IStore | IStorePersisted };
@@ -68,7 +74,11 @@ export type TStores = { [storeKey: string]: IStore | IStorePersisted };
 /**
  * Convert class type to class constructor
  */
-export type ClassReturnType<T> = T extends new (...args: any) => infer R ? R : never;
+export type ClassReturnType<T> = T extends new (...args: any) => infer R
+  ? R
+  : T extends { store: any }
+  ? ClassReturnType<T['store']>
+  : never;
 
 /**
  * Stores map to type
