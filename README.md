@@ -28,6 +28,24 @@ The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/
 npm i --save @lomray/react-mobx-manager
 ```
 
+Configure your bundler for keep classnames and function names in production:
+ 
+**React:** (craco or webpack config, terser options)
+```bash
+terserOptions.keep_classnames = true;
+terserOptions.keep_fnames = true;
+```
+
+**React Native:** (metro bundler config)
+```
+transformer: {
+  minifierConfig: {
+    keep_classnames: true,
+    keep_fnames: true,
+  },
+}
+```
+
 Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into your index file after wrap `<App/>` with `<StoreManagerProvider/>`
 
 ```jsx
