@@ -28,7 +28,7 @@ The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/
 npm i --save @lomray/react-mobx-manager
 ```
 
-Configure your bundler for keep classnames and function names in production:
+Configure your bundler for keep classnames and function names in production OR use `id` for each store:
  
 **React:** (craco or webpack config, terser options)
 ```bash
