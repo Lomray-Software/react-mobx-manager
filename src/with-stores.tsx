@@ -2,7 +2,11 @@ import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
-import { useStoreManagerContext } from './context';
+import {
+  useStoreManagerContext,
+  useStoreManagerParentContext,
+  StoreManagerParentProvider,
+} from './context';
 import type { TMapStores } from './types';
 
 /**
@@ -11,14 +15,21 @@ import type { TMapStores } from './types';
 const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   Component: FC<T>,
   stores: TS,
+  customContextId?: string,
 ): FC<Omit<T, keyof TS>> => {
-  const storesMap = Object.entries(stores);
   const ObservableComponent = observer(Component) as FC;
-  const componentName = Component.displayName || Component.name;
+  const manualContextId = customContextId || (Component['contextId'] as string);
 
   const Element: FC<Omit<T, keyof TS>> = ({ ...props }) => {
     const storeManager = useStoreManagerContext();
-    const [initStores] = useState(() => storeManager.createStores(storesMap));
+    const { parentId } = useStoreManagerParentContext();
+    const id = React.useId?.();
+    const [{ contextId, initStores }] = useState(() => {
+      const ctxId = storeManager.createContextId(manualContextId || id);
+      const initS = storeManager.createStores(Object.entries(stores), parentId, ctxId);
+
+      return { contextId: ctxId, initStores: initS };
+    });
 
     /**
      * - Check if store has 'onMount' (call if exist)
@@ -26,11 +37,15 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
      */
     useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
 
-    return <ObservableComponent {...initStores} {...props} />;
+    return (
+      <StoreManagerParentProvider parentId={contextId}>
+        <ObservableComponent {...initStores} {...props} />
+      </StoreManagerParentProvider>
+    );
   };
 
   hoistNonReactStatics(Element, Component);
-  Element.displayName = `Mobx(${componentName})`;
+  Element.displayName = `Mobx(${Component.displayName || Component.name})`;
 
   return Element;
 };

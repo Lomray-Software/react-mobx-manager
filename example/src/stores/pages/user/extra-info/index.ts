@@ -20,8 +20,8 @@ class ExtraInfoStore {
   /**
    * @constructor
    */
-  constructor({ storeManager }: IConstructorParams) {
-    this.userPageStore = storeManager.getStore(UserPageStore);
+  constructor({ getStore }: IConstructorParams) {
+    this.userPageStore = getStore(UserPageStore);
 
     makeObservable(this, {
       phone: observable,

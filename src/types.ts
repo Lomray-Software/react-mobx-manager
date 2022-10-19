@@ -2,6 +2,7 @@ import type Manager from './manager';
 
 export interface IConstructorParams {
   storeManager: Manager;
+  getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
 }
 
 export interface IStoreLifecycle {
@@ -11,6 +12,8 @@ export interface IStoreLifecycle {
 
 export interface IStore extends IStoreLifecycle {
   id?: string; // static
+  contextId?: string; // static
+  parentId?: string; // static
   isSingleton?: boolean; // static
   init?: () => void;
   toJSON?: () => Record<string, any>;
@@ -41,7 +44,7 @@ export type TStoreDefinition<TSto extends IStore | IStorePersisted = any> =
 export type TMapStores = Record<string, TStoreDefinition>;
 
 export interface IManagerParams {
-  storesParams?: Omit<IConstructorParams, 'storeManager'>;
+  storesParams?: Omit<IConstructorParams, 'storeManager' | 'getStore'>;
   storage?: IStorage;
   options?: IManagerOptions;
   initState?: Record<string, any>;
@@ -86,3 +89,10 @@ export type ClassReturnType<T> = T extends new (...args: any) => infer R
 export type StoresType<TSt> = {
   [keys in keyof TSt]: ClassReturnType<TSt[keys]>;
 };
+
+export interface IStoreParams {
+  id?: string;
+  key?: string;
+  contextId?: string;
+  parentId?: string;
+}

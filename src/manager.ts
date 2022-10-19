@@ -10,6 +10,7 @@ import type {
   TStores,
   IStoreLifecycle,
   TInitStore,
+  IStoreParams,
 } from './types';
 import wakeup from './wakeup';
 
@@ -25,13 +26,16 @@ class Manager {
   /**
    * Created stores
    */
-  private readonly stores = new Map<string, TInitStore>();
+  protected readonly stores = new Map<string, TInitStore>();
 
   /**
-   * Counters for multiple stores
-   * @private
+   * Relations between stores
+   * @protected
    */
-  private readonly counterStores = new Map<string, number>();
+  protected readonly storesRelations = new Map<
+    string, // contextId
+    { ids: Set<string>; parentId: string | null }
+  >();
 
   /**
    * Save persisted stores identities
@@ -47,7 +51,6 @@ class Manager {
 
   /**
    * Storage for persisted stores
-   * @private
    */
   public readonly storage: IStorage | undefined;
 
@@ -65,7 +68,6 @@ class Manager {
 
   /**
    * Manager options
-   * @private
    */
   public readonly options: IManagerOptions = {
     shouldDisablePersist: false,
@@ -112,78 +114,142 @@ class Manager {
    * Get store identity
    * @protected
    */
-  protected static getStoreKey<T>(
+  protected getStoreId<T>(
     store: IConstructableStore<T> | TInitStore,
-    id?: string,
-    index?: number,
+    params: IStoreParams = {},
   ): string {
-    const storeId = id || store.id || (store['name'] as string) || store.constructor.name;
+    const { id, contextId, key } = params;
 
-    return index ? `${storeId}--index${index}` : storeId;
+    if (id) {
+      return id;
+    }
+
+    if (store.id) {
+      return store.id;
+    }
+
+    let storeId = (store['name'] as string) || store.constructor.name;
+
+    if (store.isSingleton) {
+      return storeId;
+    }
+
+    storeId = `${storeId}--${contextId!}`;
+
+    return key ? `${storeId}--${key}` : storeId;
+  }
+
+  /**
+   * Generate new context id
+   */
+  public createContextId(id?: string): string {
+    return `ctx${id || this.storesRelations.size + 1}`;
   }
 
   /**
    * Get exist store
    */
-  public getStore<T>(store: IConstructableStore<T>, id?: string, index?: number): T | undefined {
-    const storeKey = Manager.getStoreKey(store, id, index);
+  public getStore<T>(store: IConstructableStore<T>, params: IStoreParams = {}): T | undefined {
+    const storeId = this.getStoreId(store, params);
 
-    if (this.stores.has(storeKey)) {
-      return this.stores.get(storeKey) as T;
+    // full match
+    if (this.stores.has(storeId)) {
+      return this.stores.get(storeId) as T;
     }
 
     // in case with singleton (create if not exist)
     if (store.isSingleton) {
-      return this.createStore(store, id);
+      return this.createStore(store, {
+        id: storeId,
+        contextId: 'singleton',
+        parentId: 'root',
+      });
     }
 
-    return undefined;
+    // try to look up store in current or parent context
+    return this.lookupStore(storeId, params);
+  }
+
+  /**
+   * Lookup store
+   * @protected
+   */
+  protected lookupStore<T>(id: string, params: IStoreParams): TInitStore<T> | undefined {
+    const { contextId, parentId: defaultParentId } = params;
+    const clearId = id.split('--')?.[0];
+    const { ids, parentId } = this.storesRelations.get(contextId!) ?? {
+      ids: new Set(),
+      parentId: defaultParentId,
+    };
+
+    const matchedIds = [...ids].filter((storeId) => storeId.startsWith(`${clearId}--`));
+
+    if (matchedIds.length === 1) {
+      return this.stores.get(matchedIds[0]) as T;
+    } else if (matchedIds.length > 1) {
+      console.error(
+        'Parent context has multiple stores with the same id, please pass key to getStore function.',
+      );
+
+      return undefined;
+    }
+
+    if (!parentId || parentId === 'root') {
+      return undefined;
+    }
+
+    return this.lookupStore(id, { contextId: parentId });
   }
 
   /**
    * Create new store instance
    * @protected
    */
-  protected createStore<T>(store: IConstructableStore<T>, id?: string): T {
-    const storeKey = Manager.getStoreKey(store, id);
+  protected createStore<T>(
+    store: IConstructableStore<T>,
+    params: Omit<Required<IStoreParams>, 'key'>,
+  ): T {
+    const { isSSR } = this.options;
+    const { id, contextId, parentId } = params;
 
     // only for singleton store
-    if ((store.isSingleton || this.options.isSSR) && this.stores.has(storeKey)) {
-      return this.stores.get(storeKey) as T;
+    if ((store.isSingleton || isSSR) && this.stores.has(id)) {
+      return this.stores.get(id) as T;
     }
 
-    const sameStoreCount = this.counterStores.get(storeKey) || 0;
-    const storeId = Manager.getStoreKey(
-      store,
-      id,
-      sameStoreCount > 0 ? sameStoreCount + 1 : undefined,
-    );
-    const newStore = new store({ storeManager: this, ...this.storesParams });
+    const newStore = new store({
+      storeManager: this,
+      getStore: <TS>(
+        targetStore: IConstructableStore<TS>,
+        targetParams = { contextId, parentId },
+      ) => this.getStore(targetStore, targetParams),
+      ...this.storesParams,
+    });
 
-    // assign id to new store
-    newStore.id = storeId;
+    // assign params to new store
+    newStore.id = id;
     newStore.isSingleton = store.isSingleton;
+    newStore.contextId = store.isSingleton ? 'singleton' : contextId;
+    newStore.parentId =
+      store.isSingleton || !parentId || parentId === contextId ? 'root' : parentId;
 
-    const initState = this.initState[storeId];
-    const persistedState = this.persistData[storeId];
+    const initState = this.initState[id];
+    const persistedState = this.persistData[id];
 
     if (initState) {
       Object.assign(newStore, initState);
-
-      if (this.options.shouldRemoveInitState) {
-        delete this.initState[storeId];
-      }
     }
 
     // Detect persisted store and restore state
-    if ('wakeup' in newStore && Manager.persistedStores.has(storeId)) {
+    if ('wakeup' in newStore && Manager.persistedStores.has(id)) {
       newStore.wakeup?.(newStore, { initState, persistedState });
-      newStore.addOnChangeListener?.(newStore, this);
     }
 
-    this.stores.set(storeId, newStore);
-    this.counterStores.set(storeKey, sameStoreCount + 1);
     newStore.init?.();
+
+    if (newStore.isSingleton || isSSR) {
+      this.prepareStore(newStore);
+    }
 
     return newStore as T;
   }
@@ -191,15 +257,60 @@ class Manager {
   /**
    * Create stores for component
    */
-  public createStores(map: [string, TStoreDefinition][]): TStores {
+  public createStores(
+    map: [string, TStoreDefinition][],
+    parentId: string,
+    contextId: string,
+  ): TStores {
     return map.reduce((res, [key, store]) => {
-      const [s, id] = 'store' in store ? [store.store, store.id] : [store];
+      const [s, id] =
+        'store' in store
+          ? [store.store, store.id!]
+          : [store, this.getStoreId(store, { key, contextId })];
 
       return {
         ...res,
-        [key]: this.createStore(s, id),
+        [key]: this.createStore(s, { id, contextId, parentId }),
       };
     }, {});
+  }
+
+  /**
+   * Prepare store before usage
+   * @protected
+   */
+  protected prepareStore(store: TStores[string]): Required<IStoreLifecycle>['onDestroy'][] {
+    const { shouldRemoveInitState } = this.options;
+    const storeId = store.id!;
+    const contextId = store.contextId!;
+    const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
+
+    if (!this.storesRelations.has(contextId)) {
+      this.storesRelations.set(contextId, {
+        ids: new Set(),
+        parentId: !store.parentId || store.parentId === contextId ? 'root' : store.parentId,
+      });
+    }
+
+    const { ids } = this.storesRelations.get(contextId)!;
+
+    // track changes in persisted store
+    if (Manager.persistedStores.has(storeId) && 'addOnChangeListener' in store) {
+      unmountCallbacks.push(store.addOnChangeListener!(store, this)!);
+    }
+
+    // cleanup init state
+    if (shouldRemoveInitState && this.initState[storeId]) {
+      delete this.initState[storeId];
+    }
+
+    // add store to manager
+    if (!this.stores.has(storeId)) {
+      this.stores.set(storeId, store);
+      ids.add(storeId);
+    }
+
+    return unmountCallbacks;
   }
 
   /**
@@ -209,12 +320,7 @@ class Manager {
     const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     Object.values(stores).forEach((store) => {
-      const id = Manager.getStoreKey(store);
-
-      // react 18 strict mode fix
-      if (!this.stores.has(id)) {
-        this.stores.set(id, store);
-      }
+      unmountCallbacks.push(...this.prepareStore(store));
 
       if ('onMount' in store) {
         const unsubscribe = store.onMount?.();
@@ -232,14 +338,18 @@ class Manager {
     return () => {
       unmountCallbacks.forEach((callback) => callback());
       Object.values(stores).forEach((store) => {
-        const storeKey = Manager.getStoreKey(store);
+        const storeId = store.id!;
 
         if (!store.isSingleton) {
-          this.stores.delete(storeKey);
-          this.counterStores.set(
-            storeKey.replace(/--index.+$/, ''),
-            (this.counterStores.get(storeKey) ?? 0) - 1,
-          );
+          const { ids } = this.storesRelations.get(store.contextId!) ?? { ids: new Set() };
+
+          this.stores.delete(storeId);
+          ids.delete(storeId);
+
+          // cleanup
+          if (!ids.size) {
+            this.storesRelations.delete(store.contextId!);
+          }
         }
       });
     };
@@ -251,8 +361,8 @@ class Manager {
   public toJSON(): Record<string, any> {
     const result = {};
 
-    for (const [storeKey, store] of this.stores.entries()) {
-      result[storeKey] = store.toJSON?.() ?? Manager.getObservableProps(store);
+    for (const [storeId, store] of this.stores.entries()) {
+      result[storeId] = store.toJSON?.() ?? Manager.getObservableProps(store);
     }
 
     return result;
@@ -301,7 +411,9 @@ class Manager {
     id: string,
   ): IConstructableStore<TSt> {
     if (Manager.persistedStores.has(id)) {
-      throw new Error(`Duplicate serializable store key: ${id}`);
+      console.error(`Duplicate serializable store key: ${id}`);
+
+      return store;
     }
 
     Manager.persistedStores.add(id);

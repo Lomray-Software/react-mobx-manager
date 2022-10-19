@@ -1,5 +1,5 @@
 import type { FC, ReactElement } from 'react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import type Manager from './manager';
 
 interface IStoreManagerProvider {
@@ -9,10 +9,35 @@ interface IStoreManagerProvider {
   children?: React.ReactNode;
 }
 
+interface IStoreManagerParentProvider {
+  children?: React.ReactNode;
+  parentId: string;
+}
+
 /**
  * Mobx store manager context
  */
 const StoreManagerContext = React.createContext<Manager>({} as Manager);
+
+/**
+ * To spread relationships
+ */
+const StoreManagerParentContext = React.createContext<IStoreManagerParentProvider>({
+  parentId: 'root',
+});
+
+/**
+ * Mobx store manager parent provider
+ * @constructor
+ */
+const StoreManagerParentProvider: FC<Omit<IStoreManagerParentProvider, 'contextId'>> = ({
+  children,
+  parentId,
+}) => {
+  const value = useMemo(() => ({ parentId }), [parentId]);
+
+  return <StoreManagerParentContext.Provider value={value} children={children} />;
+};
 
 /**
  * Mobx store manager provider
@@ -40,13 +65,24 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   }, [shouldInit, storeManager]);
 
   return (
-    <StoreManagerContext.Provider
-      value={storeManager}
-      children={isInit ? children : fallback || children}
-    />
+    <StoreManagerContext.Provider value={storeManager}>
+      <StoreManagerParentProvider parentId="root">
+        {isInit ? children : fallback || children}
+      </StoreManagerParentProvider>
+    </StoreManagerContext.Provider>
   );
 };
 
 const useStoreManagerContext = (): Manager => useContext(StoreManagerContext);
 
-export { StoreManagerProvider, StoreManagerContext, useStoreManagerContext };
+const useStoreManagerParentContext = (): Omit<IStoreManagerParentProvider, 'children'> =>
+  useContext(StoreManagerParentContext);
+
+export {
+  StoreManagerProvider,
+  StoreManagerContext,
+  StoreManagerParentContext,
+  useStoreManagerContext,
+  StoreManagerParentProvider,
+  useStoreManagerParentContext,
+};
