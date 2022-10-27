@@ -1,11 +1,9 @@
-
 <p align="center">
     <img  src="https://user-images.githubusercontent.com/95251720/180519123-eb8a36e7-e7af-41f2-9a01-ae6d6b6a94f3.svg" alt="Bootstrap logo" width="200" height="165">
 </p>
 
 <h3 align='center'>Mobx stores manager for React</h3>
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
@@ -28,7 +26,7 @@ The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/
 npm i --save @lomray/react-mobx-manager
 ```
 
-Configure your bundler for keep classnames and function names in production OR use `id` for each store:
+_Optional:_ Configure your bundler for keep classnames and function names in production OR use `id` for each store:
  
 **React:** (craco or webpack config, terser options)
 ```bash
@@ -68,9 +66,9 @@ root.render(
 );
 ```
 
-Connect mobx store to manager and you're good to go!
+Connect mobx store to manager, and you're good to go!
 
-```jsx
+```typescript
 import { withStores } from '@lomray/react-mobx-manager';
 import { makeAutoObservable } from 'mobx';
 
@@ -78,6 +76,11 @@ import { makeAutoObservable } from 'mobx';
  * Mobx user store
  */
 class UserStore {
+  /**
+   * Required only if we don't configure our bundler for keep classnames and function names 
+   */  
+  static id = 'user';
+    
   name = 'Matthew'
 
   constructor() {
@@ -92,14 +95,13 @@ const stores = {
   userStore: UserStore
 };
 
+// support typescript
 type TProps = StoresType <typeof stores>;
 
 /**
  * User component
- * @returns {JSX.Element}
- * @constructor
  */
-const User: FC<TProps> = ({userStore: {name}}) => {
+const User: FC<TProps> = ({ userStore: { name } }) => {
   return (
     <div>{name}</div>
   )
@@ -110,6 +112,8 @@ const User: FC<TProps> = ({userStore: {name}}) => {
  */
 export default withStores(User, stores);
 ```
+
+[See example app](example) for more understanding.
 
 ## Bugs and feature requests
 
