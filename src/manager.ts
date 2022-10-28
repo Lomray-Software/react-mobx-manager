@@ -111,6 +111,27 @@ class Manager {
   }
 
   /**
+   * Get all stores
+   */
+  public getStores(): Manager['stores'] {
+    return this.stores;
+  }
+
+  /**
+   * Get stores relations
+   */
+  public getStoresRelations(): Manager['storesRelations'] {
+    return this.storesRelations;
+  }
+
+  /**
+   * Get persisted stores ids
+   */
+  public static getPersistedStoresIds(): Set<string> {
+    return Manager.persistedStores;
+  }
+
+  /**
    * Get store identity
    * @protected
    */
