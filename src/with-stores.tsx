@@ -19,6 +19,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
 ): FC<Omit<T, keyof TS>> => {
   const ObservableComponent = observer(Component) as FC;
   const manualContextId = customContextId || (Component['contextId'] as string);
+  const componentName = Component.displayName || Component.name;
 
   const Element: FC<Omit<T, keyof TS>> = ({ ...props }) => {
     const storeManager = useStoreManagerContext();
@@ -26,7 +27,12 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     const id = React.useId?.();
     const [{ contextId, initStores }] = useState(() => {
       const ctxId = storeManager.createContextId(manualContextId || id);
-      const initS = storeManager.createStores(Object.entries(stores), parentId, ctxId);
+      const initS = storeManager.createStores(
+        Object.entries(stores),
+        parentId,
+        ctxId,
+        componentName,
+      );
 
       return { contextId: ctxId, initStores: initS };
     });
@@ -45,7 +51,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   };
 
   hoistNonReactStatics(Element, Component);
-  Element.displayName = `Mobx(${Component.displayName || Component.name})`;
+  Element.displayName = `Mobx(${componentName})`;
 
   return Element;
 };

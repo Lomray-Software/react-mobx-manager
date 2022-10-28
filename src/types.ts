@@ -14,6 +14,7 @@ export interface IStore extends IStoreLifecycle {
   id?: string; // static
   contextId?: string; // static
   parentId?: string; // static
+  componentName?: string; // static
   isSingleton?: boolean; // static
   init?: () => void;
   toJSON?: () => Record<string, any>;
@@ -95,4 +96,5 @@ export interface IStoreParams {
   key?: string;
   contextId?: string;
   parentId?: string;
+  componentName?: string;
 }

@@ -34,7 +34,7 @@ class Manager {
    */
   protected readonly storesRelations = new Map<
     string, // contextId
-    { ids: Set<string>; parentId: string | null }
+    { ids: Set<string>; parentId: string | null; componentName?: string }
   >();
 
   /**
@@ -184,6 +184,7 @@ class Manager {
         id: storeId,
         contextId: 'singleton',
         parentId: 'root',
+        componentName: '',
       });
     }
 
@@ -231,7 +232,7 @@ class Manager {
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
     const { isSSR } = this.options;
-    const { id, contextId, parentId } = params;
+    const { id, contextId, parentId, componentName } = params;
 
     // only for singleton store
     if ((store.isSingleton || isSSR) && this.stores.has(id)) {
@@ -253,6 +254,7 @@ class Manager {
     newStore.contextId = store.isSingleton ? 'singleton' : contextId;
     newStore.parentId =
       store.isSingleton || !parentId || parentId === contextId ? 'root' : parentId;
+    newStore.componentName = componentName;
 
     const initState = this.initState[id];
     const persistedState = this.persistData[id];
@@ -282,6 +284,7 @@ class Manager {
     map: [string, TStoreDefinition][],
     parentId: string,
     contextId: string,
+    componentName: string,
   ): TStores {
     return map.reduce((res, [key, store]) => {
       const [s, id] =
@@ -291,7 +294,7 @@ class Manager {
 
       return {
         ...res,
-        [key]: this.createStore(s, { id, contextId, parentId }),
+        [key]: this.createStore(s, { id, contextId, parentId, componentName }),
       };
     }, {});
   }
@@ -310,6 +313,7 @@ class Manager {
       this.storesRelations.set(contextId, {
         ids: new Set(),
         parentId: !store.parentId || store.parentId === contextId ? 'root' : store.parentId,
+        componentName: store.componentName,
       });
     }
 
