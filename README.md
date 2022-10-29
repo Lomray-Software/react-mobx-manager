@@ -14,6 +14,7 @@
 ## Table of contents
 
 - [Getting started](#getting-started)
+- [React Native Debug Plugin](#react-native-debug-plugin)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [Copyright](#copyright)
 
@@ -114,6 +115,9 @@ export default withStores(User, stores);
 ```
 
 [See example app](example) for more understanding.
+
+## React Native debug plugin
+For debug state you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager) 
 
 ## Bugs and feature requests
 
