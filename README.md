@@ -10,6 +10,7 @@
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager?ref=badge_shield)
 
 ## Table of contents
 
@@ -126,3 +127,7 @@ Bug or a feature request, [please open a new issue](https://github.com/Lomray-So
 ## Copyright
 
 Code and documentation copyright 2022 the [Lomray Software](https://lomray.com/). 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager?ref=badge_large)
