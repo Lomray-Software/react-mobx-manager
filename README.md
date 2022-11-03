@@ -2,7 +2,16 @@
     <img  src="https://user-images.githubusercontent.com/95251720/180519123-eb8a36e7-e7af-41f2-9a01-ae6d6b6a94f3.svg" alt="Bootstrap logo" width="200" height="165">
 </p>
 
-<h3 align='center'>Mobx stores manager for React</h3>
+<h1 align='center'>Mobx stores manager for React</h1>
+
+ - One way to escape state tree 🌲🌳🌴. 
+ - Manage your Mobx stores like a boss - debug like a hacker.
+ - Simple idea - simple implementation. 
+ - Small package size. 
+ - Support code splitting out of box. 
+ - Access stores from other stores.
+ - Can be a replacement react context
+ - And many other nice things 😎
 
 <p align="center">
   <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating" alt="reliability">
