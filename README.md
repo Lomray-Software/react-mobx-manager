@@ -4,14 +4,14 @@
 
 <h1 align='center'>Mobx stores manager for React</h1>
 
- - One way to escape state tree 🌲🌳🌴. 
- - Manage your Mobx stores like a boss - debug like a hacker.
- - Simple idea - simple implementation. 
- - Small package size. 
- - Support code splitting out of box. 
- - Access stores from other stores.
- - Can be a replacement react context
- - And many other nice things 😎
+- One way to escape state tree 🌲🌳🌴.
+- Manage your Mobx stores like a boss - debug like a hacker.
+- Simple idea - simple implementation.
+- Small package size.
+- Support code splitting out of the box.
+- Access stores from other stores.
+- Can be a replacement for react context.
+- And many other nice things 😎
 
 <p align="center">
   <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating" alt="reliability">
@@ -40,8 +40,8 @@ The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/
 npm i --save @lomray/react-mobx-manager
 ```
 
-_Optional:_ Configure your bundler for keep classnames and function names in production OR use `id` for each store:
- 
+_Optional:_ Configure your bundler to keep classnames and function names in production OR use `id` for each store:
+
 **React:** (craco or webpack config, terser options)
 ```bash
 terserOptions.keep_classnames = true;
@@ -58,7 +58,7 @@ transformer: {
 }
 ```
 
-Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into your index file after wrap `<App/>` with `<StoreManagerProvider/>`
+Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into your index file and wrap `<App/>` with `<StoreManagerProvider/>`
 
 ```jsx
 import React from 'react';
@@ -80,7 +80,7 @@ root.render(
 );
 ```
 
-Connect mobx store to manager, and you're good to go!
+Connect mobx store to the manager, and you're good to go!
 
 ```typescript
 import { withStores } from '@lomray/react-mobx-manager';
@@ -91,7 +91,7 @@ import { makeAutoObservable } from 'mobx';
  */
 class UserStore {
   /**
-   * Required only if we don't configure our bundler for keep classnames and function names 
+   * Required only if we don't configure our bundler to keep classnames and function names 
    */  
   static id = 'user';
     
@@ -127,15 +127,15 @@ const User: FC<TProps> = ({ userStore: { name } }) => {
 export default withStores(User, stores);
 ```
 
-[See example app](example) for more understanding.
+[See app example](example) for better understanding.
 
 # Support SSR
-Does this library support SSR? Short answer - yes, but we need some steps for prepare our framework.
- - Look at [After.js (razzle) based project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for more understanding.
- - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for more understanding (need write wrapper).
+Does this library support SSR? Short answer - yes, but we need some steps to prepare our framework.
+- Look at [After.js (razzle) based project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for better understanding.
+- Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for better understanding (needs writing a wrapper).
 
 ## React Native debug plugin
-For debug state you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager) 
+For debug state you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager)
 
 ## Bugs and feature requests
 
