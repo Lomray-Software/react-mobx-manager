@@ -4,13 +4,15 @@
 
 <h3 align='center'>Mobx stores manager for React</h3>
 
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Lomray-Software_react-mobx-manager)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager?ref=badge_small)
+<p align="center">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating" alt="reliability">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating" alt="Security Rating">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating" alt="Maintainability Rating">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities" alt="Vulnerabilities">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs" alt="Bugs">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc" alt="Lines of Code">
+  <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager.svg?type=small" alt="FOSSA Status">
+</p>
 
 ## Table of contents
 
@@ -120,7 +122,7 @@ export default withStores(User, stores);
 
 # Support SSR
 Does this library support SSR? Short answer - yes, but we need some steps for prepare our framework.
- - Look at [Razzle project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for more understanding.
+ - Look at [After.js (razzle) based project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for more understanding.
  - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for more understanding (need write wrapper).
 
 ## React Native debug plugin
