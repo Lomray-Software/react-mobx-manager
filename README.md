@@ -15,6 +15,7 @@
 ## Table of contents
 
 - [Getting started](#getting-started)
+- [Support SSR](#support-ssr)
 - [React Native Debug Plugin](#react-native-debug-plugin)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [Copyright](#copyright)
@@ -116,6 +117,11 @@ export default withStores(User, stores);
 ```
 
 [See example app](example) for more understanding.
+
+# Support SSR
+Does this library support SSR? Short answer - yes, but we need some steps for prepare our framework.
+ - Look at [Razzle project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for more understanding.
+ - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for more understanding (need write wrapper).
 
 ## React Native debug plugin
 For debug state you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager) 
