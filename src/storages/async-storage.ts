@@ -6,6 +6,9 @@ interface IAsyncStorage {
   removeItem: (key: string) => Promise<void>;
 }
 
+/**
+ * Async storage for mobx store manager
+ */
 class AsyncStorage implements IStorage {
   globalKey = 'stores';
 

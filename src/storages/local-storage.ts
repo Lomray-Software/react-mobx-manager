@@ -1,5 +1,8 @@
 import type { IStorage } from '../types';
 
+/**
+ * Local storage for mobx store manager
+ */
 class LocalStorage implements IStorage {
   globalKey = 'stores';
 
