@@ -155,6 +155,13 @@ class UserStore {
   }
 
   /**
+   * Set user name
+   */
+  public setName(name: string): void {
+    this.name = name;
+  }
+
+  /**
    * Example async
    * Call this func from component
    */
