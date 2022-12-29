@@ -18,7 +18,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   customContextId?: string,
 ): FC<Omit<T, keyof TS>> => {
   const ObservableComponent = observer(Component) as FC;
-  const manualContextId = customContextId || (Component['contextId'] as string);
+  const manualContextId = customContextId || (Component['libStoreContextId'] as string);
   const componentName = Component.displayName || Component.name;
 
   const Element: FC<Omit<T, keyof TS>> = ({ ...props }) => {
