@@ -11,10 +11,10 @@ export interface IStoreLifecycle {
 }
 
 export interface IStore extends IStoreLifecycle {
-  id?: string; // static
-  contextId?: string; // static
-  parentId?: string; // static
-  componentName?: string; // static
+  libStoreId?: string; // static
+  libStoreContextId?: string; // static
+  libStoreParentId?: string; // static
+  libStoreComponentName?: string; // static
   isSingleton?: boolean; // static
   init?: () => void;
   toJSON?: () => Record<string, any>;

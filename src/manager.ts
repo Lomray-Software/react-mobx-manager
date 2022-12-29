@@ -145,8 +145,8 @@ class Manager {
       return id;
     }
 
-    if (store.id) {
-      return store.id;
+    if (store.libStoreId) {
+      return store.libStoreId;
     }
 
     let storeId = (store['name'] as string) || store.constructor.name;
@@ -249,12 +249,12 @@ class Manager {
     });
 
     // assign params to new store
-    newStore.id = id;
+    newStore.libStoreId = id;
     newStore.isSingleton = store.isSingleton;
-    newStore.contextId = store.isSingleton ? 'singleton' : contextId;
-    newStore.parentId =
+    newStore.libStoreContextId = store.isSingleton ? 'singleton' : contextId;
+    newStore.libStoreParentId =
       store.isSingleton || !parentId || parentId === contextId ? 'root' : parentId;
-    newStore.componentName = componentName;
+    newStore.libStoreComponentName = componentName;
 
     const initState = this.initState[id];
     const persistedState = this.persistData[id];
@@ -305,15 +305,18 @@ class Manager {
    */
   protected prepareStore(store: TStores[string]): Required<IStoreLifecycle>['onDestroy'][] {
     const { shouldRemoveInitState } = this.options;
-    const storeId = store.id!;
-    const contextId = store.contextId!;
+    const storeId = store.libStoreId!;
+    const contextId = store.libStoreContextId!;
     const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     if (!this.storesRelations.has(contextId)) {
       this.storesRelations.set(contextId, {
         ids: new Set(),
-        parentId: !store.parentId || store.parentId === contextId ? 'root' : store.parentId,
-        componentName: store.componentName,
+        parentId:
+          !store.libStoreParentId || store.libStoreParentId === contextId
+            ? 'root'
+            : store.libStoreParentId,
+        componentName: store.libStoreComponentName,
       });
     }
 
@@ -363,17 +366,17 @@ class Manager {
     return () => {
       unmountCallbacks.forEach((callback) => callback());
       Object.values(stores).forEach((store) => {
-        const storeId = store.id!;
+        const storeId = store.libStoreId!;
 
         if (!store.isSingleton) {
-          const { ids } = this.storesRelations.get(store.contextId!) ?? { ids: new Set() };
+          const { ids } = this.storesRelations.get(store.libStoreContextId!) ?? { ids: new Set() };
 
           this.stores.delete(storeId);
           ids.delete(storeId);
 
           // cleanup
           if (!ids.size) {
-            this.storesRelations.delete(store.contextId!);
+            this.storesRelations.delete(store.libStoreContextId!);
           }
         }
       });
@@ -443,7 +446,7 @@ class Manager {
 
     Manager.persistedStores.add(id);
 
-    store.id = id;
+    store.libStoreId = id;
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {
