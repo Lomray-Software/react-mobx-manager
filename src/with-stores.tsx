@@ -32,6 +32,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
         parentId,
         ctxId,
         componentName,
+        props,
       );
 
       return { contextId: ctxId, initStores: initS };

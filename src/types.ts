@@ -1,8 +1,9 @@
 import type Manager from './manager';
 
-export interface IConstructorParams {
+export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
   getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
+  componentProps: TProps;
 }
 
 export interface IStoreLifecycle {
@@ -45,7 +46,7 @@ export type TStoreDefinition<TSto extends IStore | IStorePersisted = any> =
 export type TMapStores = Record<string, TStoreDefinition>;
 
 export interface IManagerParams {
-  storesParams?: Omit<IConstructorParams, 'storeManager' | 'getStore'>;
+  storesParams?: Omit<IConstructorParams, 'storeManager' | 'getStore' | 'componentProps'>;
   storage?: IStorage;
   options?: IManagerOptions;
   initState?: Record<string, any>;
@@ -97,4 +98,5 @@ export interface IStoreParams {
   contextId?: string;
   parentId?: string;
   componentName?: string;
+  componentProps?: Record<string, any>;
 }

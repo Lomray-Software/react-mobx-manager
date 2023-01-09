@@ -422,9 +422,12 @@ class MyStore {
    * storeManager - access to store manager
    * apiClient - your custom param, see 'storesParams' in Manager
    */
-  constructor({ getStore, storeManager, apiClient }: IConstructorParams) {
+  constructor({ getStore, storeManager, apiClient, componentProps }: IConstructorParams) {
     this.apiClient = apiClient;
     this.someParentStore = getStore(SomeParentStore);
+    
+    // In case when store is't singletone you can get access to component props
+    console.log(componentProps);
 
     makeObservable(this, {
       state: observable,

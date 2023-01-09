@@ -184,7 +184,8 @@ class Manager {
         id: storeId,
         contextId: 'singleton',
         parentId: 'root',
-        componentName: '',
+        componentName: 'root-app',
+        componentProps: {},
       });
     }
 
@@ -232,7 +233,7 @@ class Manager {
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
     const { isSSR } = this.options;
-    const { id, contextId, parentId, componentName } = params;
+    const { id, contextId, parentId, componentName, componentProps } = params;
 
     // only for singleton store
     if ((store.isSingleton || isSSR) && this.stores.has(id)) {
@@ -240,12 +241,13 @@ class Manager {
     }
 
     const newStore = new store({
+      ...this.storesParams,
       storeManager: this,
       getStore: <TS>(
         targetStore: IConstructableStore<TS>,
         targetParams = { contextId, parentId },
       ) => this.getStore(targetStore, targetParams),
-      ...this.storesParams,
+      componentProps,
     });
 
     // assign params to new store
@@ -285,6 +287,7 @@ class Manager {
     parentId: string,
     contextId: string,
     componentName: string,
+    componentProps: Record<string, any> = {},
   ): TStores {
     return map.reduce((res, [key, store]) => {
       const [s, id] =
@@ -294,7 +297,7 @@ class Manager {
 
       return {
         ...res,
-        [key]: this.createStore(s, { id, contextId, parentId, componentName }),
+        [key]: this.createStore(s, { id, contextId, parentId, componentName, componentProps }),
       };
     }, {});
   }
