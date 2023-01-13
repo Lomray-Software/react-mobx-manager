@@ -38,6 +38,12 @@ class Manager {
   >();
 
   /**
+   * Created stores size
+   * @protected
+   */
+  protected storesPool = 0;
+
+  /**
    * Save persisted stores identities
    * @private
    */
@@ -164,7 +170,7 @@ class Manager {
    * Generate new context id
    */
   public createContextId(id?: string): string {
-    return `ctx${id || this.storesRelations.size + 1}`;
+    return `ctx${id || this.storesPool + 1}`;
   }
 
   /**
@@ -276,6 +282,8 @@ class Manager {
       this.prepareStore(newStore);
     }
 
+    this.storesPool += 1;
+
     return newStore as T;
   }
 
@@ -376,6 +384,7 @@ class Manager {
 
           this.stores.delete(storeId);
           ids.delete(storeId);
+          this.storesPool = this.storesPool - 1;
 
           // cleanup
           if (!ids.size) {
