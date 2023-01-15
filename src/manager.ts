@@ -38,12 +38,6 @@ class Manager {
   >();
 
   /**
-   * Created stores size
-   * @protected
-   */
-  protected storesPool = 0;
-
-  /**
    * Save persisted stores identities
    * @private
    */
@@ -170,7 +164,7 @@ class Manager {
    * Generate new context id
    */
   public createContextId(id?: string): string {
-    return `ctx${id || this.storesPool + 1}`;
+    return `ctx${id || this.storesRelations.size + 1}`;
   }
 
   /**
@@ -277,12 +271,11 @@ class Manager {
     }
 
     newStore.init?.();
+    this.prepareStore(newStore);
 
     if (newStore.isSingleton || isSSR) {
-      this.prepareStore(newStore);
+      this.prepareMount(newStore);
     }
-
-    this.storesPool += 1;
 
     return newStore as T;
   }
@@ -314,11 +307,9 @@ class Manager {
    * Prepare store before usage
    * @protected
    */
-  protected prepareStore(store: TStores[string]): Required<IStoreLifecycle>['onDestroy'][] {
-    const { shouldRemoveInitState } = this.options;
+  protected prepareStore(store: TStores[string]): void {
     const storeId = store.libStoreId!;
     const contextId = store.libStoreContextId!;
-    const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     if (!this.storesRelations.has(contextId)) {
       this.storesRelations.set(contextId, {
@@ -333,6 +324,22 @@ class Manager {
 
     const { ids } = this.storesRelations.get(contextId)!;
 
+    // add store to manager
+    if (!this.stores.has(storeId)) {
+      this.stores.set(storeId, store);
+      ids.add(storeId);
+    }
+  }
+
+  /**
+   * Prepare store before mount to component
+   * @protected
+   */
+  protected prepareMount(store: TStores[string]): Required<IStoreLifecycle>['onDestroy'][] {
+    const { shouldRemoveInitState } = this.options;
+    const storeId = store.libStoreId!;
+    const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
+
     // track changes in persisted store
     if (Manager.persistedStores.has(storeId) && 'addOnChangeListener' in store) {
       unmountCallbacks.push(store.addOnChangeListener!(store, this)!);
@@ -341,12 +348,6 @@ class Manager {
     // cleanup init state
     if (shouldRemoveInitState && this.initState[storeId]) {
       delete this.initState[storeId];
-    }
-
-    // add store to manager
-    if (!this.stores.has(storeId)) {
-      this.stores.set(storeId, store);
-      ids.add(storeId);
     }
 
     return unmountCallbacks;
@@ -359,7 +360,7 @@ class Manager {
     const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     Object.values(stores).forEach((store) => {
-      unmountCallbacks.push(...this.prepareStore(store));
+      unmountCallbacks.push(...this.prepareMount(store));
 
       if ('onMount' in store) {
         const unsubscribe = store.onMount?.();
@@ -384,7 +385,6 @@ class Manager {
 
           this.stores.delete(storeId);
           ids.delete(storeId);
-          this.storesPool = this.storesPool - 1;
 
           // cleanup
           if (!ids.size) {
