@@ -66,6 +66,6 @@
     "react": "^18 || ^17"
   },
   "dependencies": {
-    "@lomray/event-manager": "^1.0.0"
+    "@lomray/event-manager": "^1.2.1"
   }
 }
