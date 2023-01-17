@@ -1,4 +1,6 @@
+import EventManager from '@lomray/event-manager';
 import { toJS, isObservableProp } from 'mobx';
+import Events from './events';
 import onChangeListener from './on-change-listener';
 import type {
   IConstructableStore,
@@ -265,6 +267,8 @@ class Manager {
       Object.assign(newStore, initState);
     }
 
+    EventManager.publish(Events.CREATE_STORE, { store });
+
     // Detect persisted store and restore state
     if ('wakeup' in newStore && Manager.persistedStores.has(id)) {
       newStore.wakeup?.(newStore, { initState, persistedState });
@@ -328,6 +332,7 @@ class Manager {
     if (!this.stores.has(storeId)) {
       this.stores.set(storeId, store);
       ids.add(storeId);
+      EventManager.publish(Events.ADD_STORE, { store });
     }
   }
 
@@ -361,6 +366,7 @@ class Manager {
 
     Object.values(stores).forEach((store) => {
       unmountCallbacks.push(...this.prepareMount(store));
+      EventManager.publish(Events.MOUNT_STORE, { store });
 
       if ('onMount' in store) {
         const unsubscribe = store.onMount?.();
@@ -380,11 +386,14 @@ class Manager {
       Object.values(stores).forEach((store) => {
         const storeId = store.libStoreId!;
 
+        EventManager.publish(Events.UNMOUNT_STORE, { store });
+
         if (!store.isSingleton) {
           const { ids } = this.storesRelations.get(store.libStoreContextId!) ?? { ids: new Set() };
 
           this.stores.delete(storeId);
           ids.delete(storeId);
+          EventManager.publish(Events.DELETE_STORE, { store });
 
           // cleanup
           if (!ids.size) {

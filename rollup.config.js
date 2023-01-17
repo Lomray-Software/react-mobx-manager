@@ -1,6 +1,6 @@
 import typescript from 'rollup-plugin-ts';
 import ttypescript from 'ttypescript';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 
 const IS_DEVELOP_BUILD = process.env.BUILD === 'development'
 
