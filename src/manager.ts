@@ -460,7 +460,7 @@ class Manager {
     id: string,
   ): IConstructableStore<TSt> {
     if (Manager.persistedStores.has(id)) {
-      console.error(`Duplicate serializable store key: ${id}`);
+      console.warn(`Duplicate serializable store key: ${id}`);
 
       return store;
     }
