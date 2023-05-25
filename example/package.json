@@ -4,11 +4,8 @@
   "private": true,
   "dependencies": {
     "@lomray/react-mobx-manager": "file:./lib",
-    "@types/node": "^16.11.45",
-    "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
-    "axios": "^0.27.2",
-    "mobx": "^6.6.1",
+    "axios": "^1.4.0",
+    "mobx": "^6.9.0",
     "mobx-react-lite": "^3.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -39,6 +36,9 @@
     ]
   },
   "devDependencies": {
-    "@lomray/eslint-config-react": "^2.0.0"
+    "@lomray/eslint-config-react": "^3.0.0",
+    "@types/node": "^18.13.0",
+    "@types/react": "^18.2.7",
+    "@types/react-dom": "^18.2.4"
   }
 }
