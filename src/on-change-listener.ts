@@ -1,11 +1,10 @@
 import { reaction, toJS } from 'mobx';
-import type Manager from './manager';
 import type { IStorePersisted } from './types';
 
 /**
  * Listen persist store changes
  */
-const onChangeListener: IStorePersisted['addOnChangeListener'] = (store, manager: Manager) => {
+const onChangeListener: IStorePersisted['addOnChangeListener'] = (store, manager) => {
   const { shouldDisablePersist } = manager.options;
 
   if (shouldDisablePersist || !manager.storage) {

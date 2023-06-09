@@ -5,7 +5,13 @@ import terser from '@rollup/plugin-terser';
 const IS_DEVELOP_BUILD = process.env.BUILD === 'development'
 
 export default {
-  input: 'src/index.ts',
+  input: [
+    'src/index.ts',
+    'src/stream-stores.ts',
+    'src/suspense-query.ts',
+    'src/storages/async-storage.ts',
+    'src/storages/local-storage.ts',
+  ],
   output: {
     dir: IS_DEVELOP_BUILD ? 'example/lib' : 'lib',
     format: 'cjs',

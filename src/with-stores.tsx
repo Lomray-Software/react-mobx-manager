@@ -6,8 +6,10 @@ import {
   useStoreManagerContext,
   useStoreManagerParentContext,
   StoreManagerParentProvider,
+  useStoreManagerSuspenseContext,
+  StoreManagerSuspenseProvider,
 } from './context';
-import type { TMapStores } from './types';
+import type { TMapStores, IWithStoreOptions } from './types';
 
 /**
  * Make component observable and pass stores as props
@@ -15,18 +17,19 @@ import type { TMapStores } from './types';
 const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   Component: FC<T>,
   stores: TS,
-  customContextId?: string,
+  { customContextId }: IWithStoreOptions = {},
 ): FC<Omit<T, keyof TS>> => {
   const ObservableComponent = observer(Component) as FC;
   const manualContextId = customContextId || (Component['libStoreContextId'] as string);
   const componentName = Component.displayName || Component.name;
 
-  const Element: FC<Omit<T, keyof TS>> = ({ ...props }) => {
+  const Element: FC<Omit<T, keyof TS>> = (props) => {
     const storeManager = useStoreManagerContext();
-    const { parentId } = useStoreManagerParentContext();
+    const parentId = useStoreManagerParentContext();
+    const suspenseId = useStoreManagerSuspenseContext();
     const id = React.useId?.();
     const [{ contextId, initStores }] = useState(() => {
-      const ctxId = storeManager.createContextId(manualContextId || id);
+      const ctxId = storeManager.createContextId(manualContextId || suspenseId || id);
       const initS = storeManager.createStores(
         Object.entries(stores),
         parentId,
@@ -45,9 +48,11 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
 
     return (
-      <StoreManagerParentProvider parentId={contextId}>
-        <ObservableComponent {...initStores} {...props} />
-      </StoreManagerParentProvider>
+      <StoreManagerSuspenseProvider id={null}>
+        <StoreManagerParentProvider parentId={contextId}>
+          <ObservableComponent {...initStores} {...props} />
+        </StoreManagerParentProvider>
+      </StoreManagerSuspenseProvider>
     );
   };
 

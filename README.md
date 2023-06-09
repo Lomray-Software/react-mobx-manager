@@ -8,6 +8,7 @@
 - Manage your Mobx stores like a boss - debug like a hacker.
 - Simple idea - simple implementation.
 - Small package size.
+- Support render to stream.
 - Support code splitting out of the box.
 - Access stores from other stores.
 - Can be a replacement for react context.
@@ -470,6 +471,13 @@ class MyStore {
   }
 }
 ```
+
+Lifecycles:
+ - constructor
+ - wakeup (restore state from persisted store)
+ - init
+ - onMount
+ - onDestroy
 
 ## React Native debug plugin
 For debug state, you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager)

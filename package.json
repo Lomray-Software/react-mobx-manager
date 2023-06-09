@@ -38,12 +38,16 @@
     "ts:check": "tsc --project ./tsconfig.checks.json --skipLibCheck --noemit",
     "prepare": "husky install"
   },
+  "dependencies": {
+    "@lomray/event-manager": "^1.2.2"
+  },
   "devDependencies": {
     "@commitlint/cli": "^17.6.3",
     "@commitlint/config-conventional": "^17.6.3",
     "@lomray/eslint-config-react": "^3.0.0",
     "@lomray/prettier-config": "^1.2.0",
     "@rollup/plugin-terser": "^0.4.3",
+    "@types/express": "^4.17.17",
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/react": "^18.2.7",
     "eslint": "^8.41.0",
@@ -64,8 +68,5 @@
     "mobx": "^6.9.0",
     "mobx-react-lite": "^3.4.3",
     "react": "^18 || ^17"
-  },
-  "dependencies": {
-    "@lomray/event-manager": "^1.2.1"
   }
 }

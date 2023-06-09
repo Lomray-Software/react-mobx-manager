@@ -10,8 +10,6 @@ export { default as wakeup } from './wakeup';
 
 export { default as withStores } from './with-stores';
 
-export { default as MobxLocalStorage } from './storages/local-storage';
-
-export { default as MobxAsyncStorage } from './storages/async-storage';
-
 export { default as Events } from './events';
+
+export { default as MobxSuspense } from './mobx-suspense';

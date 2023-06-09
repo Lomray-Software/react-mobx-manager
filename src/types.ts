@@ -1,5 +1,16 @@
 import type Manager from './manager';
 
+export interface IWindowManager {
+  pushInit: (state: Record<string, any>) => void;
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface Window {
+    mobxManager: IWindowManager;
+  }
+}
+
 export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
   getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
@@ -99,4 +110,8 @@ export interface IStoreParams {
   parentId?: string;
   componentName?: string;
   componentProps?: Record<string, any>;
+}
+
+export interface IWithStoreOptions {
+  customContextId?: string;
 }

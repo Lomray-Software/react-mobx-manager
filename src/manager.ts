@@ -88,6 +88,11 @@ class Manager {
     Object.assign(this.options, options || {});
 
     Manager.instance = this;
+
+    // only client side
+    if (typeof window !== 'undefined' && !window.mobxManager) {
+      window.mobxManager = { pushInit: this.pushInitState };
+    }
   }
 
   /**
@@ -132,6 +137,16 @@ class Manager {
   public static getPersistedStoresIds(): Set<string> {
     return Manager.persistedStores;
   }
+
+  /**
+   * Push initial state dynamically
+   * E.g. when stream html
+   */
+  public pushInitState = (storesState: Record<string, any> = {}): void => {
+    for (const [storeId, state] of Object.entries(storesState)) {
+      this.initState[storeId] = state;
+    }
+  };
 
   /**
    * Get store identity
@@ -365,6 +380,11 @@ class Manager {
     const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
 
     Object.values(stores).forEach((store) => {
+      /**
+       * Fix react 18 concurrent mode, twice mount etc.
+       */
+      this.prepareStore(store);
+
       unmountCallbacks.push(...this.prepareMount(store));
       EventManager.publish(Events.MOUNT_STORE, { store });
 
@@ -407,10 +427,18 @@ class Manager {
   /**
    * Get store's state
    */
-  public toJSON(): Record<string, any> {
+  public toJSON(ids?: string[]): Record<string, any> {
     const result = {};
+    const stores =
+      ids?.reduce((res, id) => {
+        if (this.stores.has(id)) {
+          res.set(id, this.stores.get(id)!);
+        }
 
-    for (const [storeId, store] of this.stores.entries()) {
+        return res;
+      }, new Map<string, TInitStore>()) ?? this.stores;
+
+    for (const [storeId, store] of stores.entries()) {
       result[storeId] = store.toJSON?.() ?? Manager.getObservableProps(store);
     }
 
