@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type Manager from './manager';
+import type Manager from '../manager';
 
 /**
  * Stream mobx manager stores

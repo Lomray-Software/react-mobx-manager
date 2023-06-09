@@ -4,6 +4,15 @@
   "description": "This package provides Mobx stores manager for react.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
+  "typesVersions": {
+    "*": {
+      "./*": ["lib/*", "lib/storages/*", "lib/server/*"]
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Lomray-Software/react-mobx-manager"

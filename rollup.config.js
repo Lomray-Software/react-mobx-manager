@@ -7,8 +7,8 @@ const IS_DEVELOP_BUILD = process.env.BUILD === 'development'
 export default {
   input: [
     'src/index.ts',
-    'src/stream-stores.ts',
     'src/suspense-query.ts',
+    'src/server/stream-stores.ts',
     'src/storages/async-storage.ts',
     'src/storages/local-storage.ts',
   ],
@@ -16,6 +16,7 @@ export default {
     dir: IS_DEVELOP_BUILD ? 'example/lib' : 'lib',
     format: 'cjs',
     preserveModules: true,
+    preserveModulesRoot: 'src',
     exports: 'auto',
   },
   external: [

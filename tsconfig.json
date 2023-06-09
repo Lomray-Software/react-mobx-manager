@@ -17,7 +17,7 @@
       "dom",
       "webworker"
     ],
-    "module": "esnext",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "noImplicitAny": true,
     "noImplicitReturns": true,
