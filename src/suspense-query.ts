@@ -1,4 +1,4 @@
-import { extendObservable, observable } from 'mobx';
+import { extendObservable, observable, runInAction } from 'mobx';
 import type { TInitStore } from './types';
 
 interface IPromise<TReturn> extends Promise<TReturn> {
@@ -72,11 +72,15 @@ class SuspenseQuery {
 
       this.promise.then(
         () => {
-          this.store[fieldName] = true;
+          runInAction(() => {
+            this.store[fieldName] = true;
+          });
         },
         (e) => {
-          this.store[fieldName] = true;
-          this.error = e;
+          runInAction(() => {
+            this.store[fieldName] = true;
+            this.error = e;
+          });
         },
       );
     }
