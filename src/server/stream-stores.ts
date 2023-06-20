@@ -1,4 +1,3 @@
-import type { Response } from 'express';
 import type Manager from '../manager';
 
 /**
@@ -29,33 +28,12 @@ class StreamStores {
   /**
    * Listen react stream and push suspense stores state to client
    */
-  public static stream(res: Response, manager: Manager): StreamStores {
+  public static getStreamState(html: string, manager: Manager): Uint8Array | undefined {
     const instance = new StreamStores(manager);
 
-    instance.beginStream(res);
+    instance.obtainSuspensions(html);
 
-    return instance;
-  }
-
-  /**
-   * Begin listen stream
-   */
-  protected beginStream(res: Response): void {
-    const write = res.write.bind(res);
-
-    res.write = (data: Uint8Array, ...args): boolean => {
-      const html = Buffer.from(data).toString();
-
-      this.obtainSuspensions(html);
-
-      const storesStateBuffer = this.obtainCompleteSuspense(html);
-
-      if (storesStateBuffer) {
-        return write(Buffer.concat([storesStateBuffer, data]), ...args) as boolean;
-      }
-
-      return write(data, ...args) as boolean;
-    };
+    return instance.obtainCompleteSuspense(html);
   }
 
   /**
