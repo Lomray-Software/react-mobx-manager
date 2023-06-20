@@ -9,7 +9,7 @@ class StreamStores {
    * Obtained suspensions from application shell
    * @protected
    */
-  protected suspendIds: Record<string, { contextId: string; count: number }>;
+  protected suspendIds: Map<string, { contextId: string; count: number }>;
 
   /**
    * Mobx store manager instance
@@ -26,14 +26,25 @@ class StreamStores {
   }
 
   /**
-   * Listen react stream and push suspense stores state to client
+   * Create stream stores service
    */
-  public static getStreamState(html: string, manager: Manager): string | undefined {
-    const instance = new StreamStores(manager);
+  public static create(manager: Manager, isAttach = true): StreamStores {
+    const streamStores = new StreamStores(manager);
 
-    instance.obtainSuspensions(html);
+    if (isAttach) {
+      manager.streamStores = streamStores;
+    }
 
-    return instance.obtainCompleteSuspense(html);
+    return streamStores;
+  }
+
+  /**
+   * Listen react stream and return suspense stores state to client
+   */
+  public getStreamState(html: string): string | undefined {
+    this.obtainSuspensions(html);
+
+    return this.obtainCompleteSuspense(html);
   }
 
   /**
@@ -57,18 +68,17 @@ class StreamStores {
       return;
     }
 
-    this.suspendIds = matchedTemplates.reduce((res, { groups }) => {
+    this.suspendIds = new Map();
+
+    matchedTemplates.forEach(({ groups }) => {
       const { templateId, contextId, count } = groups ?? {};
 
       if (!templateId) {
-        return res;
+        return;
       }
 
-      return {
-        ...res,
-        [templateId]: { contextId, count: Number(count) },
-      };
-    }, {});
+      this.suspendIds.set(templateId, { contextId, count: Number(count) });
+    });
   }
 
   /**
@@ -76,13 +86,12 @@ class StreamStores {
    * @protected
    */
   protected replaceSuspendIds(formId: string, toId: string): string | undefined {
-    if (!formId) {
+    if (!formId || !this.suspendIds.has(formId)) {
       return;
     }
 
-    this.suspendIds[toId] = this.suspendIds[formId];
-
-    delete this.suspendIds[formId];
+    this.suspendIds.set(toId, this.suspendIds.get(formId)!);
+    this.suspendIds.delete(formId);
 
     return toId;
   }
@@ -105,7 +114,7 @@ class StreamStores {
       return;
     }
 
-    const { contextId, count } = this.suspendIds[suspendId] ?? {};
+    const { contextId, count } = this.suspendIds.get(suspendId) ?? {};
 
     if (!contextId || !count) {
       return;

@@ -2,6 +2,7 @@ import EventManager from '@lomray/event-manager';
 import { toJS, isObservableProp } from 'mobx';
 import Events from './events';
 import onChangeListener from './on-change-listener';
+import type StreamStores from './server/stream-stores';
 import type {
   IConstructableStore,
   IManagerParams,
@@ -76,6 +77,12 @@ class Manager {
     shouldRemoveInitState: true,
     isSSR: false,
   };
+
+  /**
+   * Attached stream store service
+   * @see StreamStores.create
+   */
+  public streamStores?: StreamStores;
 
   /**
    * @constructor
