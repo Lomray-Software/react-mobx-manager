@@ -28,7 +28,7 @@ class StreamStores {
   /**
    * Listen react stream and push suspense stores state to client
    */
-  public static getStreamState(html: string, manager: Manager): Uint8Array | undefined {
+  public static getStreamState(html: string, manager: Manager): string | undefined {
     const instance = new StreamStores(manager);
 
     instance.obtainSuspensions(html);
@@ -91,7 +91,7 @@ class StreamStores {
    * Parse complete suspense chunk
    * @protected
    */
-  protected obtainCompleteSuspense(html: string): Uint8Array | undefined {
+  protected obtainCompleteSuspense(html: string): string | undefined {
     // each suspense begin from
     if (!html.startsWith('<div hidden id=')) {
       return;
@@ -129,7 +129,7 @@ class StreamStores {
 
     const storesState = JSON.stringify(this.manager.toJSON(storesIds));
 
-    return Buffer.from(`<script>window.mobxManager.pushInit(${storesState});</script>`, 'utf8');
+    return `<script>window.mobxManager.pushInit(${storesState});</script>`;
   }
 }
 
