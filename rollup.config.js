@@ -8,7 +8,6 @@ export default {
   input: [
     'src/index.ts',
     'src/suspense-query.ts',
-    'src/server/stream-stores.ts',
     'src/storages/async-storage.ts',
     'src/storages/local-storage.ts',
   ],

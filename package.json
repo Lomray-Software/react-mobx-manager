@@ -12,8 +12,7 @@
     "*": {
       "./*": [
         "lib/*",
-        "lib/storages/*",
-        "lib/server/*"
+        "lib/storages/*"
       ]
     }
   },
@@ -52,6 +51,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@lomray/consistent-suspense": "^1.1.1",
     "@lomray/event-manager": "^1.2.2"
   },
   "devDependencies": {

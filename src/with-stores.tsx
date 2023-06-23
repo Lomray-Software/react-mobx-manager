@@ -1,3 +1,4 @@
+import { useConsistentSuspenseContext, useId } from '@lomray/consistent-suspense';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
 import type { FC } from 'react';
@@ -6,8 +7,6 @@ import {
   useStoreManagerContext,
   useStoreManagerParentContext,
   StoreManagerParentProvider,
-  useStoreManagerSuspenseContext,
-  StoreManagerSuspenseProvider,
 } from './context';
 import type { TMapStores, IWithStoreOptions } from './types';
 
@@ -26,14 +25,15 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   const Element: FC<Omit<T, keyof TS>> = (props) => {
     const storeManager = useStoreManagerContext();
     const parentId = useStoreManagerParentContext();
-    const suspenseId = useStoreManagerSuspenseContext();
-    const id = React.useId?.();
+    const { suspenseId } = useConsistentSuspenseContext();
+    const id = useId();
     const [{ contextId, initStores }] = useState(() => {
-      const ctxId = storeManager.createContextId(manualContextId || suspenseId || id);
+      const ctxId = storeManager.createContextId(manualContextId || id);
       const initS = storeManager.createStores(
         Object.entries(stores),
         parentId,
         ctxId,
+        suspenseId,
         componentName,
         props,
       );
@@ -48,11 +48,9 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
 
     return (
-      <StoreManagerSuspenseProvider id={null}>
-        <StoreManagerParentProvider parentId={contextId}>
-          <ObservableComponent {...initStores} {...props} />
-        </StoreManagerParentProvider>
-      </StoreManagerSuspenseProvider>
+      <StoreManagerParentProvider parentId={contextId}>
+        <ObservableComponent {...initStores} {...props} />
+      </StoreManagerParentProvider>
     );
   };
 

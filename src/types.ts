@@ -26,6 +26,7 @@ export interface IStore extends IStoreLifecycle {
   libStoreId?: string; // static
   libStoreContextId?: string; // static
   libStoreParentId?: string; // static
+  libStoreSuspenseId?: string; // static
   libStoreComponentName?: string; // static
   isSingleton?: boolean; // static
   init?: () => void;
@@ -108,6 +109,7 @@ export interface IStoreParams {
   key?: string;
   contextId?: string;
   parentId?: string;
+  suspenseId?: string;
   componentName?: string;
   componentProps?: Record<string, any>;
 }

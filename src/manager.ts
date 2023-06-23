@@ -2,7 +2,6 @@ import EventManager from '@lomray/event-manager';
 import { toJS, isObservableProp } from 'mobx';
 import Events from './events';
 import onChangeListener from './on-change-listener';
-import type StreamStores from './server/stream-stores';
 import type {
   IConstructableStore,
   IManagerParams,
@@ -79,10 +78,10 @@ class Manager {
   };
 
   /**
-   * Attached stream store service
-   * @see StreamStores.create
+   * Suspense stores relations
+   * @see withStores
    */
-  public streamStores?: StreamStores;
+  protected suspenseRelations: Map<string, Set<string>> = new Map();
 
   /**
    * @constructor
@@ -136,6 +135,13 @@ class Manager {
    */
   public getStoresRelations(): Manager['storesRelations'] {
     return this.storesRelations;
+  }
+
+  /**
+   * Get suspense relations with stores
+   */
+  public getSuspenseRelations(): Manager['suspenseRelations'] {
+    return this.suspenseRelations;
   }
 
   /**
@@ -208,6 +214,7 @@ class Manager {
         id: storeId,
         contextId: 'singleton',
         parentId: 'root',
+        suspenseId: '',
         componentName: 'root-app',
         componentProps: {},
       });
@@ -257,7 +264,7 @@ class Manager {
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
     const { isSSR } = this.options;
-    const { id, contextId, parentId, componentName, componentProps } = params;
+    const { id, contextId, parentId, suspenseId, componentName, componentProps } = params;
 
     // only for singleton store
     if ((store.isSingleton || isSSR) && this.stores.has(id)) {
@@ -280,6 +287,7 @@ class Manager {
     newStore.libStoreContextId = store.isSingleton ? 'singleton' : contextId;
     newStore.libStoreParentId =
       store.isSingleton || !parentId || parentId === contextId ? 'root' : parentId;
+    newStore.libStoreSuspenseId = suspenseId;
     newStore.libStoreComponentName = componentName;
 
     const initState = this.initState[id];
@@ -313,6 +321,7 @@ class Manager {
     map: [string, TStoreDefinition][],
     parentId: string,
     contextId: string,
+    suspenseId: string,
     componentName: string,
     componentProps: Record<string, any> = {},
   ): TStores {
@@ -324,7 +333,14 @@ class Manager {
 
       return {
         ...res,
-        [key]: this.createStore(s, { id, contextId, parentId, componentName, componentProps }),
+        [key]: this.createStore(s, {
+          id,
+          contextId,
+          parentId,
+          suspenseId,
+          componentName,
+          componentProps,
+        }),
       };
     }, {});
   }
@@ -336,6 +352,7 @@ class Manager {
   protected prepareStore(store: TStores[string]): void {
     const storeId = store.libStoreId!;
     const contextId = store.libStoreContextId!;
+    const suspenseId = store.libStoreSuspenseId!;
 
     if (!this.storesRelations.has(contextId)) {
       this.storesRelations.set(contextId, {
@@ -356,6 +373,13 @@ class Manager {
       ids.add(storeId);
       EventManager.publish(Events.ADD_STORE, { store });
     }
+
+    if (!this.suspenseRelations.has(suspenseId)) {
+      this.suspenseRelations.set(suspenseId, new Set());
+    }
+
+    // add store relation with suspense
+    this.suspenseRelations.get(suspenseId)!.add(storeId);
   }
 
   /**
