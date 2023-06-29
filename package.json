@@ -51,7 +51,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@lomray/consistent-suspense": "^1.2.0",
+    "@lomray/consistent-suspense": "^1.2.2",
     "@lomray/event-manager": "^1.2.2"
   },
   "devDependencies": {
