@@ -461,7 +461,7 @@ class Manager {
    * Change store status
    */
   protected setStoreStatus(store: TStores[string], status: StoreStatus): void {
-    const { destroyTimers: { init = 500, touched = 3000, unused = 1000 } = {} } = this.options;
+    const { destroyTimers: { init = 500, touched = 10000, unused = 1000 } = {} } = this.options;
 
     store.libStoreStatus = status;
 
