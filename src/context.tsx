@@ -3,6 +3,7 @@ import { ConsistentSuspenseProvider } from '@lomray/consistent-suspense';
 import type { FC, ReactElement } from 'react';
 import React, { useContext, useEffect, useState } from 'react';
 import type Manager from './manager';
+import type { TStores } from './types';
 
 interface IStoreManagerProvider {
   storeManager: Manager;
@@ -13,8 +14,9 @@ interface IStoreManagerProvider {
 }
 
 interface IStoreManagerParentProvider {
-  children?: React.ReactNode;
   parentId: string;
+  children?: React.ReactNode;
+  initStores?: TStores;
 }
 
 /**
@@ -33,9 +35,18 @@ const StoreManagerParentContext =
  * @constructor
  */
 const StoreManagerParentProvider: FC<Omit<IStoreManagerParentProvider, 'contextId'>> = ({
-  children,
   parentId,
-}) => <StoreManagerParentContext.Provider value={parentId} children={children} />;
+  children,
+  initStores,
+}) => {
+  const storeManager = useStoreManager();
+
+  if (initStores) {
+    storeManager.touchedStores(initStores);
+  }
+
+  return <StoreManagerParentContext.Provider value={parentId} children={children} />;
+};
 
 /**
  * Mobx store manager provider
@@ -74,9 +85,9 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   );
 };
 
-const useStoreManagerContext = (): Manager => useContext(StoreManagerContext);
+const useStoreManager = (): Manager => useContext(StoreManagerContext);
 
-const useStoreManagerParentContext = (): IStoreManagerParentProvider['parentId'] =>
+const useStoreManagerParent = (): IStoreManagerParentProvider['parentId'] =>
   useContext(StoreManagerParentContext);
 
 export {
@@ -84,6 +95,6 @@ export {
   StoreManagerParentContext,
   StoreManagerProvider,
   StoreManagerParentProvider,
-  useStoreManagerContext,
-  useStoreManagerParentContext,
+  useStoreManager,
+  useStoreManagerParent,
 };

@@ -24,6 +24,7 @@ export default {
     'hoist-non-react-statics',
     'mobx-react-lite',
     '@lomray/event-manager',
+    '@lomray/consistent-suspense',
   ],
   plugins: [
     typescript({

@@ -1,13 +1,9 @@
-import { useConsistentSuspenseContext, useId } from '@lomray/consistent-suspense';
+import { useConsistentSuspense, useId } from '@lomray/consistent-suspense';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
-import {
-  useStoreManagerContext,
-  useStoreManagerParentContext,
-  StoreManagerParentProvider,
-} from './context';
+import { useStoreManager, useStoreManagerParent, StoreManagerParentProvider } from './context';
 import type { TMapStores, IWithStoreOptions } from './types';
 
 /**
@@ -23,12 +19,12 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   const componentName = Component.displayName || Component.name;
 
   const Element: FC<Omit<T, keyof TS>> = (props) => {
-    const storeManager = useStoreManagerContext();
-    const parentId = useStoreManagerParentContext();
-    const { suspenseId } = useConsistentSuspenseContext();
+    const storeManager = useStoreManager();
+    const parentId = useStoreManagerParent();
+    const { suspenseId } = useConsistentSuspense();
     const id = useId();
-    const [{ contextId, initStores }] = useState(() => {
-      const ctxId = storeManager.createContextId(manualContextId || id);
+    const [{ contextId, initStores, mountStores }] = useState(() => {
+      const ctxId = manualContextId || id;
       const initS = storeManager.createStores(
         Object.entries(stores),
         parentId,
@@ -38,18 +34,18 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
         props,
       );
 
-      return { contextId: ctxId, initStores: initS };
+      return {
+        contextId: ctxId,
+        initStores: initS,
+        mountStores: () => storeManager.mountStores(initStores),
+      };
     });
 
-    /**
-     * - Check if store has 'onMount' (call if exist)
-     * - Check if store has 'onDestroy' method (call if exist)
-     */
-    useEffect(() => storeManager.mountStores(initStores), [initStores, storeManager]);
+    useEffect(mountStores, [mountStores]);
 
     return (
-      <StoreManagerParentProvider parentId={contextId}>
-        <ObservableComponent {...initStores} {...props} />
+      <StoreManagerParentProvider parentId={contextId} initStores={initStores}>
+        <ObservableComponent {...props} {...initStores} />
       </StoreManagerParentProvider>
     );
   };
@@ -57,7 +53,11 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
   hoistNonReactStatics(Element, Component);
   Element.displayName = `Mobx(${componentName})`;
 
-  return Element;
+  return Object.defineProperty(Element, 'name', {
+    value: Element.displayName,
+    writable: false,
+    enumerable: false,
+  });
 };
 
 export default withStores;

@@ -1,18 +1,18 @@
 import EventManager from '@lomray/event-manager';
-import { toJS, isObservableProp } from 'mobx';
+import { isObservableProp, toJS } from 'mobx';
 import Events from './events';
 import onChangeListener from './on-change-listener';
+import StoreStatus from './store-status';
 import type {
   IConstructableStore,
+  IManagerOptions,
   IManagerParams,
   IStorage,
   IStore,
-  TStoreDefinition,
-  IManagerOptions,
-  TStores,
-  IStoreLifecycle,
-  TInitStore,
   IStoreParams,
+  TInitStore,
+  TStoreDefinition,
+  TStores,
 } from './types';
 import wakeup from './wakeup';
 
@@ -74,7 +74,6 @@ class Manager {
   public readonly options: IManagerOptions = {
     shouldDisablePersist: false,
     shouldRemoveInitState: true,
-    isSSR: false,
   };
 
   /**
@@ -191,13 +190,6 @@ class Manager {
   }
 
   /**
-   * Generate new context id
-   */
-  public createContextId(id?: string): string {
-    return `ctx${id || this.storesRelations.size + 1}`;
-  }
-
-  /**
    * Get exist store
    */
   public getStore<T>(store: IConstructableStore<T>, params: IStoreParams = {}): T | undefined {
@@ -263,11 +255,10 @@ class Manager {
     store: IConstructableStore<T>,
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
-    const { isSSR } = this.options;
     const { id, contextId, parentId, suspenseId, componentName, componentProps } = params;
 
     // only for singleton store
-    if ((store.isSingleton || isSSR) && this.stores.has(id)) {
+    if (this.stores.has(id)) {
       return this.stores.get(id) as T;
     }
 
@@ -290,26 +281,9 @@ class Manager {
     newStore.libStoreSuspenseId = suspenseId;
     newStore.libStoreComponentName = componentName;
 
-    const initState = this.initState[id];
-    const persistedState = this.persistData[id];
-
-    if (initState) {
-      Object.assign(newStore, initState);
-    }
-
-    EventManager.publish(Events.CREATE_STORE, { store });
-
-    // Detect persisted store and restore state
-    if ('wakeup' in newStore && Manager.persistedStores.has(id)) {
-      newStore.wakeup?.(newStore, { initState, persistedState });
-    }
-
-    newStore.init?.();
+    this.setStoreStatus(newStore, store.isSingleton ? StoreStatus.inUse : StoreStatus.init);
     this.prepareStore(newStore);
-
-    if (newStore.isSingleton || isSSR) {
-      this.prepareMount(newStore);
-    }
+    EventManager.publish(Events.CREATE_STORE, { store });
 
     return newStore as T;
   }
@@ -347,12 +321,41 @@ class Manager {
 
   /**
    * Prepare store before usage
-   * @protected
    */
   protected prepareStore(store: TStores[string]): void {
     const storeId = store.libStoreId!;
     const contextId = store.libStoreContextId!;
     const suspenseId = store.libStoreSuspenseId!;
+
+    // restore initial state from server
+    const initState = this.initState[storeId];
+    const persistedState = this.persistData[storeId];
+
+    if (this.stores.has(storeId)) {
+      return;
+    }
+
+    if (initState) {
+      Object.assign(store, initState);
+    }
+
+    // restore persisted state
+    if ('wakeup' in store && Manager.persistedStores.has(storeId)) {
+      store.wakeup?.({ initState, persistedState });
+    }
+
+    // track changes in persisted store
+    if (Manager.persistedStores.has(storeId) && 'addOnChangeListener' in store) {
+      const onDestroyDefault = store.onDestroy?.bind(store);
+      const removeListener = store.addOnChangeListener!(store, this);
+
+      store.onDestroy = () => {
+        removeListener?.();
+        onDestroyDefault?.();
+      };
+    }
+
+    store.init?.();
 
     if (!this.storesRelations.has(contextId)) {
       this.storesRelations.set(contextId, {
@@ -365,94 +368,126 @@ class Manager {
       });
     }
 
-    const { ids } = this.storesRelations.get(contextId)!;
-
-    // add store to manager
-    if (!this.stores.has(storeId)) {
-      this.stores.set(storeId, store);
-      ids.add(storeId);
-      EventManager.publish(Events.ADD_STORE, { store });
-    }
-
     if (!this.suspenseRelations.has(suspenseId)) {
       this.suspenseRelations.set(suspenseId, new Set());
     }
 
+    const { ids } = this.storesRelations.get(contextId)!;
+
+    // add store to manager
+    this.stores.set(storeId, store);
+    ids.add(storeId);
     // add store relation with suspense
     this.suspenseRelations.get(suspenseId)!.add(storeId);
+
+    EventManager.publish(Events.ADD_STORE, { store });
   }
 
   /**
-   * Prepare store before mount to component
-   * @protected
+   * Remove store
    */
-  protected prepareMount(store: TStores[string]): Required<IStoreLifecycle>['onDestroy'][] {
-    const { shouldRemoveInitState } = this.options;
+  protected removeStore(store: TStores[string]): void {
     const storeId = store.libStoreId!;
-    const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
+    const suspenseId = store.libStoreSuspenseId!;
+    const { ids } = this.storesRelations.get(store.libStoreContextId!) ?? { ids: new Set() };
 
-    // track changes in persisted store
-    if (Manager.persistedStores.has(storeId) && 'addOnChangeListener' in store) {
-      unmountCallbacks.push(store.addOnChangeListener!(store, this)!);
+    if (!this.stores.has(storeId)) {
+      return;
     }
 
-    // cleanup init state
-    if (shouldRemoveInitState && this.initState[storeId]) {
-      delete this.initState[storeId];
+    this.stores.delete(storeId);
+    ids.delete(storeId);
+
+    if (suspenseId && this.suspenseRelations.get(suspenseId)?.has(storeId)) {
+      this.suspenseRelations.get(suspenseId)!.delete(storeId);
     }
 
-    return unmountCallbacks;
+    // cleanup store relations
+    if (!ids.size) {
+      this.storesRelations.delete(store.libStoreContextId!);
+    }
+
+    if ('onDestroy' in store) {
+      store.onDestroy?.();
+    }
+
+    EventManager.publish(Events.DELETE_STORE, { store });
   }
 
   /**
    * Mount stores to component
    */
   public mountStores(stores: TStores): () => void {
-    const unmountCallbacks: Required<IStoreLifecycle>['onDestroy'][] = [];
+    const { shouldRemoveInitState } = this.options;
 
     Object.values(stores).forEach((store) => {
-      /**
-       * Fix react 18 concurrent mode, twice mount etc.
-       */
-      this.prepareStore(store);
+      const storeId = store.libStoreId!;
 
-      unmountCallbacks.push(...this.prepareMount(store));
+      // cleanup init state
+      if (shouldRemoveInitState && this.initState[storeId]) {
+        delete this.initState[storeId];
+      }
+
+      this.setStoreStatus(store, StoreStatus.inUse);
       EventManager.publish(Events.MOUNT_STORE, { store });
-
-      if ('onMount' in store) {
-        const unsubscribe = store.onMount?.();
-
-        if (typeof unsubscribe === 'function') {
-          unmountCallbacks.push(unsubscribe);
-        }
-      }
-
-      if ('onDestroy' in store) {
-        unmountCallbacks.push(() => store.onDestroy?.());
-      }
     });
 
     return () => {
-      unmountCallbacks.forEach((callback) => callback());
       Object.values(stores).forEach((store) => {
-        const storeId = store.libStoreId!;
-
-        EventManager.publish(Events.UNMOUNT_STORE, { store });
-
-        if (!store.isSingleton) {
-          const { ids } = this.storesRelations.get(store.libStoreContextId!) ?? { ids: new Set() };
-
-          this.stores.delete(storeId);
-          ids.delete(storeId);
-          EventManager.publish(Events.DELETE_STORE, { store });
-
-          // cleanup
-          if (!ids.size) {
-            this.storesRelations.delete(store.libStoreContextId!);
-          }
+        if (store.isSingleton) {
+          return;
         }
+
+        this.setStoreStatus(store, StoreStatus.unused);
+        EventManager.publish(Events.UNMOUNT_STORE, { store });
       });
     };
+  }
+
+  /**
+   * Change the stores status to touched
+   */
+  public touchedStores(stores: TStores): void {
+    Object.values(stores).forEach((store) => {
+      if (store.libStoreStatus !== StoreStatus.init || store.isSingleton) {
+        return;
+      }
+
+      this.setStoreStatus(store, StoreStatus.touched);
+    });
+  }
+
+  /**
+   * Change store status
+   */
+  protected setStoreStatus(store: TStores[string], status: StoreStatus): void {
+    const { destroyTimers: { init = 500, touched = 3000, unused = 1000 } = {} } = this.options;
+
+    store.libStoreStatus = status;
+
+    clearTimeout(store.libDestroyTimer);
+
+    let destroyTime = 0;
+
+    switch (status) {
+      case StoreStatus.init:
+        destroyTime = init;
+        break;
+
+      case StoreStatus.touched:
+        destroyTime = touched;
+        break;
+
+      case StoreStatus.unused:
+        destroyTime = unused;
+        break;
+    }
+
+    if (!destroyTime) {
+      return;
+    }
+
+    store.libDestroyTimer = setTimeout(() => this.removeStore(store), destroyTime);
   }
 
   /**
@@ -530,7 +565,7 @@ class Manager {
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {
-      store.prototype.wakeup = wakeup;
+      store.prototype.wakeup = wakeup.bind(store);
     }
 
     // add default changes listener

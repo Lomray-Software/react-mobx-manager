@@ -1,4 +1,5 @@
 import type Manager from './manager';
+import type StoreStatus from './store-status';
 
 export interface IWindowManager {
   pushInit: (state: Record<string, any>) => void;
@@ -19,7 +20,6 @@ export interface IConstructorParams<TProps = Record<string, any>> {
 
 export interface IStoreLifecycle {
   onDestroy?: () => void;
-  onMount?: () => void | (() => void);
 }
 
 export interface IStore extends IStoreLifecycle {
@@ -28,6 +28,8 @@ export interface IStore extends IStoreLifecycle {
   libStoreParentId?: string; // static
   libStoreSuspenseId?: string; // static
   libStoreComponentName?: string; // static
+  libStoreStatus?: StoreStatus; // static
+  libDestroyTimer?: NodeJS.Timeout;
   isSingleton?: boolean; // static
   init?: () => void;
   toJSON?: () => Record<string, any>;
@@ -64,13 +66,10 @@ export interface IManagerParams {
   initState?: Record<string, any>;
 }
 
-export type TWakeup = (
-  store: IStore,
-  state: {
-    initState?: Record<string, any>;
-    persistedState?: Record<string, any>;
-  },
-) => void;
+export type TWakeup = (state: {
+  initState?: Record<string, any>;
+  persistedState?: Record<string, any>;
+}) => void;
 
 export interface IStorage {
   get: () => Record<string, any> | undefined | Promise<Record<string, any> | undefined>;
@@ -83,7 +82,11 @@ export interface IStorage {
 export interface IManagerOptions {
   shouldDisablePersist?: boolean; // e.g. in server side
   shouldRemoveInitState?: boolean; // remove init state for store after initialize
-  isSSR?: boolean;
+  destroyTimers?: {
+    init?: number;
+    touched?: number;
+    unused?: number;
+  };
 }
 
 export type TStores = { [storeKey: string]: IStore | IStorePersisted };

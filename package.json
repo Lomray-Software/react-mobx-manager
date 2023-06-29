@@ -51,12 +51,12 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@lomray/consistent-suspense": "^1.1.1",
+    "@lomray/consistent-suspense": "^1.2.0",
     "@lomray/event-manager": "^1.2.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.6.3",
-    "@commitlint/config-conventional": "^17.6.3",
+    "@commitlint/cli": "^17.6.6",
+    "@commitlint/config-conventional": "^17.6.6",
     "@lomray/eslint-config-react": "^3.0.0",
     "@lomray/prettier-config": "^1.2.0",
     "@rollup/plugin-terser": "^0.4.3",

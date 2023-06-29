@@ -1,12 +1,12 @@
-import type { IStorePersisted } from './types';
+import type { TStores, TWakeup } from './types';
 
 /**
- * Restore store state from initial state
+ * Restore persisted store state
  */
-const wakeup: IStorePersisted['wakeup'] = (store, { persistedState }) => {
+function wakeup(this: TStores[string], { persistedState }: Parameters<TWakeup>[0]) {
   if (persistedState) {
-    Object.assign(store, persistedState);
+    Object.assign(this, persistedState);
   }
-};
+}
 
 export default wakeup;
