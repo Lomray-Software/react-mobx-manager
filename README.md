@@ -37,8 +37,8 @@
   - [Manager](#manager)
   - [withStores](#withstores)
   - [StoreManagerProvider](#storemanagerprovider)
-  - [useStoreManagerContext](#usestoremanagercontext)
-  - [useStoreManagerParentContext](#usestoremanagerparentcontext)
+  - [useStoreManagerContext](#usestoremanager)
+  - [useStoreManagerParentContext](#usestoremanagerparent)
   - [Store](#store)
 - [React Native Debug Plugin](#react-native-debug-plugin)
 - [Bugs and feature requests](#bugs-and-feature-requests)
@@ -253,10 +253,13 @@ const storeManager = new Manager({
      */
     shouldRemoveInitState: true,
     /**
-     * Enable this option if your application support server-side rendering (on both side, client and server)
-     * Default: false
+     * Configure store destroy timers
      */
-    isSSR: false,
+    destroyTimers: {
+      init: 500,
+      touched: 10000, // NOTE: set to max request timeout
+      unused: 1000,
+    },
   }
 });
 
@@ -286,15 +289,10 @@ const store2 = storeManager.getStore(SomeStore, { contextId: 'necessary-context-
 const relations = storeManager.getStoresRelations();
 
 /**
- * Generate unique context id
- */
-const contextId = storeManager.createContextId();
-
-/**
  * Manually create stores for component
  * NOTE: 'withStores' wrapper use this method, probably you won't need it
  */
-const stores = storeManager.createStores(['someStore', MyStore], 'parent-id', 'context-id', 'HomePage');
+const stores = storeManager.createStores(['someStore', MyStore], 'parent-id', 'context-id', 'suspense-id', 'HomePage', { componentProp: 'test' });
 
 /**
  * Mount/Unmount simple stores to component
@@ -338,10 +336,10 @@ const storeClass = Manager.persistStore(class MyStore {}, 'my-store');
 import { withStores } from '@lomray/react-mobx-manager';
 
 /**
- * Create and connect 'stores' to component
+ * Create and connect 'stores' to component with custom context id
  * NOTE: In most cases, you don't need to pass a third argument (contextId). 
  */
-withStores(Component, stores, 'optional-context-id');
+withStores(Component, stores, { customContextId: 'optional-context-id' });
 
 const stores = { myStore: MyStore, anotherStore: AnotherStore };
 ```
@@ -361,27 +359,27 @@ import { StoreManagerProvider } from '@lomray/react-mobx-manager';
 </StoreManagerProvider>
 ```
 
-### useStoreManagerContext
+### useStoreManager
 ```typescript jsx
-import { useStoreManagerContext } from '@lomray/react-mobx-manager';
+import { useStoreManager } from '@lomray/react-mobx-manager';
 
 const MyComponent: FC = () => {
   /**
    * Get store manager inside your function component
    */
-  const storeManager = useStoreManagerContext();
+  const storeManager = useStoreManager();
 }
 ```
 
-### useStoreManagerParentContext
+### useStoreManagerParent
 ```typescript jsx
-import { useStoreManagerParentContext } from '@lomray/react-mobx-manager';
+import { useStoreManagerParent } from '@lomray/react-mobx-manager';
 
 const MyComponent: FC = () => {
   /**
    * Get parent context id
    */
-  const { parentId } = useStoreManagerParentContext();
+  const { parentId } = useStoreManagerParent();
 }
 ```
 
@@ -414,7 +412,7 @@ class MyStore {
   /**
    * @private
    */
-  private someParentStore: ClassReturnType<typeof SomeParentStore>;
+  private readonly someParentStore: ClassReturnType<typeof SomeParentStore>;
 
   /**
    * @constructor
@@ -446,14 +444,6 @@ class MyStore {
   }
 
   /**
-   * Define this method if you want to do something when a component with this store is mount
-   * @private
-   */
-  private onMount(): void {
-    // do something
-  }
-
-  /**
    * Define this method if you want to do something when a component with this store is unmount
    * @private
    */
@@ -476,7 +466,6 @@ Lifecycles:
  - constructor
  - wakeup (restore state from persisted store)
  - init
- - onMount
  - onDestroy
 
 ## React Native debug plugin

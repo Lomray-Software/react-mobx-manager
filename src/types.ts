@@ -84,7 +84,7 @@ export interface IManagerOptions {
   shouldRemoveInitState?: boolean; // remove init state for store after initialize
   destroyTimers?: {
     init?: number;
-    touched?: number;
+    touched?: number; // NOTE: set to max timeout request
     unused?: number;
   };
 }
