@@ -5,6 +5,7 @@
 <h1 align='center'>Mobx stores manager for React</h1>
 
 - One way to escape state tree 🌲🌳🌴.
+- Ready to use with Suspense.
 - Manage your Mobx stores like a boss - debug like a hacker.
 - Simple idea - simple implementation.
 - Small package size.
@@ -52,6 +53,8 @@ The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/
 npm i --save @lomray/react-mobx-manager
 ```
 
+__WARNING:__ this package use [@lomray/consistent-suspense](https://github.com/Lomray-Software/consistent-suspense) for generate stable id's inside Suspense.
+
 **Optional:** Configure your bundler to keep classnames and function names in production OR use `id` for each store:
 
 - **React:** (craco or webpack config, terser options)
@@ -77,24 +80,27 @@ Import `Manager, StoreManagerProvider` from `@lomray/react-mobx-manager` into yo
 ```typescript jsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import { ConsistentSuspenseProvider } from '@lomray/consistent-suspense';
 import { Manager, StoreManagerProvider, MobxLocalStorage } from '@lomray/react-mobx-manager';
 import App from './app';
 import MyApiClient from './services/my-api-client';
+import './index.css';
 
 const apiClient = new MyApiClient();
 const storeManager = new Manager({
   storage: new MobxLocalStorage(), // optional: needs for persisting stores
-  storesParams: { apiClient }, // optional: we can provide our api client for access from the store
+  storesParams: { apiClient }, // optional: we can provide our api client for access from the each store
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
   <React.StrictMode>
-    <StoreManagerProvider storeManager={storeManager} shouldInit>
-      <App />
-    </StoreManagerProvider>
+    <ConsistentSuspenseProvider> {/** required, see warning above **/}
+      <StoreManagerProvider storeManager={storeManager} shouldInit>
+        <App />
+      </StoreManagerProvider>
+    </ConsistentSuspenseProvider>
   </React.StrictMode>,
 );
 ```
@@ -467,6 +473,9 @@ Lifecycles:
  - wakeup (restore state from persisted store)
  - init
  - onDestroy
+
+## Demo
+Explore [demo app](https://github.com/Lomray-Software/vite-template) to more understand.
 
 ## React Native debug plugin
 For debug state, you can use [Reactotron debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager)

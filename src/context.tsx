@@ -1,5 +1,3 @@
-import type { IConsistentSuspense } from '@lomray/consistent-suspense';
-import { ConsistentSuspenseProvider } from '@lomray/consistent-suspense';
 import type { FC, ReactElement } from 'react';
 import React, { useContext, useEffect, useState } from 'react';
 import type Manager from './manager';
@@ -10,7 +8,6 @@ interface IStoreManagerProvider {
   shouldInit?: boolean;
   fallback?: ReactElement;
   children?: React.ReactNode;
-  suspenseProvider?: Partial<IConsistentSuspense>;
 }
 
 interface IStoreManagerParentProvider {
@@ -56,7 +53,6 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   children,
   storeManager,
   fallback,
-  suspenseProvider = {},
   shouldInit = false,
 }) => {
   const [isInit, setInit] = useState(!shouldInit);
@@ -75,13 +71,11 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   }, [shouldInit, storeManager]);
 
   return (
-    <ConsistentSuspenseProvider {...suspenseProvider}>
-      <StoreManagerContext.Provider value={storeManager}>
-        <StoreManagerParentProvider parentId="root">
-          {isInit ? children : fallback || children}
-        </StoreManagerParentProvider>
-      </StoreManagerContext.Provider>
-    </ConsistentSuspenseProvider>
+    <StoreManagerContext.Provider value={storeManager}>
+      <StoreManagerParentProvider parentId="root">
+        {isInit ? children : fallback || children}
+      </StoreManagerParentProvider>
+    </StoreManagerContext.Provider>
   );
 };
 
