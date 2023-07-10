@@ -2,13 +2,13 @@ import type Manager from './manager';
 import type StoreStatus from './store-status';
 
 export interface IWindowManager {
-  pushInit: (state: Record<string, any>) => void;
+  push: (state: Record<string, any>) => void;
 }
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Window {
-    mobxManager: IWindowManager;
+    mbxM: Record<string, any>[] | IWindowManager;
   }
 }
 

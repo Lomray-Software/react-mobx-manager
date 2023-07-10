@@ -95,8 +95,12 @@ class Manager {
     Manager.instance = this;
 
     // only client side
-    if (typeof window !== 'undefined' && !window.mobxManager) {
-      window.mobxManager = { pushInit: this.pushInitState };
+    if (typeof window !== 'undefined') {
+      const state = window.mbxM;
+
+      window.mbxM = { push: this.pushInitState };
+
+      (Array.isArray(state) ? state : []).forEach(this.pushInitState);
     }
   }
 
