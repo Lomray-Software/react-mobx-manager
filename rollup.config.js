@@ -11,6 +11,7 @@ export default {
     'src/manager-stream.ts',
     'src/storages/async-storage.ts',
     'src/storages/local-storage.ts',
+    'src/plugins/index.ts',
   ],
   output: {
     dir: IS_DEVELOP_BUILD ? 'example/lib' : 'lib',
@@ -20,6 +21,8 @@ export default {
     exports: 'auto',
   },
   external: [
+    'node:process',
+    'node:path',
     'react',
     'mobx',
     'hoist-non-react-statics',

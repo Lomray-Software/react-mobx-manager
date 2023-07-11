@@ -182,7 +182,7 @@ class Manager {
       return store.libStoreId;
     }
 
-    let storeId = (store['name'] as string) || store.constructor.name;
+    let storeId = (store['id'] as string) || (store['name'] as string) || store.constructor.name;
 
     if (store.isSingleton) {
       return storeId;

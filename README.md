@@ -41,6 +41,7 @@
   - [useStoreManagerContext](#usestoremanager)
   - [useStoreManagerParentContext](#usestoremanagerparent)
   - [Store](#store)
+- [Example](#demo)
 - [React Native Debug Plugin](#react-native-debug-plugin)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [License](#license)
@@ -55,7 +56,7 @@ npm i --save @lomray/react-mobx-manager
 
 __WARNING:__ this package use [@lomray/consistent-suspense](https://github.com/Lomray-Software/consistent-suspense) for generate stable id's inside Suspense.
 
-**Optional:** Configure your bundler to keep classnames and function names in production OR use `id` for each store:
+**Optional:** Configure your bundler to keep classnames and function names in production OR use `id` for each store OR use `Vite plugins`:
 
 - **React:** (craco or webpack config, terser options)
 ```bash
@@ -63,14 +64,29 @@ terserOptions.keep_classnames = true;
 terserOptions.keep_fnames = true;
 ```
 
-- **React Native:** (metro bundler config)
-```
-transformer: {
-  minifierConfig: {
-    keep_classnames: true,
-    keep_fnames: true,
-  },
+- **React Native:** (metro bundler config: metro.config.js)
+```js
+module.exports = {
+  transformer: {
+    minifierConfig: {
+      keep_classnames: true,
+      keep_fnames: true,
+    },
+  }
 }
+```
+
+- **Vite plugins:**
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import MobxManager from '@lomray/react-mobx-manager/plugins/index';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), MobxManager()]
+});
+
 ```
 
 ## Usage
@@ -208,6 +224,7 @@ export default withStores(User, stores);
 
 ## Support SSR
 Does this library support SSR? Short answer - yes, but we need some steps to prepare our framework.
+- Look at [Vite demo app](https://github.com/Lomray-Software/vite-template) for a better understanding.
 - Look at [After.js (razzle) based project](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82) for a better understanding.
 - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for a better understanding (needs writing a wrapper).
 
