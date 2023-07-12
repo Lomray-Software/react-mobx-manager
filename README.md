@@ -80,13 +80,18 @@ module.exports = {
 ```typescript
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import MobxManager from '@lomray/react-mobx-manager/plugins/index';
+import MobxManager from '@lomray/react-mobx-manager/plugins/vite/index';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), MobxManager()]
 });
 
+/**
+ * Detect mobx store:
+ - by makeObservable or makeAutoObservable
+ - by @mobx-store jsdoc before class
+ */
 ```
 
 ## Usage

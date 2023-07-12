@@ -30,7 +30,48 @@ const getNextLetter = (str = ''): string => {
 };
 
 /**
+ * Try to find mobx store
+ */
+const matchMobxStore = (code: string): string | undefined => {
+  /**
+   * Match store pattern 1
+   *
+   * 1. Match 'class Classname' (capture Classname)
+   * 2. Except 'static id ='
+   * 3. Include makeObservable or makeAutoObservable
+   * 4. Except persistStore(Classname
+   */
+  const { classname } =
+    code.match(
+      /class\s(?<classname>\w+)\s+?{(?!.*static\sid\s*=.*).+(makeObservable|makeAutoObservable)(?!.*persistStore\(\1.*)/s,
+    )?.groups ?? {};
+
+  if (classname) {
+    return classname;
+  }
+
+  /**
+   * Match store pattern 2
+   *
+   * 1. Match '@mobx-store' in jsdoc before class
+   * 2. Match 'class Classname' (capture Classname)
+   * 3. Except 'static id ='
+   * 4. Except persistStore(Classname
+   */
+  const { classname: classnameSecond } =
+    code.match(
+      /(@mobx-store).+class\s(?<classname>\w+)\s+?{(?!.*static\sid\s*=.*).+}(?!.*persistStore.*)/s,
+    )?.groups ?? {};
+
+  return classnameSecond;
+};
+
+/**
  * Generate unique store id's
+ *
+ * Detect mobx store:
+ * - by makeObservable or makeAutoObservable
+ * - by @mobx-store jsdoc before class
  * @constructor
  */
 function IdGenerator({ root = cwd(), isProd = false }: IPluginOptions = {}): Plugin {
@@ -59,10 +100,24 @@ function IdGenerator({ root = cwd(), isProd = false }: IPluginOptions = {}): Plu
     return id;
   };
 
+  /**
+   * Get development id
+   */
+  const getDevId = (id: string, classname: string): string => {
+    const cleanPath = id
+      .replace(root, '')
+      .replace(/\/index.(js|ts|tsx)/, '')
+      .split('/')
+      .filter(Boolean)
+      .join('-');
+
+    return `${cleanPath}-${classname}`;
+  };
+
   return {
     name: '@lomray/react-mobx-manager-id-generator',
     transform(code, id) {
-      const extName = extname(id);
+      const extName = extname(id).split('?')[0]!;
 
       if (
         id.includes('node_modules') ||
@@ -79,25 +134,14 @@ function IdGenerator({ root = cwd(), isProd = false }: IPluginOptions = {}): Plu
         };
       }
 
-      const { classname, staticId } =
-        code.match(
-          /class\s(?<classname>\w+)\s+?{(?<staticId>.+(static\sid[^=]+=))?.+(makeObservable|makeAutoObservable)/s,
-        )?.groups ?? {};
+      const classname = matchMobxStore(code);
 
-      if (staticId || !classname) {
+      if (!classname) {
         return;
       }
 
       if (!cache.has(id)) {
-        const cleanPath = isProd
-          ? ''
-          : id
-              .replace(root, '')
-              .replace(/\/index.(js|ts|tsx)/, '')
-              .split('/')
-              .filter(Boolean)
-              .join('-');
-        const storeId = isProd ? getProdId() : `${cleanPath}-${classname}`;
+        const storeId = isProd ? getProdId() : getDevId(id, classname);
 
         cache.set(id, { classname, storeId });
       }

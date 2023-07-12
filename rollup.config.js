@@ -11,7 +11,7 @@ export default {
     'src/manager-stream.ts',
     'src/storages/async-storage.ts',
     'src/storages/local-storage.ts',
-    'src/plugins/index.ts',
+    'src/plugins/vite/index.ts',
   ],
   output: {
     dir: IS_DEVELOP_BUILD ? 'example/lib' : 'lib',
