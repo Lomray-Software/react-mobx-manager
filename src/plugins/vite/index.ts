@@ -14,10 +14,7 @@ function ViteReactMobxManager(): Plugin[] {
   let idGeneratorPlugin: Plugin;
 
   return [
-    {
-      ...HydrationUpdateFix(),
-      apply: () => !isProduction(),
-    },
+    HydrationUpdateFix(),
     {
       name: IdGenerator().name,
       configResolved({ root }) {
