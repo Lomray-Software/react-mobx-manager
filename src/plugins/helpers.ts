@@ -62,6 +62,7 @@ class Generator {
   protected lastId: string; // keep last generated production store id (letter)
 
   constructor(root: string, isProd = false) {
+    this.root = root;
     this.cache = loadCache(isProd);
   }
 
