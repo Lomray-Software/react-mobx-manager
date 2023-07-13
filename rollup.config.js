@@ -23,6 +23,7 @@ export default {
   external: [
     'node:process',
     'node:path',
+    'node:fs',
     'react',
     'mobx',
     'hoist-non-react-statics',

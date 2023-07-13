@@ -14,7 +14,10 @@ function ViteReactMobxManager(): Plugin[] {
   let idGeneratorPlugin: Plugin;
 
   return [
-    HydrationUpdateFix(),
+    {
+      ...HydrationUpdateFix(),
+      apply: () => !isProduction(),
+    },
     {
       name: IdGenerator().name,
       configResolved({ root }) {
@@ -22,6 +25,9 @@ function ViteReactMobxManager(): Plugin[] {
       },
       transform(...args) {
         return idGeneratorPlugin.transform?.['call'](this, ...args) as TransformResult | undefined;
+      },
+      buildEnd(...args) {
+        idGeneratorPlugin.buildEnd?.['call'](this, ...args);
       },
     },
   ];
