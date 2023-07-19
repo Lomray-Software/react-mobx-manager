@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import User from './pages/user/index.wrapper';
+import User from './pages/user';
 
 function App() {
   return (

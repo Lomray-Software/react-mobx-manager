@@ -14,7 +14,7 @@ export default {
     'src/plugins/vite/index.ts',
   ],
   output: {
-    dir: IS_DEVELOP_BUILD ? 'example/lib' : 'lib',
+    dir: IS_DEVELOP_BUILD ? 'example/node_modules/@lomray/react-mobx-manager/lib' : 'lib',
     format: 'cjs',
     preserveModules: true,
     preserveModulesRoot: 'src',

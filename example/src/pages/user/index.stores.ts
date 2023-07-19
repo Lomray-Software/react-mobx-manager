@@ -1,5 +1,5 @@
 import type { StoresType } from '@lomray/react-mobx-manager';
-import UserPageStore from '../../stores/pages/user';
+import UserPageStore from './stores/main';
 
 const stores = {
   userPage: UserPageStore,

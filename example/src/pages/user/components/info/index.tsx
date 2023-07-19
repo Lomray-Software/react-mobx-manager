@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import React from 'react';
-import type { IUser } from '../../../stores/pages/user';
-import ExtraInfo from './extra-info/index.wrapper';
+import type { IUser } from '../../stores/main';
+import ExtraInfo from './extra-info';
 
 interface IInfo {
   user: IUser;

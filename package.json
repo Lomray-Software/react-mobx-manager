@@ -51,7 +51,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@lomray/consistent-suspense": "^1.2.2",
+    "@lomray/consistent-suspense": "^1.3.0",
     "@lomray/event-manager": "^1.2.2"
   },
   "devDependencies": {
@@ -74,7 +74,7 @@
     "semantic-release": "^21.0.2",
     "ttypescript": "^1.5.15",
     "typescript": "^4.7.4",
-    "vite": "^4.4.2"
+    "vite": "^4.4.4"
   },
   "peerDependencies": {
     "hoist-non-react-statics": "^3.3.2",

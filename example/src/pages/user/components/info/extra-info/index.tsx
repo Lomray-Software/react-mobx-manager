@@ -1,6 +1,8 @@
+import { withStores } from '@lomray/react-mobx-manager';
 import type { FC } from 'react';
 import React, { useEffect } from 'react';
 import type { StoreProps } from './index.stores';
+import stores from './index.stores';
 
 /**
  * ExtraInfo (children) component
@@ -15,4 +17,6 @@ const ExtraInfo: FC<StoreProps> = ({ extraInfoStore: { phone, getExtraInfo } }) 
   return <span>{phone || '...'}</span>;
 };
 
-export default ExtraInfo;
+const ExtraInfoWrapper = withStores(ExtraInfo, stores);
+
+export default ExtraInfoWrapper;

@@ -1,7 +1,9 @@
+import { withStores } from '@lomray/react-mobx-manager';
 import type { FC } from 'react';
 import React, { useEffect } from 'react';
+import Info from './components/info';
 import type { StoreProps } from './index.stores';
-import Info from './info';
+import stores from './index.stores';
 
 interface IUser {
   userId: string;
@@ -44,4 +46,6 @@ const User: FC<Props> = ({ userId, userPage: { user, error, isLoading, getUser }
   );
 };
 
-export default User;
+const UserWrapper = withStores(User, stores);
+
+export default UserWrapper;

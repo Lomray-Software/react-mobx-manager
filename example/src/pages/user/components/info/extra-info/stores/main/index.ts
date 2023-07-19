@@ -1,7 +1,7 @@
+import type { IConstructorParams } from '@lomray/react-mobx-manager';
 import axios from 'axios';
 import { action, makeObservable, observable } from 'mobx';
-import type { IConstructorParams } from '@lomray/react-mobx-manager';
-import UserPageStore from '../index';
+import UserPageStore from '../../../../../stores/main';
 
 /**
  * Store for Extra info component
@@ -22,6 +22,8 @@ class ExtraInfoStore {
    */
   constructor({ getStore }: IConstructorParams) {
     this.userPageStore = getStore(UserPageStore);
+
+    console.log(this.userPageStore);
 
     makeObservable(this, {
       phone: observable,

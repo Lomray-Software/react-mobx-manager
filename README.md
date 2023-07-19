@@ -6,10 +6,11 @@
 
 - One way to escape state tree 🌲🌳🌴.
 - Ready to use with Suspense.
+- Support SSR.
+- Support render to stream.
 - Manage your Mobx stores like a boss - debug like a hacker.
 - Simple idea - simple implementation.
 - Small package size.
-- Support render to stream.
 - Support code splitting out of the box.
 - Access stores from other stores.
 - Can be a replacement for react context.
@@ -51,13 +52,14 @@
 The React-mobx-manager package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
 ```
-npm i --save @lomray/react-mobx-manager
+npm i --save @lomray/react-mobx-manager @lomray/consistent-suspense
 ```
 
-__WARNING:__ this package use [@lomray/consistent-suspense](https://github.com/Lomray-Software/consistent-suspense) for generate stable id's inside Suspense.
+__NOTE:__ this package use [@lomray/consistent-suspense](https://github.com/Lomray-Software/consistent-suspense) for generate stable id's inside Suspense.
 
-**Optional:** Configure your bundler to keep classnames and function names in production OR use `id` for each store OR use `Vite plugins`:
+__Choose one of store id generating strategy__:
 
+1. Configure your bundler to keep classnames and function names. Store id will be generated from class names (chose unique class names).
 - **React:** (craco or webpack config, terser options)
 ```bash
 terserOptions.keep_classnames = true;
@@ -75,8 +77,24 @@ module.exports = {
   }
 }
 ```
+2. Define `id` for each store.
 
-- **Vite plugins:**
+```typescript
+import { makeObservable } from "mobx";
+
+class MyStore {
+  /**
+   * Define unique store id
+   */
+  static id = 'Unique-store-id';
+
+  constructor() {
+    makeObservable(this, {})
+  }
+}
+```
+3. Use `Vite plugins`.
+
 ```typescript
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -84,6 +102,9 @@ import MobxManager from '@lomray/react-mobx-manager/plugins/vite/index';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  /**
+   * Store id's will be generated automatically, just chill
+   */
   plugins: [react(), MobxManager()]
 });
 
@@ -117,7 +138,7 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
   <React.StrictMode>
-    <ConsistentSuspenseProvider> {/** required, see warning above **/}
+    <ConsistentSuspenseProvider> {/** required **/}
       <StoreManagerProvider storeManager={storeManager} shouldInit>
         <App />
       </StoreManagerProvider>
@@ -225,7 +246,7 @@ const User: FC<TProps> = ({ userStore: { name } }) => {
 export default withStores(User, stores);
 ```
 
-[See app example](example) for a better understanding.
+[See app example](https://github.com/Lomray-Software/vite-template) for a better understanding.
 
 ## Support SSR
 Does this library support SSR? Short answer - yes, but we need some steps to prepare our framework.
@@ -234,7 +255,7 @@ Does this library support SSR? Short answer - yes, but we need some steps to pre
 - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for a better understanding (needs writing a wrapper).
 
 ## Important Tips
-- Create **singleton** store only for global stores e.g, for application settings, logged user, etc.
+- Create **singleton** store only for global stores e.g, for application settings, logged user, theme, etc.
 - To get started, stick to the concept: Store for Component. Don't connect (through withStores) not singleton store to several components.
 
 ## Documentation
