@@ -174,10 +174,10 @@ class UserStore {
   static id = 'user';
 
   /**
-   * You can also enable 'singleton' behavior for global application stores
+   * You can also enable behavior for global application stores
    * Default: false
    */
-  static isSingleton = true;
+  static isGlobal = true;
 
   /**
    * Our state
@@ -255,8 +255,8 @@ Does this library support SSR? Short answer - yes, but we need some steps to pre
 - Look at [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example) for a better understanding (needs writing a wrapper).
 
 ## Important Tips
-- Create **singleton** store only for global stores e.g, for application settings, logged user, theme, etc.
-- To get started, stick to the concept: Store for Component. Don't connect (through withStores) not singleton store to several components.
+- Create **global** store only for e.g: application settings, logged user, theme, etc.
+- To get started, stick to the concept: Store for Component. Don't connect (through withStores) not global store to several components.
 
 ## Documentation
 
@@ -329,7 +329,7 @@ const managerStores = storeManager.getStores();
 /**
  * Get specific store
  */
-const store = storeManager.getStore(SomeSingletonStore);
+const store = storeManager.getStore(SomeGlobalStore);
 const store2 = storeManager.getStore(SomeStore, { contextId: 'necessary-context-id' });
 
 /**
@@ -445,10 +445,10 @@ class MyStore {
   static id = 'user';
 
   /**
-   * You can also enable 'singleton' behavior for global application stores
+   * You can also enable behavior for global application stores
    * Default: false
    */
-  static isSingleton = true;
+  static isGlobal = true;
     
   /**
    * Store observable state
@@ -466,7 +466,7 @@ class MyStore {
   /**
    * @constructor
    * 
-   * getStore - get parent store or singleton store
+   * getStore - get parent store or global store
    * storeManager - access to store manager
    * apiClient - your custom param, see 'storesParams' in Manager
    */
@@ -474,7 +474,7 @@ class MyStore {
     this.apiClient = apiClient;
     this.someParentStore = getStore(SomeParentStore);
     
-    // In case when store is't singletone you can get access to component props
+    // In case when store is't global you can get access to component props
     console.log(componentProps);
 
     makeObservable(this, {

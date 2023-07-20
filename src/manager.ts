@@ -184,7 +184,7 @@ class Manager {
 
     let storeId = (store['id'] as string) || (store['name'] as string) || store.constructor.name;
 
-    if (store.isSingleton) {
+    if (store.isGlobal) {
       return storeId;
     }
 
@@ -204,11 +204,11 @@ class Manager {
       return this.stores.get(storeId) as T;
     }
 
-    // in case with singleton (create if not exist)
-    if (store.isSingleton) {
+    // in case with global store (create if not exist)
+    if (store.isGlobal) {
       return this.createStore(store, {
         id: storeId,
-        contextId: 'singleton',
+        contextId: 'global',
         parentId: 'root',
         suspenseId: '',
         componentName: 'root-app',
@@ -261,7 +261,7 @@ class Manager {
   ): T {
     const { id, contextId, parentId, suspenseId, componentName, componentProps } = params;
 
-    // only for singleton store
+    // only for global store
     if (this.stores.has(id)) {
       return this.stores.get(id) as T;
     }
@@ -278,14 +278,14 @@ class Manager {
 
     // assign params to new store
     newStore.libStoreId = id;
-    newStore.isSingleton = store.isSingleton;
-    newStore.libStoreContextId = store.isSingleton ? 'singleton' : contextId;
+    newStore.isGlobal = store.isGlobal;
+    newStore.libStoreContextId = store.isGlobal ? 'global' : contextId;
     newStore.libStoreParentId =
-      store.isSingleton || !parentId || parentId === contextId ? 'root' : parentId;
+      store.isGlobal || !parentId || parentId === contextId ? 'root' : parentId;
     newStore.libStoreSuspenseId = suspenseId;
     newStore.libStoreComponentName = componentName;
 
-    this.setStoreStatus(newStore, store.isSingleton ? StoreStatus.inUse : StoreStatus.init);
+    this.setStoreStatus(newStore, store.isGlobal ? StoreStatus.inUse : StoreStatus.init);
     this.prepareStore(newStore);
     EventManager.publish(Events.CREATE_STORE, { store });
 
@@ -438,7 +438,7 @@ class Manager {
 
     return () => {
       Object.values(stores).forEach((store) => {
-        if (store.isSingleton) {
+        if (store.isGlobal) {
           return;
         }
 
@@ -453,7 +453,7 @@ class Manager {
    */
   public touchedStores(stores: TStores): void {
     Object.values(stores).forEach((store) => {
-      if (store.libStoreStatus !== StoreStatus.init || store.isSingleton) {
+      if (store.libStoreStatus !== StoreStatus.init || store.isGlobal) {
         return;
       }
 
