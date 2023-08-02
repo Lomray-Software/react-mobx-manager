@@ -1,8 +1,10 @@
+<h1 align='center'>Mobx stores manager for React</h1>
+
 <p align="center">
-    <img  src="https://user-images.githubusercontent.com/95251720/180519123-eb8a36e7-e7af-41f2-9a01-ae6d6b6a94f3.svg" alt="Bootstrap logo" width="200" height="165">
+    <img  src="./logo.png" alt="Mobx stores manager logo" width="250" height="253">
 </p>
 
-<h1 align='center'>Mobx stores manager for React</h1>
+### Key features:
 
 - One way to escape state tree 🌲🌳🌴.
 - Ready to use with Suspense.
