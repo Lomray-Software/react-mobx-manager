@@ -497,14 +497,15 @@ class Manager {
    */
   public toJSON(ids?: string[]): Record<string, any> {
     const result = {};
-    const stores =
-      ids?.reduce((res, id) => {
-        if (this.stores.has(id)) {
-          res.set(id, this.stores.get(id)!);
-        }
+    const stores = Array.isArray(ids)
+      ? ids.reduce((res, id) => {
+          if (this.stores.has(id)) {
+            res.set(id, this.stores.get(id)!);
+          }
 
-        return res;
-      }, new Map<string, TInitStore>()) ?? this.stores;
+          return res;
+        }, new Map<string, TInitStore>())
+      : this.stores;
 
     for (const [storeId, store] of stores.entries()) {
       result[storeId] = store.toJSON?.() ?? Manager.getObservableProps(store);
@@ -567,7 +568,7 @@ class Manager {
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {
-      store.prototype.wakeup = wakeup.bind(store);
+      store.prototype.wakeup = wakeup;
     }
 
     // add default changes listener
