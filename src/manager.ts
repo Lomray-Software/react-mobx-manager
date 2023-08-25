@@ -383,8 +383,6 @@ class Manager {
     ids.add(storeId);
     // add store relation with suspense
     this.suspenseRelations.get(suspenseId)!.add(storeId);
-
-    EventManager.publish(Events.ADD_STORE, { store });
   }
 
   /**

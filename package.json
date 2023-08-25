@@ -52,11 +52,11 @@
   },
   "dependencies": {
     "@lomray/consistent-suspense": "^1.3.0",
-    "@lomray/event-manager": "^1.2.2"
+    "@lomray/event-manager": "^2.0.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.6.6",
-    "@commitlint/config-conventional": "^17.6.6",
+    "@commitlint/cli": "^17.7.1",
+    "@commitlint/config-conventional": "^17.7.0",
     "@lomray/eslint-config-react": "^3.0.0",
     "@lomray/prettier-config": "^1.2.0",
     "@rollup/plugin-terser": "^0.4.3",

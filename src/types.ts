@@ -1,3 +1,4 @@
+import type Events from './events';
 import type Manager from './manager';
 import type StoreStatus from './store-status';
 
@@ -119,4 +120,19 @@ export interface IStoreParams {
 
 export interface IWithStoreOptions {
   customContextId?: string;
+}
+
+export interface IMobxManagerEvents {
+  [Events.CREATE_STORE]: {
+    store: IConstructableStore;
+  };
+  [Events.MOUNT_STORE]: {
+    store: IStorePersisted | IStore;
+  };
+  [Events.UNMOUNT_STORE]: {
+    store: IStorePersisted | IStore;
+  };
+  [Events.DELETE_STORE]: {
+    store: IStorePersisted | IStore;
+  };
 }

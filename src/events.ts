@@ -2,11 +2,10 @@
  * Store manager events
  */
 enum Events {
-  ADD_STORE = 'add-store',
-  DELETE_STORE = 'delete-store',
-  CREATE_STORE = 'create-store',
-  MOUNT_STORE = 'mount-store',
-  UNMOUNT_STORE = 'unmount-store',
+  CREATE_STORE = 'mobx-manager:store-create',
+  MOUNT_STORE = 'mobx-manager:store-mount',
+  UNMOUNT_STORE = 'mobx-manager:store-unmount',
+  DELETE_STORE = 'mobx-manager:store-delete',
 }
 
 export default Events;
