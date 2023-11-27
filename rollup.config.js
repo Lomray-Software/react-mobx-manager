@@ -12,6 +12,7 @@ export default {
     'src/storages/async-storage.ts',
     'src/storages/local-storage.ts',
     'src/plugins/vite/index.ts',
+    'src/plugins/dev-extension/index.ts',
   ],
   output: {
     dir: IS_DEVELOP_BUILD ? 'example/node_modules/@lomray/react-mobx-manager/lib' : 'lib',
@@ -26,6 +27,7 @@ export default {
     'node:fs',
     'react',
     'mobx',
+    'lodash',
     'hoist-non-react-statics',
     'mobx-react-lite',
     '@lomray/event-manager',

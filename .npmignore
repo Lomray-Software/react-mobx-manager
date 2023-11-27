@@ -16,4 +16,8 @@ sonar-project.properties
 /example
 tsconfig.json
 tsconfig.checks.json
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
+logo.png
 .nvmrc

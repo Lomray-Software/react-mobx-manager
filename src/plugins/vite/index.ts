@@ -1,6 +1,5 @@
 import * as process from 'node:process';
 import type { Plugin, TransformResult } from 'vite';
-import HydrationUpdateFix from './hydration-update-fix';
 import IdGenerator from './id-generator';
 
 const isProduction = (mode?: string): boolean =>
@@ -14,10 +13,6 @@ function ViteReactMobxManager(): Plugin[] {
   let idGeneratorPlugin: Plugin;
 
   return [
-    {
-      ...HydrationUpdateFix(),
-      apply: () => !isProduction(),
-    },
     {
       name: IdGenerator().name,
       configResolved({ root }) {
