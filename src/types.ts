@@ -98,8 +98,8 @@ export type TStores = { [storeKey: string]: IStore | IStorePersisted };
 export type ClassReturnType<T> = T extends new (...args: any) => infer R
   ? R
   : T extends { store: any }
-  ? ClassReturnType<T['store']>
-  : never;
+    ? ClassReturnType<T['store']>
+    : never;
 
 /**
  * Stores map to type
