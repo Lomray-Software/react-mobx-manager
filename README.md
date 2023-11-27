@@ -25,10 +25,10 @@
   <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities" alt="Vulnerabilities">
   <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs" alt="Bugs">
   <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc" alt="Lines of Code">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=coverage" alt="code coverage">
   <img src="https://img.shields.io/bundlephobia/minzip/@lomray/react-mobx-manager" alt="size">
   <img src="https://img.shields.io/npm/l/@lomray/react-mobx-manager" alt="size">
   <img src="https://img.shields.io/npm/v/@lomray/react-mobx-manager?label=semantic%20release&logo=semantic-release" alt="semantic version">
-  <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FLomray-Software%2Freact-mobx-manager.svg?type=small" alt="FOSSA Status">
 </p>
 
 ## Table of contents

@@ -1,0 +1,11 @@
+{
+  "ui":         "bdd",
+  "timeout":    5000,
+  "extension":  ["ts", "tsx"],
+  "watchFiles": ["__tests__/**/*.ts", "src/**/*.ts"],
+  "require":    ["./__helpers__/sinon-chai.ts", "./__helpers__/root-hooks.ts"],
+  "node-option": [
+    "no-warnings",
+    "loader=ts-node/register"
+  ]
+}

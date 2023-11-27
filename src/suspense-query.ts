@@ -1,7 +1,7 @@
 import { extendObservable, observable, runInAction } from 'mobx';
 import type { TInitStore } from './types';
 
-interface IPromise<TReturn> extends Promise<TReturn> {
+export interface IPromise<TReturn> extends Promise<TReturn> {
   status?: 'fulfilled' | 'pending' | 'rejected';
   value?: TReturn;
   reason?: any;

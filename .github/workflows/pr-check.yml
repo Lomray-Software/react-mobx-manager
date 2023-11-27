@@ -3,6 +3,7 @@ name: Check PR
 on:
   pull_request:
     branches: [ staging, prod ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   check:
@@ -20,7 +21,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build lib
         run: npm run build:dev
@@ -34,9 +35,45 @@ jobs:
       - name: Check eslint
         run: npm run lint:check
 
+      - name: Test
+        run: npx c8 npm run test
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: coverage-lcov
+          path: coverage
+
       - uses: naveenk1223/action-pr-title@master
         with:
           regex: '^(feat|fix|perf|refactor|revert|test|test|build|chore)([(a-z-)]*):\s[a-z0-9\s,()]+$' # Regex the title should match.
           prefix_case_sensitive: true
           min_length: 10
           max_length: 80
+
+
+  sonarcube:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.ref }}-sonarcube
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@master
+        with:
+          name: coverage-lcov
+          path: coverage
+
+      - id: package-version
+        run: npx @lomray/microservices-cli package-version
+
+      - uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectVersion=${{ steps.package-version.outputs.version }}

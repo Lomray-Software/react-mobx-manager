@@ -30,24 +30,21 @@
     "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
     "target": "es2019",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "@src/*": ["./src/*"]
     }
   },
   "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
     "acceptance-tests",
-    "webpack",
-    "jest",
-    "public/lib",
     "node_modules",
     "build",
     "lib",
     "commitlint.config.js",
     "nyc.config.js",
     "rollup.config.js"
-  ]
+  ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
 }
