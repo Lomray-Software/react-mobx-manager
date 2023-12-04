@@ -1,11 +1,13 @@
 .gitignore
 .github
+.run
 commitlint.config.js
 release.config.js
 rollup.config.js
 .eslintignore
 .eslintrc.js
 .lintstagedrc.js
+.mocharc.json
 .prettierrc.js
 sonar-project.properties
 .husky
@@ -14,6 +16,8 @@ sonar-project.properties
 /index.ts
 /src
 /example
+/coverage
+/typing
 tsconfig.json
 tsconfig.checks.json
 CODE_OF_CONDUCT.md
@@ -22,3 +26,6 @@ SECURITY.md
 logo.png
 .nvmrc
 __mocks__
+__helpers__
+__tests__
+.c8rc.json
