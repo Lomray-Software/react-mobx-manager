@@ -168,7 +168,7 @@ class Manager {
    * Get store identity
    * @protected
    */
-  protected getStoreId<T>(
+  protected getStoreId<T extends IStore>(
     store: IConstructableStore<T> | TInitStore,
     params: IStoreParams = {},
   ): string {
@@ -196,7 +196,10 @@ class Manager {
   /**
    * Get exist store
    */
-  public getStore<T>(store: IConstructableStore<T>, params: IStoreParams = {}): T | undefined {
+  public getStore<T extends IStore>(
+    store: IConstructableStore<T>,
+    params: IStoreParams = {},
+  ): T | undefined {
     const storeId = this.getStoreId(store, params);
 
     // full match
@@ -222,9 +225,11 @@ class Manager {
 
   /**
    * Lookup store
-   * @protected
    */
-  protected lookupStore<T>(id: string, params: IStoreParams): TInitStore<T> | undefined {
+  protected lookupStore<T extends IStore>(
+    id: string,
+    params: IStoreParams,
+  ): TInitStore<T> | undefined {
     const { contextId, parentId: defaultParentId } = params;
     const clearId = id.split('--')?.[0];
     const { ids, parentId } = this.storesRelations.get(contextId!) ?? {
@@ -255,7 +260,7 @@ class Manager {
    * Create new store instance
    * @protected
    */
-  protected createStore<T>(
+  protected createStore<T extends IStore>(
     store: IConstructableStore<T>,
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
@@ -269,7 +274,7 @@ class Manager {
     const newStore = new store({
       ...this.storesParams,
       storeManager: this,
-      getStore: <TS>(
+      getStore: <TS extends IStore>(
         targetStore: IConstructableStore<TS>,
         targetParams = { contextId, parentId },
       ) => this.getStore(targetStore, targetParams),
@@ -552,7 +557,7 @@ class Manager {
   /**
    * Persist store
    */
-  public static persistStore<TSt>(
+  public static persistStore<TSt extends IStore>(
     store: IConstructableStore<TSt>,
     id: string,
   ): IConstructableStore<TSt> {

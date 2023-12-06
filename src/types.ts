@@ -15,7 +15,10 @@ declare global {
 
 export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
-  getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
+  getStore: <T extends IStore>(
+    store: IConstructableStore<T>,
+    params?: Partial<IStoreParams>,
+  ) => T | undefined;
   componentProps: TProps;
 }
 
