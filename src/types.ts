@@ -15,7 +15,7 @@ declare global {
 
 export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
-  getStore: <T extends IStore>(
+  getStore: <T extends TAnyStore>(
     store: IConstructableStore<T>,
     params?: Partial<IStoreParams>,
   ) => T | undefined;
@@ -44,8 +44,7 @@ export interface IStorePersisted extends IStore {
   wakeup?: TWakeup;
 }
 
-export type TInitStore<TSto extends IStore | IStorePersisted = IStore> = TSto &
-  (IStorePersisted | IStore);
+export type TInitStore<TSto extends TAnyStore = IStore> = TSto & (IStorePersisted | IStore);
 
 export type IConstructableStore<TSto extends IStore = IStore> = (new (
   props: IConstructorParams,
@@ -57,7 +56,7 @@ export type IConstructableStore<TSto extends IStore = IStore> = (new (
  */
 export type IStoreConfig = { id?: string };
 
-export type TStoreDefinition<TSto extends IStore | IStorePersisted = any> =
+export type TStoreDefinition<TSto extends TAnyStore = any> =
   | IConstructableStore<TSto>
   | ({ store: IConstructableStore<TSto> } & IStoreConfig);
 
@@ -93,7 +92,9 @@ export interface IManagerOptions {
   };
 }
 
-export type TStores = { [storeKey: string]: IStore | IStorePersisted };
+export type TAnyStore = IStore | IStorePersisted;
+
+export type TStores = { [storeKey: string]: TAnyStore };
 
 /**
  * Convert class type to class constructor
@@ -130,12 +131,12 @@ export interface IMobxManagerEvents {
     store: IConstructableStore;
   };
   [Events.MOUNT_STORE]: {
-    store: IStorePersisted | IStore;
+    store: TAnyStore;
   };
   [Events.UNMOUNT_STORE]: {
-    store: IStorePersisted | IStore;
+    store: TAnyStore;
   };
   [Events.DELETE_STORE]: {
-    store: IStorePersisted | IStore;
+    store: TAnyStore;
   };
 }

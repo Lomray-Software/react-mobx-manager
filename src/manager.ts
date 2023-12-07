@@ -8,12 +8,11 @@ import type {
   IManagerOptions,
   IManagerParams,
   IStorage,
-  IStore,
   IStoreParams,
-  IStorePersisted,
   TInitStore,
   TStoreDefinition,
   TStores,
+  TAnyStore,
 } from './types';
 import wakeup from './wakeup';
 
@@ -169,7 +168,7 @@ class Manager {
    * Get store identity
    * @protected
    */
-  protected getStoreId<T extends IStore>(
+  protected getStoreId<T extends TAnyStore>(
     store: IConstructableStore<T> | TInitStore,
     params: IStoreParams = {},
   ): string {
@@ -197,7 +196,7 @@ class Manager {
   /**
    * Get exist store
    */
-  public getStore<T extends IStore>(
+  public getStore<T extends TAnyStore>(
     store: IConstructableStore<T>,
     params: IStoreParams = {},
   ): T | undefined {
@@ -227,7 +226,7 @@ class Manager {
   /**
    * Lookup store
    */
-  protected lookupStore<T extends IStore>(
+  protected lookupStore<T extends TAnyStore>(
     id: string,
     params: IStoreParams,
   ): TInitStore<T> | undefined {
@@ -261,7 +260,7 @@ class Manager {
    * Create new store instance
    * @protected
    */
-  protected createStore<T extends IStore>(
+  protected createStore<T extends TAnyStore>(
     store: IConstructableStore<T>,
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
@@ -275,7 +274,7 @@ class Manager {
     const newStore = new store({
       ...this.storesParams,
       storeManager: this,
-      getStore: <TS extends IStore>(
+      getStore: <TS extends TAnyStore>(
         targetStore: IConstructableStore<TS>,
         targetParams = { contextId, parentId },
       ) => this.getStore(targetStore, targetParams),
@@ -543,7 +542,7 @@ class Manager {
    * Get observable store props (fields)
    * @private
    */
-  public static getObservableProps(store: IStore): Record<string, any> {
+  public static getObservableProps(store: TAnyStore): Record<string, any> {
     const props = toJS(store);
 
     return Object.entries(props).reduce(
@@ -558,7 +557,7 @@ class Manager {
   /**
    * Persist store
    */
-  public static persistStore<TSt extends IStore | IStorePersisted>(
+  public static persistStore<TSt extends TAnyStore>(
     store: IConstructableStore<TSt>,
     id: string,
   ): IConstructableStore<TSt> {
