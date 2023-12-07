@@ -53,7 +53,7 @@ export type IConstructableStore<TSto = IStore> = (new (
  */
 export type IStoreConfig = { id?: string };
 
-export type TStoreDefinition<TSto = TAnyStore> =
+export type TStoreDefinition<TSto extends TAnyStore = any> =
   | IConstructableStore<TSto>
   | ({ store: IConstructableStore<TSto> } & IStoreConfig);
 
