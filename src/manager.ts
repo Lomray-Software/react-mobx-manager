@@ -9,10 +9,10 @@ import type {
   IManagerParams,
   IStorage,
   IStoreParams,
+  TAnyStore,
   TInitStore,
   TStoreDefinition,
   TStores,
-  TAnyStore,
 } from './types';
 import wakeup from './wakeup';
 
@@ -196,10 +196,7 @@ class Manager {
   /**
    * Get exist store
    */
-  public getStore<T extends TAnyStore>(
-    store: IConstructableStore<T>,
-    params: IStoreParams = {},
-  ): T | undefined {
+  public getStore<T>(store: IConstructableStore<T>, params: IStoreParams = {}): T | undefined {
     const storeId = this.getStoreId(store, params);
 
     // full match
@@ -220,16 +217,13 @@ class Manager {
     }
 
     // try to look up store in current or parent context
-    return this.lookupStore(storeId, params);
+    return this.lookupStore(storeId, params) as T;
   }
 
   /**
    * Lookup store
    */
-  protected lookupStore<T extends TAnyStore>(
-    id: string,
-    params: IStoreParams,
-  ): TInitStore<T> | undefined {
+  protected lookupStore(id: string, params: IStoreParams): TInitStore<TAnyStore> | undefined {
     const { contextId, parentId: defaultParentId } = params;
     const clearId = id.split('--')?.[0];
     const { ids, parentId } = this.storesRelations.get(contextId!) ?? {
@@ -240,7 +234,7 @@ class Manager {
     const matchedIds = [...ids].filter((storeId) => storeId.startsWith(`${clearId}--`));
 
     if (matchedIds.length === 1) {
-      return this.stores.get(matchedIds[0]) as T;
+      return this.stores.get(matchedIds[0]);
     } else if (matchedIds.length > 1) {
       console.error(
         'Parent context has multiple stores with the same id, please pass key to getStore function.',
@@ -260,7 +254,7 @@ class Manager {
    * Create new store instance
    * @protected
    */
-  protected createStore<T extends TAnyStore>(
+  protected createStore<T>(
     store: IConstructableStore<T>,
     params: Omit<Required<IStoreParams>, 'key'>,
   ): T {
@@ -274,7 +268,7 @@ class Manager {
     const newStore = new store({
       ...this.storesParams,
       storeManager: this,
-      getStore: <TS extends TAnyStore>(
+      getStore: <TS>(
         targetStore: IConstructableStore<TS>,
         targetParams = { contextId, parentId },
       ) => this.getStore(targetStore, targetParams),
@@ -540,7 +534,6 @@ class Manager {
 
   /**
    * Get observable store props (fields)
-   * @private
    */
   public static getObservableProps(store: TAnyStore): Record<string, any> {
     const props = toJS(store);
@@ -557,7 +550,7 @@ class Manager {
   /**
    * Persist store
    */
-  public static persistStore<TSt extends TAnyStore>(
+  public static persistStore<TSt>(
     store: IConstructableStore<TSt>,
     id: string,
   ): IConstructableStore<TSt> {

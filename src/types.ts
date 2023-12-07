@@ -15,10 +15,7 @@ declare global {
 
 export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
-  getStore: <T extends TAnyStore>(
-    store: IConstructableStore<T>,
-    params?: Partial<IStoreParams>,
-  ) => T | undefined;
+  getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
   componentProps: TProps;
 }
 
@@ -44,9 +41,9 @@ export interface IStorePersisted extends IStore {
   wakeup?: TWakeup;
 }
 
-export type TInitStore<TSto extends TAnyStore = IStore> = TSto & (IStorePersisted | IStore);
+export type TInitStore<TSto = IStore> = TSto & TAnyStore;
 
-export type IConstructableStore<TSto extends IStore = IStore> = (new (
+export type IConstructableStore<TSto = IStore> = (new (
   props: IConstructorParams,
 ) => TInitStore<TSto>) &
   Partial<IStorePersisted>;
@@ -56,7 +53,7 @@ export type IConstructableStore<TSto extends IStore = IStore> = (new (
  */
 export type IStoreConfig = { id?: string };
 
-export type TStoreDefinition<TSto extends TAnyStore = any> =
+export type TStoreDefinition<TSto = TAnyStore> =
   | IConstructableStore<TSto>
   | ({ store: IConstructableStore<TSto> } & IStoreConfig);
 
