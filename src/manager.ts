@@ -10,6 +10,7 @@ import type {
   IStorage,
   IStore,
   IStoreParams,
+  IStorePersisted,
   TInitStore,
   TStoreDefinition,
   TStores,
@@ -557,7 +558,7 @@ class Manager {
   /**
    * Persist store
    */
-  public static persistStore<TSt extends IStore>(
+  public static persistStore<TSt extends IStore | IStorePersisted>(
     store: IConstructableStore<TSt>,
     id: string,
   ): IConstructableStore<TSt> {
