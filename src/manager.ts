@@ -247,12 +247,26 @@ class Manager {
       return undefined;
     }
 
-    return this.lookupStore(id, { contextId: parentId });
+    return this.lookupStore(id, { contextId: this.getBiggerContext(parentId, defaultParentId) });
+  }
+
+  /**
+   * Get bigger context from two
+   */
+  protected getBiggerContext(ctx1?: string, ctx2?: string): string | undefined {
+    if (!ctx1) {
+      return ctx2;
+    } else if (!ctx2) {
+      return ctx1;
+    }
+
+    const regexp = /[^a-zA-Z]/g;
+
+    return ctx1.replace(regexp, '') > ctx2.replace(regexp, '') ? ctx1 : ctx2;
   }
 
   /**
    * Create new store instance
-   * @protected
    */
   protected createStore<T>(
     store: IConstructableStore<T>,
