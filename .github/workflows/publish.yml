@@ -35,8 +35,10 @@ jobs:
           name: coverage-lcov
           path: coverage
 
-      - name: Build package
-        run: npm run build
+      - name: Build
+        run: |
+          npm pkg delete scripts.prepare
+          npm run build
 
       - name: Publish npm packages / create github release
         run: npx semantic-release
