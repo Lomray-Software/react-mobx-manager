@@ -1,6 +1,11 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 type ICache = Map<string, { storeId: string; classname: string }>;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const cacheFolder = `${
   __dirname.split('node_modules')[0]

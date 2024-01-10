@@ -1,3 +1,5 @@
-module.exports = {
-  ...require('@lomray/prettier-config'),
+import config from '@lomray/prettier-config';
+
+export default {
+  ...config,
 };

@@ -1,3 +1,4 @@
+import deepMerge from './deep-merge';
 import type { TStores, TWakeup } from './types';
 
 /**
@@ -5,7 +6,7 @@ import type { TStores, TWakeup } from './types';
  */
 function wakeup(this: TStores[string], { persistedState }: Parameters<TWakeup>[0]) {
   if (persistedState) {
-    Object.assign(this, persistedState);
+    deepMerge(this, persistedState);
   }
 }
 

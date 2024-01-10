@@ -14,11 +14,13 @@
       "es2015",
       "es2017",
       "es2019",
+      "es2021",
       "dom",
       "webworker"
     ],
-    "module": "CommonJS",
+    "module": "ES2022",
     "moduleResolution": "Node",
+    "target": "ESNext",
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
@@ -29,16 +31,13 @@
     "pretty": true,
     "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
-    "target": "es2019",
     "baseUrl": ".",
     "paths": {
       "@src/*": ["./src/*"]
     }
   },
   "exclude": [
-    "acceptance-tests",
     "node_modules",
-    "build",
     "lib",
     "commitlint.config.js",
     "nyc.config.js",

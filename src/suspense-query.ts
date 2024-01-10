@@ -18,13 +18,12 @@ interface ISuspenseQueryParams {
  */
 class SuspenseQuery {
   /**
-   * @private
+   * @protected
    */
   protected promise: Promise<any> | undefined;
 
   /**
    * Target store
-   * @private
    */
   protected readonly store: TInitStore;
 

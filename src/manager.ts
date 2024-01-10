@@ -1,5 +1,7 @@
 import EventManager from '@lomray/event-manager';
 import { isObservableProp, toJS } from 'mobx';
+import { isPropObservableExported, isPropSimpleExported } from '@src/make-exported';
+import deepMerge from './deep-merge';
 import Events from './events';
 import onChangeListener from './on-change-listener';
 import StoreStatus from './store-status';
@@ -287,6 +289,7 @@ class Manager {
         targetParams = { contextId, parentId },
       ) => this.getStore(targetStore, targetParams),
       componentProps,
+      initState: this.initState[id],
     });
 
     // assign params to new store
@@ -353,7 +356,7 @@ class Manager {
     }
 
     if (initState) {
-      Object.assign(store, initState);
+      deepMerge(store, initState);
     }
 
     // restore persisted state
@@ -555,7 +558,12 @@ class Manager {
     return Object.entries(props).reduce(
       (res, [prop, value]) => ({
         ...res,
-        ...(isObservableProp(store, prop) ? { [prop]: value } : {}),
+        ...(isObservableProp(store, prop) || isPropSimpleExported(store, prop)
+          ? { [prop]: value }
+          : {}),
+        ...(isPropObservableExported(store, prop)
+          ? { [prop]: Manager.getObservableProps(store[prop] as TAnyStore) }
+          : {}),
       }),
       {},
     );

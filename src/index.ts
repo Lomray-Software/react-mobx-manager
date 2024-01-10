@@ -10,4 +10,6 @@ export { default as wakeup } from './wakeup';
 
 export { default as withStores } from './with-stores';
 
+export * from './make-exported';
+
 export { default as Events } from './events';

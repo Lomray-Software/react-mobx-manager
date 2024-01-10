@@ -2,20 +2,8 @@
   "name": "@lomray/react-mobx-manager",
   "version": "1.0.0",
   "description": "This package provides Mobx stores manager for react.",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "exports": {
-    ".": "./lib/index.js",
-    "./*": "./lib/*.js"
-  },
-  "typesVersions": {
-    "*": {
-      "./*": [
-        "lib/*",
-        "lib/storages/*"
-      ]
-    }
-  },
+  "type": "module",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Lomray-Software/react-mobx-manager"
@@ -52,45 +40,45 @@
     "test:watch": "mocha --no-warnings  __tests__ --recursive --unhandled-rejections=strict",
     "prepare": "husky install"
   },
-  "dependencies": {
-    "@lomray/consistent-suspense": "^1.3.1",
-    "@lomray/event-manager": "^2.0.2"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@commitlint/cli": "^18.4.3",
-    "@commitlint/config-conventional": "^18.4.3",
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
     "@lomray/eslint-config-react": "^3.0.0",
-    "@lomray/prettier-config": "^1.2.0",
+    "@lomray/prettier-config": "^2.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@types/chai": "^4.3.11",
     "@types/hoist-non-react-statics": "^3.3.5",
     "@types/lodash": "^4.14.202",
     "@types/mocha": "^10.0.6",
-    "@types/react": "^18.2.42",
-    "@types/sinon": "^17.0.2",
+    "@types/react": "^18.2.47",
+    "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
-    "c8": "^8.0.1",
-    "chai": "^4.3.10",
-    "eslint": "^8.55.0",
+    "c8": "^9.0.0",
+    "chai": "^4.4.0",
+    "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-prettier": "^5.1.3",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "mocha": "^10.2.0",
-    "prettier": "^3.1.0",
-    "rollup": "2.79.1",
+    "prettier": "^3.1.1",
+    "rollup": "^4.9.4",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-folder-input": "^1.0.1",
     "rollup-plugin-ts": "^3.4.5",
     "semantic-release": "^21.1.2",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "ttypescript": "^1.5.15",
     "typescript": "^4.9.5",
-    "vite": "^5.0.6"
+    "vite": "^5.0.11"
   },
   "peerDependencies": {
+    "@lomray/consistent-suspense": ">=2.0.1",
+    "@lomray/event-manager": ">=2.0.2",
     "hoist-non-react-statics": ">=3.3.2",
     "lodash": ">=4.17.21",
     "mobx": ">=6.9.0",

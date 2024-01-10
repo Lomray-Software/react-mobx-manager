@@ -17,6 +17,7 @@ export interface IConstructorParams<TProps = Record<string, any>> {
   storeManager: Manager;
   getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
   componentProps: TProps;
+  initState?: Record<string, any>;
 }
 
 export interface IStoreLifecycle {

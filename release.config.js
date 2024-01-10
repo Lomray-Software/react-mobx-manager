@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   branches: [
     'prod',
     {
@@ -10,11 +10,9 @@ module.exports = {
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
-    '@semantic-release/npm',
-    ["@semantic-release/github", {
-      "assets": [
-        {"path": "build.zip", "label": "Build-${nextRelease.gitTag}"},
-      ]
+    ['@semantic-release/npm', {
+      pkgRoot: './lib'
     }],
+    '@semantic-release/github',
   ]
 }

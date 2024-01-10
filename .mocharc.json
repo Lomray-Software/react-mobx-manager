@@ -5,7 +5,9 @@
   "watchFiles": ["__tests__/**/*.ts", "src/**/*.ts"],
   "require":    ["./__helpers__/sinon-chai.ts", "./__helpers__/root-hooks.ts"],
   "node-option": [
+    "experimental-specifier-resolution=node",
     "no-warnings",
-    "loader=ts-node/register"
+    "loader=ts-node/esm",
+    "loader=./__helpers__/loader.js"
   ]
 }
