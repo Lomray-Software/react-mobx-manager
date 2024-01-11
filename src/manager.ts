@@ -1,8 +1,8 @@
 import EventManager from '@lomray/event-manager';
 import { isObservableProp, toJS } from 'mobx';
-import { isPropObservableExported, isPropSimpleExported } from '@src/make-exported';
 import deepMerge from './deep-merge';
 import Events from './events';
+import { isPropObservableExported, isPropSimpleExported } from './make-exported';
 import onChangeListener from './on-change-listener';
 import StoreStatus from './store-status';
 import type {
