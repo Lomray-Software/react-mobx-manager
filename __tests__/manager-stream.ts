@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import { describe, it, afterEach } from 'vitest';
 import type Manager from '@src/manager';
 import ManagerStream from '@src/manager-stream';
 

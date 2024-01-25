@@ -33,6 +33,8 @@
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
+      "@__helpers__/*": ["./__helpers__/*"],
+      "@__mocks__/*": ["./__mocks__/*"],
       "@src/*": ["./src/*"]
     }
   },
