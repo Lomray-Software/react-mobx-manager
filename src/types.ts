@@ -68,6 +68,7 @@ export interface IManagerParams {
 }
 
 export type TWakeup = (state: {
+  manager: Manager;
   initState?: Record<string, any>;
   persistedState?: Record<string, any>;
 }) => void;

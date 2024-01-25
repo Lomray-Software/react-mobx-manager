@@ -6,9 +6,9 @@ const isObject = (obj: any) => obj !== null && typeof obj === 'object';
 /**
  * Custom small deep merge function for restore store state
  */
-const deepMerge = (target: any, source: any) => {
+const deepMerge = (target: any, source: any): boolean => {
   if (!isObject(target) || !isObject(source)) {
-    return;
+    return false;
   }
 
   for (const key in source) {
@@ -22,6 +22,8 @@ const deepMerge = (target: any, source: any) => {
       target[key] = source[key];
     }
   }
+
+  return true;
 };
 
 export default deepMerge;

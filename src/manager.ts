@@ -11,6 +11,7 @@ import type {
   IManagerParams,
   IStorage,
   IStoreParams,
+  IStorePersisted,
   TAnyStore,
   TInitStore,
   TStoreDefinition,
@@ -361,7 +362,7 @@ class Manager {
 
     // restore persisted state
     if ('wakeup' in store && Manager.persistedStores.has(storeId)) {
-      store.wakeup?.({ initState, persistedState });
+      store.wakeup?.({ initState, persistedState, manager: this });
     }
 
     // track changes in persisted store
@@ -509,6 +510,13 @@ class Manager {
   }
 
   /**
+   * Get store state
+   */
+  public getStoreState(store: TAnyStore): Record<string, any> {
+    return store.toJSON?.() ?? Manager.getObservableProps(store);
+  }
+
+  /**
    * Get store's state
    */
   public toJSON(ids?: string[]): Record<string, any> {
@@ -524,29 +532,34 @@ class Manager {
       : this.stores;
 
     for (const [storeId, store] of stores.entries()) {
-      result[storeId] = store.toJSON?.() ?? Manager.getObservableProps(store);
+      result[storeId] = this.getStoreState(store);
     }
 
     return result;
   }
 
   /**
-   * Get persisted store's data
+   * Save persisted store state to provided storage
    */
-  public toPersistedJSON(): Record<string, any> {
-    const result = {};
-
-    for (const storeKey of Manager.persistedStores) {
-      const store = this.stores.get(storeKey);
-
-      if (!store) {
-        continue;
-      }
-
-      result[storeKey] = store['toJSON']?.() ?? Manager.getObservableProps(store);
+  public async savePersistedStore(store: IStorePersisted): Promise<boolean> {
+    if (this.options.shouldDisablePersist || !this.storage) {
+      return false;
     }
 
-    return result;
+    try {
+      this.persistData = {
+        ...this.persistData,
+        [this.getStoreId(store)]: this.getStoreState(store),
+      };
+
+      await this.storage?.set(this.persistData);
+
+      return true;
+    } catch (e) {
+      console.error('Failed to persist stores: ', e);
+    }
+
+    return false;
   }
 
   /**
