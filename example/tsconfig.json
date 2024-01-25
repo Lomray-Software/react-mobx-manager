@@ -1,49 +1,28 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowUnreachableCode": false,
-    "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "jsx": "react",
-    "lib": [
-      "es6",
-      "es2015",
-      "es2017",
-      "es2019",
-      "dom",
-      "webworker"
-    ],
-    "module": "esnext",
-    "moduleResolution": "Node",
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": false,
-    "sourceMap": true,
-    "strictNullChecks": true,
-    "strict": false,
-    "pretty": true,
-    "suppressImplicitAnyIndexErrors": true,
+    "target": "ES2020",
     "useDefineForClassFields": true,
-    "target": "esnext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "baseUrl": "./src",
+    "paths": {}
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
-    "acceptance-tests",
-    "webpack",
-    "jest",
-    "public/lib",
-    "node_modules",
-    "build",
-    "lib",
-    "commitlint.config.js",
-    "nyc.config.js",
-    "rollup.config.js"
-  ]
+  "include": ["src", "types", "vite.config.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

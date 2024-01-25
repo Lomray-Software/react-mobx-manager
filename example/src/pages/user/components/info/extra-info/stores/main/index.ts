@@ -23,8 +23,6 @@ class ExtraInfoStore {
   constructor({ getStore }: IConstructorParams) {
     this.userPageStore = getStore(UserPageStore);
 
-    console.log(this.userPageStore);
-
     makeObservable(this, {
       phone: observable,
       setPhone: action.bound,
