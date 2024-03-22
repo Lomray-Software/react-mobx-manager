@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-export interface IConstructorParams<TProps = Record<string, any>> {
+export interface IConstructorParams<TProps = any> {
   storeManager: Manager;
   getStore: <T>(store: IConstructableStore<T>, params?: Partial<IStoreParams>) => T | undefined;
   componentProps: TProps;

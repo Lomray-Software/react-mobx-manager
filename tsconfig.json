@@ -43,7 +43,8 @@
     "lib",
     "commitlint.config.js",
     "nyc.config.js",
-    "rollup.config.js"
+    "rollup.config.js",
+    "example"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"]
