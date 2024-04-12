@@ -321,21 +321,29 @@ class Manager {
     componentProps: Record<string, any> = {},
   ): TStores {
     return map.reduce((res, [key, store]) => {
-      const [s, id] =
-        'store' in store
-          ? [store.store, store.id!]
-          : [store, this.getStoreId(store, { key, contextId })];
+      const {
+        id,
+        store: s,
+        isParent = false,
+      } = 'store' in store ? store : { store, id: undefined, isParent: false };
+      const storeId =
+        id ||
+        (isParent
+          ? (this.getStore(s, { contextId, parentId })?.libStoreId as string)
+          : this.getStoreId(s, { key, contextId }));
 
       return {
         ...res,
-        [key]: this.createStore(s, {
-          id,
-          contextId,
-          parentId,
-          suspenseId,
-          componentName,
-          componentProps,
-        }),
+        [key]: storeId
+          ? this.createStore(s, {
+              id: storeId,
+              contextId,
+              parentId,
+              suspenseId,
+              componentName,
+              componentProps,
+            })
+          : undefined,
       };
     }, {});
   }

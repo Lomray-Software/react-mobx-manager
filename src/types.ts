@@ -52,7 +52,7 @@ export type IConstructableStore<TSto = IStore> = (new (
 /**
  * Store params
  */
-export type IStoreConfig = { id?: string };
+export type IStoreConfig = { id?: string; isParent?: boolean };
 
 export type TStoreDefinition<TSto extends TAnyStore = any> =
   | IConstructableStore<TSto>
