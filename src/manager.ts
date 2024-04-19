@@ -1,5 +1,6 @@
 import EventManager from '@lomray/event-manager';
 import { isObservableProp, toJS } from 'mobx';
+import { ROOT_CONTEXT_ID } from './constants';
 import deepMerge from './deep-merge';
 import Events from './events';
 import { isPropObservableExported, isPropSimpleExported } from './make-exported';
@@ -7,6 +8,7 @@ import onChangeListener from './on-change-listener';
 import StoreStatus from './store-status';
 import type {
   IConstructableStore,
+  IGroupedStores,
   IManagerOptions,
   IManagerParams,
   IStorage,
@@ -212,7 +214,7 @@ class Manager {
       return this.createStore(store, {
         id: storeId,
         contextId: 'global',
-        parentId: 'root',
+        parentId: ROOT_CONTEXT_ID,
         suspenseId: '',
         componentName: 'root-app',
         componentProps: {},
@@ -246,7 +248,7 @@ class Manager {
       return undefined;
     }
 
-    if (!parentId || parentId === 'root') {
+    if (!parentId || parentId === ROOT_CONTEXT_ID) {
       return undefined;
     }
 
@@ -298,7 +300,7 @@ class Manager {
     newStore.isGlobal = store.isGlobal;
     newStore.libStoreContextId = store.isGlobal ? 'global' : contextId;
     newStore.libStoreParentId =
-      store.isGlobal || !parentId || parentId === contextId ? 'root' : parentId;
+      store.isGlobal || !parentId || parentId === contextId ? ROOT_CONTEXT_ID : parentId;
     newStore.libStoreSuspenseId = suspenseId;
     newStore.libStoreComponentName = componentName;
 
@@ -311,6 +313,8 @@ class Manager {
 
   /**
    * Create stores for component
+   *
+   * NOTE: use only inside withStores wrapper
    */
   public createStores(
     map: [string, TStoreDefinition][],
@@ -319,33 +323,82 @@ class Manager {
     suspenseId: string,
     componentName: string,
     componentProps: Record<string, any> = {},
-  ): TStores {
-    return map.reduce((res, [key, store]) => {
-      const {
-        id,
-        store: s,
-        isParent = false,
-      } = 'store' in store ? store : { store, id: undefined, isParent: false };
-      const storeId =
-        id ||
-        (isParent
-          ? (this.getStore(s, { contextId, parentId })?.libStoreId as string)
-          : this.getStoreId(s, { key, contextId }));
+  ): IGroupedStores {
+    const result = map.reduce(
+      (res, [key, store]) => {
+        const {
+          id,
+          store: s,
+          isParent = false,
+        } = 'store' in store ? store : { store, id: undefined, isParent: false };
+        const storeId =
+          id ||
+          (isParent
+            ? (this.getStore(s, { contextId, parentId })?.libStoreId as string)
+            : this.getStoreId(s, { key, contextId }));
 
-      return {
-        ...res,
-        [key]: storeId
-          ? this.createStore(s, {
-              id: storeId,
-              contextId,
-              parentId,
-              suspenseId,
-              componentName,
-              componentProps,
-            })
-          : undefined,
-      };
-    }, {});
+        if (!storeId) {
+          return res;
+        }
+
+        const storeInstance = this.createStore(s, {
+          id: storeId,
+          contextId,
+          parentId,
+          suspenseId,
+          componentName,
+          componentProps,
+        });
+
+        if (isParent) {
+          res.parentStores[key] = storeInstance;
+        } else if (storeInstance.isGlobal) {
+          res.globalStores[key] = storeInstance;
+        } else {
+          res.relativeStores[key] = storeInstance;
+        }
+
+        return res;
+      },
+      { relativeStores: {}, parentStores: {}, globalStores: {} },
+    );
+
+    // need create context relation in case when component doesn't include relative stores
+    this.createRelationContext(contextId, parentId, componentName);
+
+    return result;
+  }
+
+  /**
+   * Create empty relation context
+   */
+  protected createRelationContext(
+    contextId: string,
+    parentId?: string,
+    componentName?: string,
+  ): void {
+    if (this.storesRelations.has(contextId)) {
+      return;
+    }
+
+    this.storesRelations.set(contextId, {
+      ids: new Set(),
+      parentId: !parentId || parentId === contextId ? ROOT_CONTEXT_ID : parentId,
+      componentName,
+    });
+  }
+
+  /**
+   * Delete relation context id
+   */
+  protected removeRelationContext(contextId: string): void {
+    const storesRelations = this.storesRelations.get(contextId);
+
+    if (!storesRelations || contextId === ROOT_CONTEXT_ID || storesRelations.ids.size > 0) {
+      return;
+    }
+
+    this.storesRelations.delete(contextId);
   }
 
   /**
@@ -385,17 +438,7 @@ class Manager {
     }
 
     store.init?.();
-
-    if (!this.storesRelations.has(contextId)) {
-      this.storesRelations.set(contextId, {
-        ids: new Set(),
-        parentId:
-          !store.libStoreParentId || store.libStoreParentId === contextId
-            ? 'root'
-            : store.libStoreParentId,
-        componentName: store.libStoreComponentName,
-      });
-    }
+    this.createRelationContext(contextId, store.libStoreParentId, store.libStoreComponentName);
 
     if (!this.suspenseRelations.has(suspenseId)) {
       this.suspenseRelations.set(suspenseId, new Set());
@@ -429,10 +472,7 @@ class Manager {
       this.suspenseRelations.get(suspenseId)!.delete(storeId);
     }
 
-    // cleanup store relations
-    if (!ids.size) {
-      this.storesRelations.delete(store.libStoreContextId!);
-    }
+    this.removeRelationContext(store.libStoreContextId!);
 
     if ('onDestroy' in store) {
       store.onDestroy?.();
@@ -443,11 +483,17 @@ class Manager {
 
   /**
    * Mount stores to component
+   *
+   * NOTE: use only inside withStores wrapper
    */
-  public mountStores(stores: TStores): () => void {
+  public mountStores(
+    contextId: string,
+    { globalStores = {}, relativeStores = {} }: Partial<IGroupedStores>,
+  ): () => void {
     const { shouldRemoveInitState } = this.options;
+    const touchableStores = { ...globalStores, ...relativeStores };
 
-    Object.values(stores).forEach((store) => {
+    Object.values(touchableStores).forEach((store) => {
       const storeId = store.libStoreId!;
 
       // cleanup init state
@@ -460,7 +506,7 @@ class Manager {
     });
 
     return () => {
-      Object.values(stores).forEach((store) => {
+      Object.values(touchableStores).forEach((store) => {
         if (store.isGlobal) {
           return;
         }
@@ -468,6 +514,8 @@ class Manager {
         this.setStoreStatus(store, StoreStatus.unused);
         EventManager.publish(Events.UNMOUNT_STORE, { store });
       });
+
+      this.removeRelationContext(contextId);
     };
   }
 

@@ -1,15 +1,18 @@
-import { withStores } from '@lomray/react-mobx-manager';
+import { type StoresType, withStores } from "@lomray/react-mobx-manager";
 import type { FC } from 'react';
 import React, { useEffect } from 'react';
 import Info from './components/info';
-import type { StoreProps } from './index.stores';
-import stores from './index.stores';
+import UserPageStore from './stores/main';
 
 interface IUser {
   userId: string;
 }
 
-type Props = IUser & StoreProps;
+const stores = {
+  userPage: UserPageStore,
+};
+
+type Props = IUser & StoresType<typeof stores>;
 
 const User: FC<Props> = ({ userId, userPage: { user, error, isLoading, getUser } }) => {
   useEffect(() => {

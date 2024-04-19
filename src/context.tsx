@@ -1,5 +1,6 @@
 import type { FC, ReactElement } from 'react';
 import React, { useContext, useEffect, useState } from 'react';
+import { ROOT_CONTEXT_ID } from './constants';
 import type Manager from './manager';
 import type { TStores } from './types';
 
@@ -13,7 +14,7 @@ interface IStoreManagerProvider {
 interface IStoreManagerParentProvider {
   parentId: string;
   children?: React.ReactNode;
-  initStores?: TStores;
+  touchableStores?: TStores;
 }
 
 /**
@@ -25,7 +26,7 @@ const StoreManagerContext = React.createContext<Manager>({} as Manager);
  * To spread relationships
  */
 const StoreManagerParentContext =
-  React.createContext<IStoreManagerParentProvider['parentId']>('root');
+  React.createContext<IStoreManagerParentProvider['parentId']>(ROOT_CONTEXT_ID);
 
 /**
  * Mobx store manager parent provider
@@ -34,12 +35,12 @@ const StoreManagerParentContext =
 const StoreManagerParentProvider: FC<Omit<IStoreManagerParentProvider, 'contextId'>> = ({
   parentId,
   children,
-  initStores,
+  touchableStores,
 }) => {
   const storeManager = useStoreManager();
 
-  if (initStores) {
-    storeManager.touchedStores(initStores);
+  if (touchableStores) {
+    storeManager.touchedStores(touchableStores);
   }
 
   return <StoreManagerParentContext.Provider value={parentId} children={children} />;

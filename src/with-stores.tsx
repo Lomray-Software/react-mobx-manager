@@ -23,9 +23,9 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     const parentId = useStoreManagerParent();
     const { suspenseId } = useConsistentSuspense();
     const id = useId();
-    const [{ contextId, initStores, mountStores }] = useState(() => {
+    const [{ contextId, componentStores, touchableStores, mountStores }] = useState(() => {
       const ctxId = manualContextId || id;
-      const initS = storeManager.createStores(
+      const groupedStores = storeManager.createStores(
         Object.entries(stores),
         parentId,
         ctxId,
@@ -33,19 +33,22 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
         componentName,
         props,
       );
+      const { globalStores, relativeStores, parentStores } = groupedStores;
+      const tStores = { ...relativeStores, ...globalStores };
 
       return {
+        touchableStores: tStores,
+        componentStores: { ...tStores, ...parentStores },
         contextId: ctxId,
-        initStores: initS,
-        mountStores: () => storeManager.mountStores(initStores),
+        mountStores: () => storeManager.mountStores(ctxId, groupedStores),
       };
     });
 
     useEffect(mountStores, [mountStores]);
 
     return (
-      <StoreManagerParentProvider parentId={contextId} initStores={initStores}>
-        <ObservableComponent {...props} {...initStores} />
+      <StoreManagerParentProvider parentId={contextId} touchableStores={touchableStores}>
+        <ObservableComponent {...props} {...componentStores} />
       </StoreManagerParentProvider>
     );
   };

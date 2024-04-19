@@ -1,15 +1,18 @@
-import { withStores } from '@lomray/react-mobx-manager';
+import { type StoresType, withStores } from "@lomray/react-mobx-manager";
 import type { FC } from 'react';
 import React, { useEffect } from 'react';
-import type { StoreProps } from './index.stores';
-import stores from './index.stores';
+import ExtraInfoStore from './stores/main';
+
+const stores = {
+  extraInfoStore: ExtraInfoStore,
+};
 
 /**
  * ExtraInfo (children) component
  * Demonstrate working with store in children component
  * @constructor
  */
-const ExtraInfo: FC<StoreProps> = ({ extraInfoStore: { phone, getExtraInfo } }) => {
+const ExtraInfo: FC<StoresType<typeof stores>> = ({ extraInfoStore: { phone, getExtraInfo } }) => {
   useEffect(() => {
     void getExtraInfo();
   }, [getExtraInfo]);

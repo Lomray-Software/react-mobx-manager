@@ -139,3 +139,9 @@ export interface IMobxManagerEvents {
     store: TAnyStore;
   };
 }
+
+export interface IGroupedStores {
+  relativeStores: TStores;
+  parentStores: TStores;
+  globalStores: TStores;
+}

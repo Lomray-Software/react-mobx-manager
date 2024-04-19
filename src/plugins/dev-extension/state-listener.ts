@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { spy } from 'mobx';
+import { ROOT_CONTEXT_ID } from '@src/constants';
 import Manager from '../../manager';
 
 enum Listeners {
@@ -37,14 +38,14 @@ class StateListener {
    * @protected
    */
   protected getContextKey(contextId: string, nestedKey?: string): string {
-    if (contextId === 'root') {
+    if (contextId === ROOT_CONTEXT_ID) {
       return contextId;
     }
 
     const { parentId } = this.manager.getStoresRelations().get(contextId) ?? {};
 
-    if (!parentId || parentId === 'root') {
-      return `${parentId ?? 'root'}.${nestedKey ?? contextId}`;
+    if (!parentId || parentId === ROOT_CONTEXT_ID) {
+      return `${parentId ?? ROOT_CONTEXT_ID}.${nestedKey ?? contextId}`;
     }
 
     return this.getContextKey(parentId, `${parentId}.${nestedKey ?? contextId}`);
