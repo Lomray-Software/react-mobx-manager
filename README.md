@@ -342,11 +342,13 @@ const relations = storeManager.getStoresRelations();
 /**
  * Manually create stores for component
  * NOTE: 'withStores' wrapper use this method, probably you won't need it
+ * WARNING: Avoid using this method directly, it may cause unexpected behavior
  */
 const stores = storeManager.createStores(['someStore', MyStore], 'parent-id', 'context-id', 'suspense-id', 'HomePage', { componentProp: 'test' });
 
 /**
  * Mount/Unmount simple stores to component
+ * WARNING: Avoid using this method directly, it may cause unexpected behavior
  */
 const unmount = storeManager.mountStores(stores);
 
@@ -386,13 +388,20 @@ const storeClass = Manager.persistStore(class MyStore {}, 'my-store');
 ```typescript
 import { withStores } from '@lomray/react-mobx-manager';
 
+const stores = { 
+  myStore: MyStore, 
+  anotherStore: AnotherStore,
+  // assign static id to future store
+  demoStore: { store: SomeStore, id: 'my-id' },
+  // get parent store, do this only inside children components
+  parentStore: { store: SomeParentStore, isParent: true },
+};
+
 /**
  * Create and connect 'stores' to component with custom context id
  * NOTE: In most cases, you don't need to pass a third argument (contextId). 
  */
 withStores(Component, stores, { customContextId: 'optional-context-id' });
-
-const stores = { myStore: MyStore, anotherStore: AnotherStore };
 ```
 
 ### StoreManagerProvider
