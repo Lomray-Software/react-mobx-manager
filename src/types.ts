@@ -1,5 +1,6 @@
 import type Events from './events';
 import type Manager from './manager';
+import type CombinedStorage from './storages/combined-storage';
 import type StoreStatus from './store-status';
 
 export interface IWindowManager {
@@ -38,6 +39,7 @@ export interface IStore extends IStoreLifecycle {
 }
 
 export interface IStorePersisted extends IStore {
+  libStorageOptions?: IPersistOptions; // static
   addOnChangeListener?: (store: IStorePersisted, manager: Manager) => (() => void) | undefined;
   wakeup?: TWakeup;
 }
@@ -62,7 +64,7 @@ export type TMapStores = Record<string, TStoreDefinition>;
 
 export interface IManagerParams {
   storesParams?: Omit<IConstructorParams, 'storeManager' | 'getStore' | 'componentProps'>;
-  storage?: IStorage;
+  storage?: IStorage | CombinedStorage;
   options?: IManagerOptions;
   initState?: Record<string, any>;
 }
@@ -144,4 +146,12 @@ export interface IGroupedStores {
   relativeStores: TStores;
   parentStores: TStores;
   globalStores: TStores;
+}
+
+export interface IPersistOptions {
+  attributes?: {
+    // storageId => attributes, * - all attributes
+    // first storage => *, by default
+    [storageId: string]: string[];
+  };
 }

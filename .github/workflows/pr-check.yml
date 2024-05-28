@@ -46,10 +46,7 @@ jobs:
         run: echo "${{ github.event.pull_request.title }}" | npx --no-install commitlint -g commitlint.config.js
 
       - name: Build lib
-        run: npm run build:dev
-
-      - name: Install example dependencies
-        run: cd example && npm ci
+        run: npm run build
 
       - name: Typescript check
         run: npm run ts:check

@@ -59,7 +59,7 @@ npm i --save @lomray/react-mobx-manager @lomray/consistent-suspense
 
 __NOTE:__ this package use [@lomray/consistent-suspense](https://github.com/Lomray-Software/consistent-suspense) for generate stable id's inside Suspense.
 
-__Choose one of store id generating strategy__:
+__Choose one of store id generating strategy (1 or 2 or 3)__:
 
 1. Configure your bundler to keep classnames and function names. Store id will be generated from class names (chose unique class names).
 - **React:** (craco or webpack config, terser options)
@@ -276,6 +276,7 @@ const storeManager = new Manager({
    */
   storage: new MobxLocalStorage(), // React
   // storage: new MobxAsyncStorage(AsyncStorage), // React Native
+  // storage: new CombinedStorage({ local: MobxAsyncStorage, cookie: CookieStorage }), // Define multiple storages
   /**
    * Optional: provide some params for access from store constructor
    * E.g. we can provide our api client for access from the store
@@ -382,6 +383,16 @@ const manager = Manager.get();
  * Enable persisting state for store 
  */
 const storeClass = Manager.persistStore(class MyStore {}, 'my-store');
+
+/**
+ * Choose storage and attributes
+ */
+const storeClass2 = Manager.persistStore(class MyStore {}, 'my-store', {
+  attributes: {
+    local: ['someProp'], // thees attributes will be stored in local storage
+    cookie: ['specificProp'], // thees attributes will be stored in cookie storage
+  }
+});
 ```
 
 ### withStores

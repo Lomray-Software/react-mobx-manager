@@ -45,8 +45,5 @@
     "nyc.config.js",
     "rollup.config.js",
     "example"
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
-  }
+  ]
 }

@@ -7,11 +7,23 @@ class LocalStorage implements IStorage {
   globalKey = 'stores';
 
   /**
+   * @protected
+   */
+  protected storage: Storage;
+
+  /**
+   * @constructor
+   */
+  constructor(storage: Storage = localStorage) {
+    this.storage = storage;
+  }
+
+  /**
    * @inheritDoc
    */
   get(): Record<string, any> | Promise<Record<string, any> | undefined> {
     try {
-      return JSON.parse(localStorage.getItem(this.globalKey) || '{}') as Record<string, any>;
+      return JSON.parse(this.storage.getItem(this.globalKey) || '{}') as Record<string, any>;
     } catch (e) {
       return {};
     }
@@ -21,14 +33,14 @@ class LocalStorage implements IStorage {
    * @inheritDoc
    */
   flush(): void | Promise<any> {
-    return localStorage.removeItem(this.globalKey);
+    return this.storage.removeItem(this.globalKey);
   }
 
   /**
    * @inheritDoc
    */
   set(value: Record<string, any> | undefined): void {
-    return localStorage.setItem(this.globalKey, JSON.stringify(value || '{}'));
+    return this.storage.setItem(this.globalKey, JSON.stringify(value || '{}'));
   }
 }
 

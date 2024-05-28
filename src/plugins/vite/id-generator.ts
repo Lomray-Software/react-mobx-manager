@@ -22,7 +22,7 @@ function IdGenerator({ root = cwd(), isProd = false }: IPluginOptions = {}): Plu
   return {
     name: '@lomray/react-mobx-manager-id-generator',
     transform(code, id) {
-      const extName = extname(id).split('?')[0]!;
+      const [extName] = extname(id).split('?');
 
       if (
         id.includes('node_modules') ||

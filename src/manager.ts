@@ -5,13 +5,14 @@ import deepMerge from './deep-merge';
 import Events from './events';
 import { isPropObservableExported, isPropSimpleExported } from './make-exported';
 import onChangeListener from './on-change-listener';
+import CombinedStorage from './storages/combined-storage';
 import StoreStatus from './store-status';
 import type {
   IConstructableStore,
   IGroupedStores,
   IManagerOptions,
   IManagerParams,
-  IStorage,
+  IPersistOptions,
   IStoreParams,
   IStorePersisted,
   TAnyStore,
@@ -37,7 +38,6 @@ class Manager {
 
   /**
    * Relations between stores
-   * @protected
    */
   protected readonly storesRelations = new Map<
     string, // contextId
@@ -46,30 +46,21 @@ class Manager {
 
   /**
    * Save persisted stores identities
-   * @private
    */
   protected static readonly persistedStores = new Set<string>();
 
   /**
    * Initial stores state (local storage, custom etc.)
-   * @private
    */
   protected readonly initState: Record<string, any>;
 
   /**
    * Storage for persisted stores
    */
-  public readonly storage: IStorage | undefined;
-
-  /**
-   * Restored persist storage data
-   * @protected
-   */
-  protected persistData: Record<string, any> = {};
+  public readonly storage?: CombinedStorage;
 
   /**
    * Additional store's constructor params
-   * @private
    */
   protected readonly storesParams: IManagerParams['storesParams'];
 
@@ -93,7 +84,12 @@ class Manager {
   public constructor({ initState, storesParams, storage, options }: IManagerParams = {}) {
     this.initState = initState || {};
     this.storesParams = storesParams || {};
-    this.storage = storage;
+    this.storage =
+      storage instanceof CombinedStorage
+        ? storage
+        : storage
+          ? new CombinedStorage({ default: storage })
+          : undefined;
 
     Object.assign(this.options, options || {});
 
@@ -114,7 +110,7 @@ class Manager {
    */
   public async init(): Promise<Manager> {
     if (this.storage) {
-      this.persistData = (await this.storage.get()) || {};
+      await this.storage.get();
     }
 
     return this;
@@ -409,13 +405,12 @@ class Manager {
     const contextId = store.libStoreContextId!;
     const suspenseId = store.libStoreSuspenseId!;
 
-    // restore initial state from server
-    const initState = this.initState[storeId];
-    const persistedState = this.persistData[storeId];
-
     if (this.stores.has(storeId)) {
       return;
     }
+
+    // restore initial state from server
+    const initState = this.initState[storeId];
 
     if (initState) {
       deepMerge(store, initState);
@@ -423,7 +418,11 @@ class Manager {
 
     // restore persisted state
     if ('wakeup' in store && Manager.persistedStores.has(storeId)) {
-      store.wakeup?.({ initState, persistedState, manager: this });
+      store.wakeup?.({
+        initState,
+        persistedState: this.storage?.getStoreData(store),
+        manager: this,
+      });
     }
 
     // track changes in persisted store
@@ -603,12 +602,7 @@ class Manager {
     }
 
     try {
-      this.persistData = {
-        ...this.persistData,
-        [this.getStoreId(store)]: this.getStoreState(store),
-      };
-
-      await this.storage?.set(this.persistData);
+      await this.storage.saveStoreData(store, this.getStoreState(store));
 
       return true;
     } catch (e) {
@@ -644,6 +638,7 @@ class Manager {
   public static persistStore<TSt>(
     store: IConstructableStore<TSt>,
     id: string,
+    options: IPersistOptions = {},
   ): IConstructableStore<TSt> {
     if (Manager.persistedStores.has(id)) {
       console.warn(`Duplicate serializable store key: ${id}`);
@@ -654,6 +649,7 @@ class Manager {
     Manager.persistedStores.add(id);
 
     store.libStoreId = id;
+    store.libStorageOptions = options;
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {
