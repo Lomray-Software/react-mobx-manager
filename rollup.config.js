@@ -3,8 +3,7 @@ import { folderInput } from 'rollup-plugin-folder-input';
 import copy from 'rollup-plugin-copy';
 import terser from '@rollup/plugin-terser';
 
-const IS_DEVELOP_BUILD = process.env.BUILD === 'development'
-const dest = IS_DEVELOP_BUILD ? 'example/node_modules/@lomray/react-mobx-manager' : 'lib';
+const dest = 'lib';
 
 export default {
   input: [

@@ -9,7 +9,7 @@ const exportedPropName = 'libExported';
 const makeExported = <T extends object>(
   store: T,
   props: {
-    [P in Exclude<keyof T, 'toString'>]?: 'observable' | 'simple';
+    [P in Exclude<keyof T, 'toString'>]?: 'observable' | 'simple' | 'excluded';
   },
 ): void => {
   store[exportedPropName] = props;
@@ -27,4 +27,10 @@ const isPropObservableExported = (store: TAnyStore, prop: string): boolean =>
 const isPropSimpleExported = (store: TAnyStore, prop: string): boolean =>
   store?.[exportedPropName]?.[prop] === 'simple';
 
-export { makeExported, isPropObservableExported, isPropSimpleExported };
+/**
+ * Check if store prop is excluded from export
+ */
+const isPropExcludedFromExport = (store: TAnyStore, prop: string): boolean =>
+  store?.[exportedPropName]?.[prop] === 'excluded';
+
+export { makeExported, isPropObservableExported, isPropSimpleExported, isPropExcludedFromExport };

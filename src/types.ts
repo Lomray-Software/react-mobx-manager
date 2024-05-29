@@ -149,6 +149,8 @@ export interface IGroupedStores {
 }
 
 export interface IPersistOptions {
+  // default: exclude. Exclude - except attributes from other storages
+  behaviour?: 'exclude' | 'include';
   attributes?: {
     // storageId => attributes, * - all attributes
     // first storage => *, by default

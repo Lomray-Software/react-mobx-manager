@@ -31,7 +31,7 @@
   "homepage": "https://github.com/Lomray-Software/react-mobx-manager",
   "scripts": {
     "build": "rollup -c",
-    "build:watch": "rollup -c -w --environment BUILD:development",
+    "build:watch": "rollup -c -w",
     "lint:check": "eslint \"src/**/*.{ts,tsx,*.ts,*tsx}\"",
     "lint:format": "eslint --fix \"src/**/*.{ts,tsx,*.ts,*tsx}\"",
     "ts:check": "tsc --project ./tsconfig.checks.json --skipLibCheck --noemit",

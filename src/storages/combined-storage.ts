@@ -1,3 +1,4 @@
+import deepCompare from '../deep-compare';
 import type { IPersistOptions, IStorage, IStorePersisted } from '../types';
 
 interface ICombinedStorage {
@@ -89,6 +90,7 @@ class CombinedStorage implements IStorage {
       attributes: {
         [this.defaultId]: ['*'],
       },
+      behaviour: 'exclude',
       ...(store.libStorageOptions ?? {}),
     };
   }
@@ -130,28 +132,36 @@ class CombinedStorage implements IStorage {
     data: Record<string, any> | undefined,
   ): Promise<void> {
     const storeId = store.libStoreId!;
-    const { attributes } = this.getStoreOptions(store);
-    const dataKeys = Object.keys(data ?? {});
+    const { attributes, behaviour } = this.getStoreOptions(store);
+    const dataKeys = new Set(Object.keys(data ?? {}));
 
     const dataByStorages = Object.entries(attributes!).map(([storageId, attr]) => {
-      const storeData =
-        attr[0] === '*'
-          ? data
-          : attr.reduce(
-              (r, attrName) => ({
-                ...r,
-                ...(dataKeys.includes(attrName) ? { [attrName]: data?.[attrName] } : {}),
-              }),
-              {},
-            );
+      const storeData = (attr[0] === '*' ? [...dataKeys] : attr).reduce((r, attrName) => {
+        if (!dataKeys.has(attrName)) {
+          return r;
+        }
 
-      return this.set(
-        {
-          ...(this.persistData?.[storageId] ?? {}),
-          [storeId]: storeData,
-        } as Record<string, any>,
-        storageId,
-      );
+        if (behaviour === 'exclude') {
+          dataKeys.delete(attrName);
+        }
+
+        return {
+          ...r,
+          [attrName]: data?.[attrName],
+        };
+      }, {});
+
+      const newData = {
+        ...(this.persistData?.[storageId] ?? {}),
+        [storeId]: storeData,
+      } as Record<string, any>;
+
+      // skip updating if nothing changed
+      if (deepCompare(this.persistData?.[storageId]?.[storeId] ?? {}, storeData)) {
+        return null;
+      }
+
+      return this.set(newData, storageId);
     });
 
     await Promise.all(dataByStorages);

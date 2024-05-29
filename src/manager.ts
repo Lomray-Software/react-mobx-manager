@@ -3,7 +3,11 @@ import { isObservableProp, toJS } from 'mobx';
 import { ROOT_CONTEXT_ID } from './constants';
 import deepMerge from './deep-merge';
 import Events from './events';
-import { isPropObservableExported, isPropSimpleExported } from './make-exported';
+import {
+  isPropExcludedFromExport,
+  isPropObservableExported,
+  isPropSimpleExported,
+} from './make-exported';
 import onChangeListener from './on-change-listener';
 import CombinedStorage from './storages/combined-storage';
 import StoreStatus from './store-status';
@@ -621,7 +625,8 @@ class Manager {
     return Object.entries(props).reduce(
       (res, [prop, value]) => ({
         ...res,
-        ...(isObservableProp(store, prop) || isPropSimpleExported(store, prop)
+        ...((isObservableProp(store, prop) && !isPropExcludedFromExport(store, prop)) ||
+        isPropSimpleExported(store, prop)
           ? { [prop]: value }
           : {}),
         ...(isPropObservableExported(store, prop)
@@ -640,16 +645,14 @@ class Manager {
     id: string,
     options: IPersistOptions = {},
   ): IConstructableStore<TSt> {
-    if (Manager.persistedStores.has(id)) {
-      console.warn(`Duplicate serializable store key: ${id}`);
-
-      return store;
-    }
-
     Manager.persistedStores.add(id);
 
     store.libStoreId = id;
-    store.libStorageOptions = options;
+
+    // add storage options
+    if (!('libStorageOptions' in store.prototype)) {
+      store.prototype.libStorageOptions = options;
+    }
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {

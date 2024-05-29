@@ -1,11 +1,11 @@
 import deepMerge from './deep-merge';
-import type { TStores, TWakeup } from './types';
+import type { IStorePersisted, TWakeup } from './types';
 
 /**
  * Restore persisted store state
  */
 function wakeup(
-  this: TStores[string],
+  this: IStorePersisted,
   { initState, persistedState, manager }: Parameters<TWakeup>[0],
 ) {
   const resState = {};
