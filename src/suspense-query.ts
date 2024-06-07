@@ -12,6 +12,11 @@ interface ISuspenseQueryParams {
   errorFields?: string[];
 }
 
+interface ISuspenseSubqueryOptions {
+  id: string;
+  hash: unknown;
+}
+
 /**
  * Run request and cache promise
  * Sync suspense status between server and client
@@ -21,6 +26,11 @@ class SuspenseQuery {
    * @protected
    */
   protected promise: Promise<any> | undefined;
+
+  /**
+   * Subqueries info
+   */
+  protected subqueries: Map<string, { hash: unknown; promise?: IPromise<any> }> = new Map();
 
   /**
    * Target store
@@ -134,6 +144,36 @@ class SuspenseQuery {
     }
 
     return SuspenseQuery.run<TReturn>(this.promise);
+  };
+
+  /**
+   * Run subquery
+   * Re-fetch data from query by hash changes in children components
+   * NOTE: only client side
+   */
+  public subquery = <TReturn>(
+    promise: () => Promise<TReturn>,
+    options: ISuspenseSubqueryOptions,
+  ): TReturn | undefined => {
+    const { id, hash } = options;
+    const subquery = this.subqueries.get(id);
+
+    // skip first run
+    if (!subquery) {
+      this.subqueries.set(id, { hash });
+
+      return undefined;
+    }
+
+    if (subquery?.hash === hash) {
+      return SuspenseQuery.run<TReturn>(subquery?.promise);
+    }
+
+    const newQuery = promise();
+
+    this.subqueries.set(id, { hash, promise: newQuery });
+
+    return SuspenseQuery.run<TReturn>(newQuery);
   };
 
   /**
