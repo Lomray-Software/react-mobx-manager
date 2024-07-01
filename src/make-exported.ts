@@ -11,8 +11,9 @@ const makeExported = <T extends object>(
   props: {
     [P in Exclude<keyof T, 'toString'>]?: 'observable' | 'simple' | 'excluded';
   },
+  shouldExtend = true,
 ): void => {
-  store[exportedPropName] = props;
+  store[exportedPropName] = { ...(shouldExtend ? store?.[exportedPropName] ?? {} : {}), ...props };
 };
 
 /**

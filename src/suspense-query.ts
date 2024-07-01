@@ -1,4 +1,4 @@
-import { extendObservable, observable, runInAction } from 'mobx';
+import { makeExported } from './make-exported';
 import type { TInitStore } from './types';
 
 export interface IPromise<TReturn> extends Promise<TReturn> {
@@ -10,6 +10,10 @@ export interface IPromise<TReturn> extends Promise<TReturn> {
 interface ISuspenseQueryParams {
   fieldName?: string; // field name in target store for save suspense state
   errorFields?: string[];
+}
+
+interface ISuspenseQueryOptions {
+  hash?: unknown;
 }
 
 interface ISuspenseSubqueryOptions {
@@ -55,17 +59,11 @@ class SuspenseQuery {
     const defaultInit = store.init?.bind(store);
 
     store.init = () => {
-      this.isComplete(); // throw error immediately from server side if exist
+      this.throwError(); // throw error immediately from server side if exist
       defaultInit?.();
     };
 
-    extendObservable(
-      store,
-      { [fieldName]: false },
-      {
-        [fieldName]: observable,
-      },
-    );
+    makeExported(store, { [fieldName]: 'simple' });
   }
 
   /**
@@ -94,34 +92,54 @@ class SuspenseQuery {
   }
 
   /**
-   * Detect if suspense is restored from server side:
-   *  - throw error if exist
-   *  - skip run suspense if already completed
+   * Throw suspense error
    */
-  protected isComplete(): boolean {
+  protected throwError(): void {
     const value = this.store[this.params.fieldName];
-    const valueType = typeof value;
 
     // pass error to error boundary
-    if (valueType !== 'boolean') {
+    if (value?.error) {
       throw this.jsonToError(
         new Error((value?.message ?? value?.name) as string),
         value as Record<string, any>,
       );
     }
+  }
 
-    return value === true;
+  /**
+   * Detect if suspense is restored from server side:
+   *  - throw error if exist
+   *  - skip run suspense if already completed
+   */
+  protected isComplete(hash: unknown): boolean {
+    const value = this.store[this.params.fieldName];
+
+    // pass error to error boundary
+    if (value?.error) {
+      this.throwError();
+    }
+
+    return value?.done === true && value.hash === hash;
   }
 
   /**
    * Run request
    * Save request resolve status
    */
-  public query = <TReturn>(promise: () => Promise<TReturn>): TReturn | undefined => {
+  public query = <TReturn>(
+    promise: () => Promise<TReturn>,
+    options: ISuspenseQueryOptions = {},
+  ): TReturn | undefined => {
+    const { hash = '' } = options;
     const { fieldName } = this.params;
 
-    if (this.isComplete()) {
+    if (this.isComplete(hash)) {
       return;
+    }
+
+    if (this.store[fieldName]?.hash !== hash) {
+      this.store[fieldName] = { hash, done: false };
+      this.promise = undefined;
     }
 
     if (!this.promise) {
@@ -129,16 +147,12 @@ class SuspenseQuery {
 
       this.promise.then(
         () => {
-          runInAction(() => {
-            this.store[fieldName] = true;
-          });
+          this.store[fieldName] = { hash, done: true };
         },
         (e) => {
-          runInAction(() => {
-            this.errorJson(e);
+          this.errorJson(e);
 
-            this.store[fieldName] = e;
-          });
+          this.store[fieldName] = { error: e };
         },
       );
     }
