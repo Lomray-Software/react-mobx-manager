@@ -158,5 +158,5 @@ export interface IPersistOptions {
   };
   // disable export all store observable props except props marker with makeExported
   // default: false
-  isExportedAttributes?: boolean;
+  isNotExported?: boolean;
 }

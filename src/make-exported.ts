@@ -21,7 +21,7 @@ const makeExported = <T extends object>(
  * @see IPersistOptions
  */
 const isPropExcludedInPersist = (store: TAnyStore): boolean => {
-  return store?.['libStorageOptions']?.isExportedAttributes || false;
+  return store?.['libStorageOptions']?.isNotExported || false;
 };
 
 /**
