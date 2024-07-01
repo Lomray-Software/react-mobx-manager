@@ -156,4 +156,7 @@ export interface IPersistOptions {
     // first storage => *, by default
     [storageId: string]: string[];
   };
+  // disable export all store observable props except props marker with makeExported
+  // default: false
+  isExportedAttributes?: boolean;
 }

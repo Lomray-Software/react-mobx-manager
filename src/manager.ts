@@ -571,14 +571,14 @@ class Manager {
   /**
    * Get store state
    */
-  public getStoreState(store: TAnyStore): Record<string, any> {
-    return store.toJSON?.() ?? Manager.getObservableProps(store);
+  public getStoreState(store: TAnyStore, withNotExported = false): Record<string, any> {
+    return store.toJSON?.() ?? Manager.getObservableProps(store, withNotExported);
   }
 
   /**
    * Get store's state
    */
-  public toJSON(ids?: string[]): Record<string, any> {
+  public toJSON(ids?: string[], isIncludeExported = false): Record<string, any> {
     const result = {};
     const stores = Array.isArray(ids)
       ? ids.reduce((res, id) => {
@@ -591,7 +591,7 @@ class Manager {
       : this.stores;
 
     for (const [storeId, store] of stores.entries()) {
-      result[storeId] = this.getStoreState(store);
+      result[storeId] = this.getStoreState(store, isIncludeExported);
     }
 
     return result;
@@ -606,7 +606,7 @@ class Manager {
     }
 
     try {
-      await this.storage.saveStoreData(store, this.getStoreState(store));
+      await this.storage.saveStoreData(store, this.getStoreState(store, true));
 
       return true;
     } catch (e) {
@@ -619,13 +619,14 @@ class Manager {
   /**
    * Get observable store props (fields)
    */
-  public static getObservableProps(store: TAnyStore): Record<string, any> {
+  public static getObservableProps(store: TAnyStore, withNotExported = false): Record<string, any> {
     const props = toJS(store);
 
     return Object.entries(props).reduce(
       (res, [prop, value]) => ({
         ...res,
-        ...((isObservableProp(store, prop) && !isPropExcludedFromExport(store, prop)) ||
+        ...((isObservableProp(store, prop) &&
+          !isPropExcludedFromExport(store, prop, withNotExported)) ||
         isPropSimpleExported(store, prop)
           ? { [prop]: value }
           : {}),

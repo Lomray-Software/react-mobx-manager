@@ -17,6 +17,14 @@ const makeExported = <T extends object>(
 };
 
 /**
+ * Excluded in persistStore level
+ * @see IPersistOptions
+ */
+const isPropExcludedInPersist = (store: TAnyStore): boolean => {
+  return store?.['libStorageOptions']?.isExportedAttributes || false;
+};
+
+/**
  * Check if store prop is observable exported
  */
 const isPropObservableExported = (store: TAnyStore, prop: string): boolean =>
@@ -31,7 +39,12 @@ const isPropSimpleExported = (store: TAnyStore, prop: string): boolean =>
 /**
  * Check if store prop is excluded from export
  */
-const isPropExcludedFromExport = (store: TAnyStore, prop: string): boolean =>
-  store?.[exportedPropName]?.[prop] === 'excluded';
+const isPropExcludedFromExport = (
+  store: TAnyStore,
+  prop: string,
+  withNotExported = false,
+): boolean =>
+  store?.[exportedPropName]?.[prop] === 'excluded' ||
+  (!withNotExported && isPropExcludedInPersist(store));
 
 export { makeExported, isPropObservableExported, isPropSimpleExported, isPropExcludedFromExport };
