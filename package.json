@@ -6,7 +6,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Lomray-Software/react-mobx-manager"
+    "url": "git+https://github.com/Lomray-Software/react-mobx-manager.git"
   },
   "keywords": [
     "react",
