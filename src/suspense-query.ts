@@ -100,8 +100,8 @@ class SuspenseQuery {
     // pass error to error boundary
     if (value?.error) {
       throw this.jsonToError(
-        new Error((value?.message ?? value?.name) as string),
-        value as Record<string, any>,
+        new Error((value?.error?.message ?? value?.error?.name) as string),
+        value?.error as Record<string, any>,
       );
     }
   }
