@@ -1,4 +1,6 @@
 import type Events from './events';
+import type { ILoggerOpts } from './logger';
+import type Logger from './logger';
 import type Manager from './manager';
 import type CombinedStorage from './storages/combined-storage';
 import type StoreStatus from './store-status';
@@ -67,6 +69,7 @@ export interface IManagerParams {
   storage?: IStorage | CombinedStorage;
   options?: IManagerOptions;
   initState?: Record<string, any>;
+  logger?: Logger | Omit<ILoggerOpts, 'manager'>;
 }
 
 export type TWakeup = (state: {

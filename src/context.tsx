@@ -63,12 +63,7 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
       return;
     }
 
-    storeManager
-      .init()
-      .then(() => setInit(true))
-      .catch((e: Error) => {
-        console.error('Failed initialized store manager: ', e);
-      });
+    void storeManager.init().then(() => setInit(true));
   }, [shouldInit, storeManager]);
 
   return (

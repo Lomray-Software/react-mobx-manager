@@ -3,6 +3,7 @@ import { isObservableProp, toJS } from 'mobx';
 import { ROOT_CONTEXT_ID } from './constants';
 import deepMerge from './deep-merge';
 import Events from './events';
+import Logger from './logger';
 import {
   isPropExcludedFromExport,
   isPropObservableExported,
@@ -83,11 +84,20 @@ class Manager {
   protected suspenseRelations: Map<string, Set<string>> = new Map();
 
   /**
+   * Mobx manager logger
+   */
+  protected readonly logger: Logger;
+
+  /**
    * @constructor
    */
-  public constructor({ initState, storesParams, storage, options }: IManagerParams = {}) {
+  public constructor({ initState, storesParams, storage, options, logger }: IManagerParams = {}) {
     this.initState = initState || {};
     this.storesParams = storesParams || {};
+    this.logger =
+      logger && 'log' in logger
+        ? logger
+        : new Logger({ level: 3, ...(logger ?? {}), manager: this });
     this.storage =
       storage instanceof CombinedStorage
         ? storage
@@ -113,8 +123,12 @@ class Manager {
    * Init store manager
    */
   public async init(): Promise<Manager> {
-    if (this.storage) {
-      await this.storage.get();
+    try {
+      if (this.storage) {
+        await this.storage.get();
+      }
+    } catch (e) {
+      this.logger.err('Failed initialized store manager: ', e);
     }
 
     return this;
@@ -171,7 +185,6 @@ class Manager {
 
   /**
    * Get store identity
-   * @protected
    */
   protected getStoreId<T extends TAnyStore>(
     store: IConstructableStore<T> | TInitStore,
@@ -241,7 +254,7 @@ class Manager {
     if (matchedIds.length === 1) {
       return this.stores.get(matchedIds[0]);
     } else if (matchedIds.length > 1) {
-      console.error(
+      this.logger.err(
         'Parent context has multiple stores with the same id, please pass key to getStore function.',
       );
 
@@ -338,6 +351,15 @@ class Manager {
             : this.getStoreId(s, { key, contextId }));
 
         if (!storeId) {
+          const msg = `Cannot find or create store '${key}': '${this.getStoreId(s)}'`;
+
+          this.logger.warn(msg);
+          this.logger.debug(
+            msg,
+            { contextId, parentId, suspenseId, componentName, isParent },
+            true,
+          );
+
           return res;
         }
 
@@ -610,7 +632,7 @@ class Manager {
 
       return true;
     } catch (e) {
-      console.error('Failed to persist stores: ', e);
+      this.logger.err('Failed to persist stores: ', e);
     }
 
     return false;
