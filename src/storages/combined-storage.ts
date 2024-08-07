@@ -161,6 +161,10 @@ class CombinedStorage implements IStorage {
         return null;
       }
 
+      if (this.persistData?.[storageId]?.[storeId]) {
+        this.persistData[storageId][storeId] = storeData;
+      }
+
       return this.set(newData, storageId);
     });
 
