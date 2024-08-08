@@ -94,6 +94,13 @@ export interface IManagerOptions {
     touched?: number; // NOTE: set to max timeout request
     unused?: number;
   };
+  /**
+   * When for some strange reason stores cannot be created or found in the parent context:
+   * none: don't do anything
+   * dummy: force create empty store
+   * empty (default): don't render component if any of the stores not created
+   */
+  failedCreationStrategy: 'none' | 'dummy' | 'empty';
 }
 
 export type TAnyStore = IStore | IStorePersisted;
@@ -149,6 +156,7 @@ export interface IGroupedStores {
   relativeStores: TStores;
   parentStores: TStores;
   globalStores: TStores;
+  hasCreationFailure: boolean;
 }
 
 export interface IPersistOptions {

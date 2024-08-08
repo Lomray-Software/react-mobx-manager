@@ -75,6 +75,7 @@ class Manager {
   public readonly options: IManagerOptions = {
     shouldDisablePersist: false,
     shouldRemoveInitState: true,
+    failedCreationStrategy: 'empty',
   };
 
   /**
@@ -337,6 +338,8 @@ class Manager {
     componentName: string,
     componentProps: Record<string, any> = {},
   ): IGroupedStores {
+    const { failedCreationStrategy } = this.options;
+
     const result = map.reduce(
       (res, [key, store]) => {
         const {
@@ -344,7 +347,7 @@ class Manager {
           store: s,
           isParent = false,
         } = 'store' in store ? store : { store, id: undefined, isParent: false };
-        const storeId =
+        let storeId =
           id ||
           (isParent
             ? (this.getStore(s, { contextId, parentId })?.libStoreId as string)
@@ -360,7 +363,16 @@ class Manager {
             true,
           );
 
-          return res;
+          if (failedCreationStrategy === 'dummy') {
+            // try to force create store
+            storeId = this.getStoreId(s, { key, contextId });
+          } else {
+            if (failedCreationStrategy === 'empty') {
+              res.hasCreationFailure = true;
+            }
+
+            return res;
+          }
         }
 
         const storeInstance = this.createStore(s, {
@@ -382,7 +394,7 @@ class Manager {
 
         return res;
       },
-      { relativeStores: {}, parentStores: {}, globalStores: {} },
+      { relativeStores: {}, parentStores: {}, globalStores: {}, hasCreationFailure: false },
     );
 
     // need create context relation in case when component doesn't include relative stores

@@ -23,32 +23,35 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     const parentId = useStoreManagerParent();
     const { suspenseId } = useConsistentSuspense();
     const id = useId();
-    const [{ contextId, componentStores, touchableStores, mountStores }] = useState(() => {
-      const ctxId = manualContextId || id;
-      const groupedStores = storeManager.createStores(
-        Object.entries(stores),
-        parentId,
-        ctxId,
-        suspenseId,
-        componentName,
-        props,
-      );
-      const { globalStores, relativeStores, parentStores } = groupedStores;
-      const tStores = { ...relativeStores, ...globalStores };
+    const [{ contextId, hasFailure, touchableStores, componentStores, mountStores }] = useState(
+      () => {
+        const ctxId = manualContextId || id;
+        const groupedStores = storeManager.createStores(
+          Object.entries(stores),
+          parentId,
+          ctxId,
+          suspenseId,
+          componentName,
+          props,
+        );
+        const { globalStores, relativeStores, parentStores, hasCreationFailure } = groupedStores;
+        const tStores = { ...relativeStores, ...globalStores };
 
-      return {
-        touchableStores: tStores,
-        componentStores: { ...tStores, ...parentStores },
-        contextId: ctxId,
-        mountStores: () => storeManager.mountStores(ctxId, groupedStores),
-      };
-    });
+        return {
+          contextId: ctxId,
+          hasFailure: hasCreationFailure,
+          touchableStores: tStores,
+          componentStores: { ...tStores, ...parentStores },
+          mountStores: () => storeManager.mountStores(ctxId, groupedStores),
+        };
+      },
+    );
 
     useEffect(mountStores, [mountStores]);
 
     return (
       <StoreManagerParentProvider parentId={contextId} touchableStores={touchableStores}>
-        <ObservableComponent {...props} {...componentStores} />
+        {!hasFailure && <ObservableComponent {...props} {...componentStores} />}
       </StoreManagerParentProvider>
     );
   };
