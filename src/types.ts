@@ -100,7 +100,7 @@ export interface IManagerOptions {
    * dummy: force create empty store
    * empty (default): don't render component if any of the stores not created
    */
-  failedCreationStrategy: 'none' | 'dummy' | 'empty';
+  failedCreationStrategy?: 'none' | 'dummy' | 'empty';
 }
 
 export type TAnyStore = IStore | IStorePersisted;
