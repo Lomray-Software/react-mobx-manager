@@ -1,6 +1,6 @@
 import type { IStorage } from '../types';
 
-interface ICookiesStorageOptions {
+interface ICookiesStorageAttributes {
   expires?: number | Date | undefined;
   path?: string | undefined;
   domain?: string | undefined;
@@ -11,15 +11,24 @@ interface ICookiesStorageOptions {
 
 interface ICookieStorage {
   get: (key: string) => string | null | undefined;
-  set: (key: string, value: string, options: ICookiesStorageOptions) => any;
-  remove: (key: string, options: ICookiesStorageOptions) => any;
+  set: (key: string, value: string, options: ICookiesStorageAttributes) => any;
+  remove: (key: string, options: ICookiesStorageAttributes) => any;
+}
+
+interface ICookiesStorageOptions {
+  storage: ICookieStorage;
+  globalKey?: string;
+  cookieAttr?: ICookiesStorageAttributes;
 }
 
 /**
  * Cookie storage for mobx store manager
  */
 class CookieStorage implements IStorage {
-  globalKey = 'stores';
+  /**
+   * Cookie storage key
+   */
+  protected globalKey: string;
 
   /**
    * @protected
@@ -27,16 +36,17 @@ class CookieStorage implements IStorage {
   protected storage: ICookieStorage;
 
   /**
-   * Cookie options
+   * Cookie attributes
    */
-  protected options: ICookiesStorageOptions;
+  protected cookieAttr: ICookiesStorageAttributes;
 
   /**
    * @constructor
    */
-  constructor(storage: ICookieStorage, options: ICookiesStorageOptions = {}) {
+  constructor({ storage, cookieAttr, globalKey }: ICookiesStorageOptions) {
     this.storage = storage;
-    this.options = options;
+    this.cookieAttr = cookieAttr ?? {};
+    this.globalKey = globalKey ?? 'stores';
   }
 
   /**
@@ -54,14 +64,14 @@ class CookieStorage implements IStorage {
    * @inheritDoc
    */
   public flush(): void | Promise<any> {
-    return this.storage.remove(this.globalKey, this.options);
+    return this.storage.remove(this.globalKey, this.cookieAttr);
   }
 
   /**
    * @inheritDoc
    */
   public set(value: Record<string, any> | undefined): void {
-    return this.storage.set(this.globalKey, JSON.stringify(value || '{}'), this.options);
+    return this.storage.set(this.globalKey, JSON.stringify(value || '{}'), this.cookieAttr);
   }
 }
 

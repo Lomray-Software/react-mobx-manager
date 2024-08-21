@@ -1,10 +1,18 @@
 import type { IStorage } from '../types';
 
+interface ILocalStorageOptions {
+  globalKey?: string;
+  storage?: Storage;
+}
+
 /**
  * Local storage for mobx store manager
  */
 class LocalStorage implements IStorage {
-  globalKey = 'stores';
+  /**
+   * Local storage key
+   */
+  protected globalKey: string;
 
   /**
    * @protected
@@ -14,8 +22,9 @@ class LocalStorage implements IStorage {
   /**
    * @constructor
    */
-  constructor(storage: Storage = localStorage) {
-    this.storage = storage;
+  constructor({ storage, globalKey }: ILocalStorageOptions = {}) {
+    this.storage = storage ?? localStorage;
+    this.globalKey = globalKey ?? 'stores';
   }
 
   /**
