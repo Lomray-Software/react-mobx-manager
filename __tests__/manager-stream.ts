@@ -34,9 +34,8 @@ describe('ManagerStream', () => {
 
     const result = managerStream.take('suspenseId');
 
-    expect(result).to.include('<script>!window.mbxM && (window.mbxM = []);</script>');
-    expect(result).to.include(
-      '<script>window.mbxM.push({"store1":{"data":"value1"},"store2":{"data":"value2"}});</script>',
+    expect(result).to.equal(
+      '<script>!window.mbxM && (window.mbxM = []);</script><script>window.mbxM.push(JSON.parse("{\\"store1\\":{\\"data\\":\\"value1\\"},\\"store2\\":{\\"data\\":\\"value2\\"}}"));</script>',
     );
   });
 
@@ -50,9 +49,26 @@ describe('ManagerStream', () => {
     managerStream.take('suspenseId'); // first call
     const result = managerStream.take('suspenseId'); // second call
 
-    expect(result).to.not.include('<script>!window.mbxM && (window.mbxM = []);</script>');
-    expect(result).to.include(
-      '<script>window.mbxM.push({"store1":{"data":"value1"},"store2":{"data":"value2"}});</script>',
+    expect(result).to.equal(
+      '<script>window.mbxM.push(JSON.parse("{\\"store1\\":{\\"data\\":\\"value1\\"},\\"store2\\":{\\"data\\":\\"value2\\"}}"));</script>',
+    );
+  });
+
+  it('should properly escape JSON for usage as an object literal inside of a script tag', () => {
+    const storesIds = new Set(['store1', 'store2']);
+    const managerStream = new ManagerStream(manager as unknown as Manager);
+
+    manager.getSuspenseRelations.returns(new Map([['suspenseId', storesIds]]));
+    manager.toJSON.returns({
+      store1: { data: 'value1' },
+      store2: { data: '</script><script>console.log("Bad thing")</script>' },
+    });
+
+    managerStream.take('suspenseId'); // first call
+    const result = managerStream.take('suspenseId'); // second call
+
+    expect(result).to.equal(
+      '<script>window.mbxM.push(JSON.parse("{\\"store1\\":{\\"data\\":\\"value1\\"},\\"store2\\":{\\"data\\":\\"\\u003c/script\\u003e\\u003cscript\\u003econsole.log(\\\\\\"Bad thing\\\\\\")\\u003c/script\\u003e\\"}}"));</script>',
     );
   });
 });
