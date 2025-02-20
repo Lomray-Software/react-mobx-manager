@@ -103,7 +103,7 @@ class CombinedStorage implements IStorage {
     const { attributes } = this.getStoreOptions(store);
 
     return Object.entries(attributes!).reduce((res, [storageId, attr]) => {
-      const storageData = this.persistData?.[storageId]?.[storeId] ?? {};
+      const storageData = this.persistData[storageId]?.[storeId] ?? {};
       const allowedData =
         attr[0] === '*'
           ? storageData
@@ -161,9 +161,11 @@ class CombinedStorage implements IStorage {
         return null;
       }
 
-      if (this.persistData?.[storageId]?.[storeId]) {
-        this.persistData[storageId][storeId] = storeData;
+      if (!this.persistData[storageId]?.[storeId]) {
+        this.persistData[storageId][storeId] = {};
       }
+
+      this.persistData[storageId][storeId] = storeData;
 
       return this.set(newData, storageId);
     });

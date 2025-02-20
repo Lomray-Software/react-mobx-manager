@@ -6,11 +6,19 @@ interface IAsyncStorage {
   removeItem: (key: string) => Promise<void>;
 }
 
+interface IAsyncStorageOptions {
+  storage: IAsyncStorage;
+  globalKey?: string;
+}
+
 /**
  * Async storage for mobx store manager
  */
 class AsyncStorage implements IStorage {
-  globalKey = 'stores';
+  /**
+   * Cookie storage key
+   */
+  protected globalKey: string;
 
   /**
    * @protected
@@ -20,8 +28,9 @@ class AsyncStorage implements IStorage {
   /**
    * @constructor
    */
-  constructor(AsyncStoragePackage: IAsyncStorage) {
-    this.storage = AsyncStoragePackage;
+  constructor({ storage, globalKey }: IAsyncStorageOptions) {
+    this.storage = storage;
+    this.globalKey = globalKey ?? 'stores';
   }
 
   /**
@@ -34,6 +43,8 @@ class AsyncStorage implements IStorage {
         any
       >;
     } catch (e) {
+      console.error('Failed to get item from async storage:', e);
+
       return {};
     }
   }
@@ -41,15 +52,23 @@ class AsyncStorage implements IStorage {
   /**
    * @inheritDoc
    */
-  flush(): Promise<any> {
-    return this.storage.removeItem(this.globalKey);
+  async flush(): Promise<any> {
+    try {
+      return await this.storage.removeItem(this.globalKey);
+    } catch (e) {
+      console.error('Failed to flush async storage key:', e);
+    }
   }
 
   /**
    * @inheritDoc
    */
-  set(value: Record<string, any> | undefined): Promise<void> {
-    return this.storage.setItem(this.globalKey, JSON.stringify(value || '{}'));
+  async set(value: Record<string, any> | undefined): Promise<void> {
+    try {
+      return await this.storage.setItem(this.globalKey, JSON.stringify(value || '{}'));
+    } catch (e) {
+      console.error('Failed to set value to async storage:', e);
+    }
   }
 }
 
