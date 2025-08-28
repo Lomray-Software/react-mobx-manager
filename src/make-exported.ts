@@ -13,7 +13,6 @@ const makeExported = <T extends object>(
   },
   shouldExtend = true,
 ): void => {
-  // @ts-ignore
   store[exportedPropName] = { ...(shouldExtend ? store?.[exportedPropName] ?? {} : {}), ...props };
 };
 
@@ -22,7 +21,6 @@ const makeExported = <T extends object>(
  * @see IPersistOptions
  */
 const isPropExcludedInPersist = (store: TAnyStore): boolean => {
-  // @ts-ignore
   return store?.['libStorageOptions']?.isNotExported || false;
 };
 
@@ -30,14 +28,12 @@ const isPropExcludedInPersist = (store: TAnyStore): boolean => {
  * Check if store prop is observable exported
  */
 const isPropObservableExported = (store: TAnyStore, prop: string): boolean =>
-  // @ts-ignore
   store?.[exportedPropName]?.[prop] === 'observable';
 
 /**
  * Check if store prop is simple exported
  */
 const isPropSimpleExported = (store: TAnyStore, prop: string): boolean =>
-  // @ts-ignore
   store?.[exportedPropName]?.[prop] === 'simple';
 
 /**
@@ -48,7 +44,6 @@ const isPropExcludedFromExport = (
   prop: string,
   withNotExported = false,
 ): boolean =>
-  // @ts-ignore
   store?.[exportedPropName]?.[prop] === 'excluded' ||
   (!withNotExported && isPropExcludedInPersist(store));
 

@@ -29,6 +29,7 @@
     "strictNullChecks": true,
     "strict": false,
     "pretty": true,
+    "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
