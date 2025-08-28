@@ -201,6 +201,7 @@ class Manager {
       return store.libStoreId;
     }
 
+    // @ts-ignore
     let storeId = (store['id'] as string) || (store['name'] as string) || store.constructor.name;
 
     if (store.isGlobal) {
@@ -385,10 +386,13 @@ class Manager {
         });
 
         if (isParent) {
+          // @ts-ignore
           res.parentStores[key] = storeInstance;
         } else if (storeInstance.isGlobal) {
+          // @ts-ignore
           res.globalStores[key] = storeInstance;
         } else {
+          // @ts-ignore
           res.relativeStores[key] = storeInstance;
         }
 
@@ -625,6 +629,7 @@ class Manager {
       : this.stores;
 
     for (const [storeId, store] of stores.entries()) {
+      // @ts-ignore
       result[storeId] = this.getStoreState(store, isIncludeExported);
     }
 
@@ -665,7 +670,7 @@ class Manager {
           ? { [prop]: value }
           : {}),
         ...(isPropObservableExported(store, prop)
-          ? { [prop]: Manager.getObservableProps(store[prop] as TAnyStore) }
+          ? { [prop]: Manager.getObservableProps((store as any)[prop] as TAnyStore) }
           : {}),
       }),
       {},

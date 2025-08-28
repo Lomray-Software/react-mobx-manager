@@ -92,6 +92,7 @@ class StateListener {
         return;
       }
 
+      // @ts-ignore
       this.manager?.['__devOnChange']?.({
         event: _.cloneDeep(event),
         storesState: this.getStoresState(),

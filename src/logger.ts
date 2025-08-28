@@ -12,6 +12,8 @@ export interface ILoggerOpts {
   manager: Manager;
 }
 
+type LogMethod = 'log' | 'error' | 'warn' | 'info';
+
 export interface ILoggerLogOpts {
   level: ILoggerOpts['level'];
   err?: Error;
@@ -39,7 +41,7 @@ class Logger {
       return;
     }
 
-    let type = 'log';
+    let type: LogMethod = 'log';
 
     switch (level) {
       case 1:

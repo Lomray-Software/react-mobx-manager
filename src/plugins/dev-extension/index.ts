@@ -2,6 +2,7 @@ import type Manager from '../../manager';
 import StateListener from './state-listener';
 
 function connectDevExtension(storeManager: Manager): void {
+  // @ts-ignore
   window['__MOBX_STORE_MANAGER__'] = new StateListener(storeManager).subscribe();
 }
 

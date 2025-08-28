@@ -85,6 +85,7 @@ class SuspenseQuery {
    */
   protected jsonToError(e: Error, values: Record<string, any>): Error {
     this.params.errorFields.forEach((name) => {
+      // @ts-ignore
       e[name] = values?.[name];
     });
 
@@ -95,6 +96,7 @@ class SuspenseQuery {
    * Throw suspense error
    */
   protected throwError(): void {
+    // @ts-ignore
     const value = this.store[this.params.fieldName];
 
     // pass error to error boundary
@@ -112,6 +114,7 @@ class SuspenseQuery {
    *  - skip run suspense if already completed
    */
   protected isComplete(hash: unknown): boolean {
+    // @ts-ignore
     const value = this.store[this.params.fieldName];
 
     // pass error to error boundary
@@ -137,7 +140,9 @@ class SuspenseQuery {
       return;
     }
 
+    // @ts-ignore
     if (this.store[fieldName]?.hash !== hash) {
+      // @ts-ignore
       this.store[fieldName] = { hash, done: false };
       this.promise = undefined;
     }
@@ -147,11 +152,13 @@ class SuspenseQuery {
 
       this.promise.then(
         () => {
+          // @ts-ignore
           this.store[fieldName] = { hash, done: true };
         },
         (e) => {
           this.errorJson(e);
 
+          // @ts-ignore
           this.store[fieldName] = { error: e };
         },
       );
