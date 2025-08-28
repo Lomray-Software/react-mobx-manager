@@ -77,5 +77,6 @@
     "mobx": ">=6.9.0",
     "mobx-react-lite": "^3 || ^4",
     "react": "^19 || ^18 || ^17"
-  }
+  },
+  "packageManager": "npm@11.5.2"
 }
