@@ -13,7 +13,10 @@ const makeExported = <T extends object>(
   },
   shouldExtend = true,
 ): void => {
-  store[exportedPropName] = { ...(shouldExtend ? store?.[exportedPropName] ?? {} : {}), ...props };
+  store[exportedPropName] = {
+    ...(shouldExtend ? (store?.[exportedPropName] ?? {}) : {}),
+    ...props,
+  };
 };
 
 /**
