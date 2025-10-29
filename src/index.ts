@@ -12,6 +12,8 @@ export { default as withStores } from './with-stores';
 
 export * from './make-exported';
 
+export * from './make-fetching';
+
 export { default as Events } from './events';
 
 export { default as Logger } from './logger';
