@@ -1,6 +1,6 @@
 import type { IStorage } from '../types';
 
-interface ILocalStorageOptions {
+export interface ILocalStorageOptions {
   globalKey?: string;
   storage?: Storage;
 }
