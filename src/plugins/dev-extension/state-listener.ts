@@ -1,11 +1,13 @@
 import _ from 'lodash';
-import { spy } from 'mobx';
+import { spy, untracked } from 'mobx';
 import { ROOT_CONTEXT_ID } from '@src/constants';
 import Manager from '../../manager';
 
 enum Listeners {
   SPY = 'spy',
 }
+
+type SpyEvent = Parameters<Parameters<typeof spy>[0]>[0];
 
 /**
  * State listener
@@ -21,6 +23,17 @@ class StateListener {
    * @protected
    */
   protected static listeners: Record<Listeners | string, () => void> = {} as never;
+
+  /**
+   * Last mobx event
+   * @private
+   */
+  private _lastEvent: SpyEvent | null = null;
+
+  /**
+   * @private
+   */
+  private readonly _throttleMs = 16;
 
   /**
    * @constructor
@@ -52,35 +65,88 @@ class StateListener {
   }
 
   /**
-   * Get stores state
-   * @protected
+   * Store snapshot WITHOUT creating mobx dependencies
    */
   protected getStoresState(): { root: Record<string, any> } {
-    const state: { root: Record<string, any> } = { root: {} };
+    return untracked(() => {
+      const state: { root: Record<string, any> } = { root: {} };
 
-    try {
-      const stores = this.manager.getStores();
+      try {
+        const stores = this.manager.getStores();
 
-      this.manager.getStoresRelations().forEach(({ ids, componentName }, contextId) => {
-        const key = this.getContextKey(contextId);
+        this.manager.getStoresRelations().forEach(({ ids, componentName }, contextId) => {
+          const key = this.getContextKey(contextId);
 
-        ids.forEach((id) => {
-          const store = stores.get(id);
+          ids.forEach((id) => {
+            const store = stores.get(id);
 
-          if (store) {
-            const storeState = store?.toJSON?.() ?? Manager.getObservableProps(store);
+            if (store) {
+              const storeState = store?.toJSON?.() ?? Manager.getObservableProps(store);
 
-            _.set(state, `${key}.stores.${id}`, storeState);
-            _.set(state, `${key}.componentName`, componentName);
-          }
+              _.set(state, `${key}.stores.${id}`, storeState);
+              _.set(state, `${key}.componentName`, componentName);
+            }
+          });
         });
-      });
-    } catch (e) {
-      // manager has not initialized yet
-    }
+      } catch {
+        // manager has not initialized yet
+      }
 
-    return state;
+      return state;
+    });
   }
+
+  /**
+   * Safe clone
+   * @private
+   */
+  private getSafeEvent(event: SpyEvent): SpyEvent {
+    const normalized = _.mapValues(event, (v) => {
+      if (v == null) {
+        return v;
+      }
+
+      const t = typeof v;
+
+      if (t === 'string' || t === 'number' || t === 'boolean') {
+        return v;
+      }
+
+      if (Array.isArray(v)) {
+        return { length: v.length };
+      }
+
+      if (t === 'function' || t === 'symbol') {
+        return undefined;
+      }
+
+      if (t === 'object') {
+        return { objectType: v?.constructor?.name ?? 'Object' };
+      }
+
+      return undefined;
+    });
+
+    return _.pickBy(normalized, (v) => v !== undefined) as SpyEvent;
+  }
+
+  /**
+   * Batch sending
+   * @private
+   */
+  private emitChange = _.throttle(
+    () => {
+      const payload = {
+        event: this._lastEvent,
+        storesState: this.getStoresState(),
+      };
+
+      this.manager?.['__devOnChange']?.(payload);
+      this._lastEvent = null;
+    },
+    this._throttleMs,
+    { leading: false, trailing: true },
+  );
 
   /**
    * Subscribe on stores changes
@@ -88,14 +154,13 @@ class StateListener {
    */
   public subscribe(): Manager {
     StateListener.listeners[Listeners.SPY] = spy((event) => {
-      if (['report-end', 'reaction'].includes(event.type)) {
+      if (['report-end', 'reaction'].includes(event?.type)) {
         return;
       }
 
-      this.manager?.['__devOnChange']?.({
-        event: _.cloneDeep(event),
-        storesState: this.getStoresState(),
-      });
+      this._lastEvent = this.getSafeEvent(event);
+
+      this.emitChange();
     });
 
     return this.manager;
