@@ -8,27 +8,11 @@ on:
 env:
   NODE_VERSION: 20.18.3
   ENABLE_CACHE: yes
+  NPM_VERSION: 11.5.2
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.ref }}-prepare
-      cancel-in-progress: true
-    outputs:
-      node-version: ${{ steps.variable.outputs.node-version }}
-      enable-cache: ${{ steps.variable.outputs.enable-cache }}
-
-    steps:
-      - name: Define variables
-        id: variable
-        run: |
-          echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
-          echo "enable-cache=$ENABLE_CACHE" >> $GITHUB_OUTPUT
-
   check:
     name: Check PR
-    needs: [prepare]
     runs-on: ubuntu-latest
 
     steps:
@@ -36,8 +20,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ needs.prepare.outputs.node-version }}
-          cache: ${{ needs.prepare.outputs.enable-cache == 'yes' && 'npm' || '' }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: ${{ env.ENABLE_CACHE == 'yes' && 'npm' || '' }}
+
+      - run: corepack enable
+      - run: corepack prepare npm@${{ env.NPM_VERSION }} --activate
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
