@@ -78,5 +78,10 @@
     "mobx-react-lite": "^3 || ^4",
     "react": "^19 || ^18 || ^17"
   },
+  "overrides": {
+    "rollup-plugin-ts": {
+      "browserslist-generator": "^3.0.0"
+    }
+  },
   "packageManager": "npm@11.5.2"
 }
