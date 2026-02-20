@@ -5,7 +5,7 @@ on:
     branches: [ prod, staging ]
 
 env:
-  NODE_VERSION: 20.18.3
+  NODE_VERSION: 22.21.0
   ENABLE_CACHE: yes
   NPM_VERSION: 11.5.2
 
