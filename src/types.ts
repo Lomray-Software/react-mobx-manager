@@ -34,7 +34,7 @@ export interface IStore extends IStoreLifecycle {
   libStoreSuspenseId?: string; // static
   libStoreComponentName?: string; // static
   libStoreStatus?: StoreStatus; // static
-  libDestroyTimer?: NodeJS.Timeout;
+  libDestroyTimer?: ReturnType<typeof setTimeout>;
   isGlobal?: boolean; // static
   init?: () => void;
   toJSON?: () => Record<string, any>;
