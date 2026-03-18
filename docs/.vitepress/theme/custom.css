@@ -1,0 +1,124 @@
+:root {
+  --vp-c-brand-1: #0f766e;
+  --vp-c-brand-2: #0b5f59;
+  --vp-c-brand-3: #134e4a;
+  --vp-c-brand-soft: rgba(15, 118, 110, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #0f766e 15%, #1d4ed8 55%, #0f172a 100%);
+  --vp-home-hero-image-background-image:
+    radial-gradient(circle at 30% 30%, rgba(15, 118, 110, 0.45), transparent 40%),
+    radial-gradient(circle at 70% 40%, rgba(29, 78, 216, 0.35), transparent 34%),
+    radial-gradient(circle at 50% 80%, rgba(15, 23, 42, 0.2), transparent 40%);
+  --vp-home-hero-image-filter: blur(56px);
+  --home-card-bg:
+    linear-gradient(180deg, rgba(243, 250, 249, 0.96), rgba(255, 255, 255, 0.98)),
+    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(29, 78, 216, 0.06));
+  --home-card-border: rgba(15, 118, 110, 0.2);
+  --home-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --home-panel-bg: linear-gradient(135deg, rgba(227, 250, 246, 0.95), rgba(239, 246, 255, 0.92));
+  --home-panel-border: rgba(15, 118, 110, 0.22);
+  --home-panel-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+  --home-item-bg: linear-gradient(180deg, rgba(247, 252, 251, 0.96), rgba(255, 255, 255, 0.98));
+  --home-item-border: rgba(15, 118, 110, 0.14);
+  --home-item-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.dark {
+  --vp-home-hero-image-background-image:
+    radial-gradient(circle at 30% 30%, rgba(20, 184, 166, 0.3), transparent 42%),
+    radial-gradient(circle at 70% 40%, rgba(59, 130, 246, 0.25), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(15, 23, 42, 0.5), transparent 42%);
+  --home-card-bg:
+    linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.98)),
+    linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(59, 130, 246, 0.1));
+  --home-card-border: rgba(45, 212, 191, 0.24);
+  --home-card-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  --home-panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+  --home-panel-border: rgba(45, 212, 191, 0.2);
+  --home-panel-shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
+  --home-item-bg: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(30, 41, 59, 0.96));
+  --home-item-border: rgba(45, 212, 191, 0.16);
+  --home-item-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+.VPHome {
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 26%);
+}
+
+.VPHomeHero .container {
+  position: relative;
+}
+
+.VPHomeHero .main {
+  max-width: 760px;
+}
+
+.VPHomeHero .tagline {
+  max-width: 640px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.VPHomeHero .actions {
+  padding-top: 10px;
+}
+
+.VPFeature {
+  border: 1px solid var(--home-card-border);
+  background: var(--home-card-bg);
+  box-shadow: var(--home-card-shadow);
+}
+
+.VPFeature .title,
+.VPFeature .details {
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc h2,
+.vp-doc h3 {
+  letter-spacing: -0.02em;
+}
+
+.home-callout {
+  margin-top: 32px;
+  padding: 20px 24px;
+  border: 1px solid var(--home-panel-border);
+  border-radius: 18px;
+  background: var(--home-panel-bg);
+  box-shadow: var(--home-panel-shadow);
+}
+
+.home-callout p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--vp-c-text-1);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.home-grid .item {
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--home-item-bg);
+  border: 1px solid var(--home-item-border);
+  box-shadow: var(--home-item-shadow);
+  color: var(--vp-c-text-1);
+}
+
+.home-grid .item strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
