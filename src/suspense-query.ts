@@ -60,7 +60,8 @@ class SuspenseQuery {
 
     store.init = () => {
       this.throwError(); // throw error immediately from server side if exist
-      defaultInit?.();
+
+      return defaultInit?.();
     };
 
     makeExported(store, { [fieldName]: 'simple' });

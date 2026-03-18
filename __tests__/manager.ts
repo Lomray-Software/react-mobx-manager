@@ -351,7 +351,7 @@ describe('Manager', () => {
     });
     const result = manager.createStores(
       [['relativeStore', RelativeStore]],
-      'parent-context',
+      parentContextId,
       managedContextId,
       suspenseId,
       managedComponentName,
@@ -375,6 +375,49 @@ describe('Manager', () => {
 
     expect(manager.getStores().has(store.libStoreId!)).to.equal(false);
     expect(manager.getSuspenseRelations().get(suspenseId)?.has(store.libStoreId!)).to.equal(false);
+    sinon.assert.calledOnce(onDestroy);
+
+    clock.restore();
+  });
+
+  it('should run cleanup returned from init when store is destroyed', async () => {
+    const clock = sandbox.useFakeTimers();
+    const onDestroy = sandbox.stub();
+    const initCleanup = sandbox.stub();
+
+    class RelativeStore {
+      public libStoreId?: string;
+      public libStoreStatus?: StoreStatus;
+      public libDestroyTimer?: ReturnType<typeof setTimeout>;
+      public isGlobal?: boolean;
+      public onDestroy = onDestroy;
+
+      public init() {
+        return initCleanup;
+      }
+    }
+
+    const manager = new Manager({
+      options: {
+        destroyTimers: {
+          init: 0,
+          unused: 5,
+        },
+      },
+    });
+    const result = manager.createStores(
+      [['relativeStore', RelativeStore]],
+      parentContextId,
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+    );
+    const unmount = manager.mountStores(managedContextId, result);
+
+    unmount();
+    await clock.tickAsync(5);
+
+    sinon.assert.calledOnce(initCleanup);
     sinon.assert.calledOnce(onDestroy);
 
     clock.restore();

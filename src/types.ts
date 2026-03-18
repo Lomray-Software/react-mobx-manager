@@ -36,7 +36,7 @@ export interface IStore extends IStoreLifecycle {
   libStoreStatus?: StoreStatus; // static
   libDestroyTimer?: ReturnType<typeof setTimeout>;
   isGlobal?: boolean; // static
-  init?: () => void;
+  init?: () => void | (() => void);
   toJSON?: () => Record<string, any>;
 }
 

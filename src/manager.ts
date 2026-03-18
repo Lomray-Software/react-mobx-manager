@@ -436,6 +436,22 @@ class Manager {
   }
 
   /**
+   * Append callback to store destroy lifecycle
+   */
+  protected appendDestroyCallback(store: TStores[string], callback?: () => void): void {
+    if (!callback) {
+      return;
+    }
+
+    const onDestroyDefault = store.onDestroy?.bind(store);
+
+    store.onDestroy = (): void => {
+      callback();
+      onDestroyDefault?.();
+    };
+  }
+
+  /**
    * Prepare store before usage
    */
   protected prepareStore(store: TStores[string]): void {
@@ -465,16 +481,17 @@ class Manager {
 
     // track changes in persisted store
     if (Manager.persistedStores.has(storeId) && 'addOnChangeListener' in store) {
-      const onDestroyDefault = store.onDestroy?.bind(store);
       const removeListener = store.addOnChangeListener!(store, this);
 
-      store.onDestroy = () => {
-        removeListener?.();
-        onDestroyDefault?.();
-      };
+      this.appendDestroyCallback(store, removeListener);
     }
 
-    store.init?.();
+    const initCleanup = store.init?.();
+
+    if (typeof initCleanup === 'function') {
+      this.appendDestroyCallback(store, initCleanup);
+    }
+
     this.createRelationContext(contextId, store.libStoreParentId, store.libStoreComponentName);
 
     if (!this.suspenseRelations.has(suspenseId)) {

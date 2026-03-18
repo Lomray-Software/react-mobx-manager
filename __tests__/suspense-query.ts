@@ -70,6 +70,17 @@ describe('SuspenseQuery', () => {
     expect(() => store.init()).to.throw('broken');
   });
 
+  it('should preserve cleanup callback returned from init wrapper', () => {
+    const cleanup = () => undefined;
+    const store: Record<string, any> = {
+      init: () => cleanup,
+    };
+
+    new SuspenseQuery(store);
+
+    expect(store.init()).to.equal(cleanup);
+  });
+
   it('should manage subqueries by id and hash', async () => {
     let resolvePromise: ((value: string) => void) | undefined;
     const target = new SuspenseQuery({} as never);
