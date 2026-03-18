@@ -2,7 +2,7 @@ name: Deploy Docs
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ prod ]
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
