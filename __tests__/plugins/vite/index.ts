@@ -12,7 +12,7 @@ describe('plugins/vite/index', () => {
 
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('@src/plugins/vite/id-generator');
+    vi.doUnmock('@src/plugins/vite/id-generator');
     delete process.env.NODE_ENV;
   });
 
@@ -43,7 +43,7 @@ describe('plugins/vite/index', () => {
     callBuildEnd(plugin.buildEnd, { meta: 'ctx' });
 
     expect(IdGenerator.lastCall.args[0]).to.deep.equal({ root: '/root', isProd: true });
-    expect(transform).to.have.been.calledOnce;
-    expect(buildEnd).to.have.been.calledOnce;
+    sinon.assert.calledOnce(transform);
+    sinon.assert.calledOnce(buildEnd);
   });
 });

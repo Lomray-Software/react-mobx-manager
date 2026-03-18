@@ -5,7 +5,7 @@ import { afterEach, describe, it, vi } from 'vitest';
 describe('plugins/dev-extension/state-listener', () => {
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('mobx');
+    vi.doUnmock('mobx');
   });
 
   it('should build context keys and collect stores state', async () => {
@@ -83,9 +83,9 @@ describe('plugins/dev-extension/state-listener', () => {
       callback: () => undefined,
       nested: { foo: 'bar' },
     });
-    await clock.tickAsync(20);
+    clock.tick(20);
 
-    expect(manager.__devOnChange).to.have.been.calledWith({
+    sinon.assert.calledWith(manager.__devOnChange, {
       event: {
         type: 'action',
         name: 'update',
@@ -97,9 +97,9 @@ describe('plugins/dev-extension/state-listener', () => {
 
     manager.__devOnChange.resetHistory();
     listener?.({ type: 'report-end' });
-    await clock.tickAsync(20);
+    clock.tick(20);
 
-    expect(manager.__devOnChange).to.have.callCount(0);
+    sinon.assert.notCalled(manager.__devOnChange);
 
     clock.restore();
     sandbox.restore();

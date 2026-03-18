@@ -1,9 +1,5 @@
-import chai from 'chai';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import { afterAll, afterEach, beforeEach } from 'vitest';
-
-chai.use(sinonChai);
 
 const consoleOriginal = {
   log: console.log,

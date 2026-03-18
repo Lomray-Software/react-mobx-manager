@@ -61,7 +61,7 @@ describe('CombinedStorage', () => {
 
     expect(shouldSet).to.equal(set.firstCall.returnValue);
     expect(shouldSkip).to.be.undefined;
-    expect(set).to.have.been.calledWith({ foo: 'bar' });
+    sinon.assert.calledWith(set, { foo: 'bar' });
   });
 
   it('should merge persisted store data by configured attributes', async () => {
@@ -125,8 +125,8 @@ describe('CombinedStorage', () => {
     await target.saveStoreData(store, { foo: 1, bar: 2 });
     await target.saveStoreData(store, { foo: 1, bar: 2 });
 
-    expect(setPrimary).to.have.been.calledOnceWith({ store: { foo: 1 } });
-    expect(setSecondary).to.have.been.calledOnceWith({ store: { bar: 2 } });
+    sinon.assert.calledOnceWithExactly(setPrimary, { store: { foo: 1 } });
+    sinon.assert.calledOnceWithExactly(setSecondary, { store: { bar: 2 } });
   });
 
   it('should support include behaviour and flush all storages', async () => {
@@ -163,9 +163,9 @@ describe('CombinedStorage', () => {
     );
     await target.flush();
 
-    expect(setPrimary).to.have.been.calledOnceWith({ store: { foo: 1 } });
-    expect(setSecondary).to.have.been.calledOnceWith({ store: { foo: 1 } });
-    expect(flushPrimary).to.have.been.calledOnce;
-    expect(flushSecondary).to.have.been.calledOnce;
+    sinon.assert.calledOnceWithExactly(setPrimary, { store: { foo: 1 } });
+    sinon.assert.calledOnceWithExactly(setSecondary, { store: { foo: 1 } });
+    sinon.assert.calledOnce(flushPrimary);
+    sinon.assert.calledOnce(flushSecondary);
   });
 });

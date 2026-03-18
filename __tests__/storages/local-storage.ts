@@ -23,7 +23,7 @@ describe('LocalStorage', () => {
     }).get();
 
     expect(result).to.deep.equal({ foo: 'bar' });
-    expect(storage.getItem).to.have.been.calledWith('custom');
+    sinon.assert.calledWith(storage.getItem, 'custom');
   });
 
   it('should return empty object on invalid json', () => {
@@ -49,7 +49,7 @@ describe('LocalStorage', () => {
     void target.set({ foo: 'bar' });
     void target.flush();
 
-    expect(storage.setItem).to.have.been.calledWith('stores', '{"foo":"bar"}');
-    expect(storage.removeItem).to.have.been.calledWith('stores');
+    sinon.assert.calledWith(storage.setItem, 'stores', '{"foo":"bar"}');
+    sinon.assert.calledWith(storage.removeItem, 'stores');
   });
 });

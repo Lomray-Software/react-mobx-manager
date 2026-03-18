@@ -5,7 +5,7 @@ import { afterEach, describe, it, vi } from 'vitest';
 describe('plugins/helpers', () => {
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('node:fs');
+    vi.doUnmock('node:fs');
   });
 
   it('should load cache from file in production mode and save it back', async () => {
@@ -36,9 +36,9 @@ describe('plugins/helpers', () => {
     expect([...cache.entries()]).to.deep.equal([
       ['file.ts', { storeId: 'S1', classname: 'Store' }],
     ]);
-    expect(readFileSync).to.have.been.calledOnce;
-    expect(mkdirSync).to.have.been.calledOnce;
-    expect(writeFileSync).to.have.been.calledOnce;
+    sinon.assert.calledOnce(readFileSync);
+    sinon.assert.calledOnce(mkdirSync);
+    sinon.assert.calledOnce(writeFileSync);
   });
 
   it('should generate next letters and ids', async () => {

@@ -9,7 +9,7 @@ describe('plugins/vite/id-generator', () => {
 
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('@src/plugins/helpers');
+    vi.doUnmock('@src/plugins/helpers');
   });
 
   it('should skip unsupported files', async () => {
@@ -69,6 +69,6 @@ describe('plugins/vite/id-generator', () => {
 
     callBuildEnd(freshPlugin.buildEnd);
 
-    expect(saveCache).to.have.been.calledOnce;
+    sinon.assert.calledOnce(saveCache);
   });
 });

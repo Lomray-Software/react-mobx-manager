@@ -8,7 +8,7 @@ describe('context', () => {
 
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('react');
+    vi.doUnmock('react');
   });
 
   it('should initialize manager provider and parent provider', async () => {
@@ -75,7 +75,7 @@ describe('context', () => {
     });
 
     expect(parentResult).to.equal(childNode);
-    expect(storeManager.touchedStores).to.have.been.calledOnceWith({ store: {} });
+    sinon.assert.calledOnceWithExactly(storeManager.touchedStores, { store: {} });
 
     const providerResult = StoreManagerProvider({
       storeManager: storeManager as never,
@@ -85,7 +85,7 @@ describe('context', () => {
     });
 
     expect(providerResult).to.equal(fallbackNode);
-    expect(storeManager.init).to.have.been.calledOnce;
+    sinon.assert.calledOnce(storeManager.init);
 
     contexts[0].value = storeManager;
     contexts[1].value = 'parent-id';

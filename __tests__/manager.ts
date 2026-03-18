@@ -160,7 +160,7 @@ describe('Manager', () => {
     });
 
     expect(shouldPersist).to.equal(false);
-    expect(logger.err).to.have.been.calledWith('Failed to persist stores: ');
+    sinon.assert.calledWith(logger.err, 'Failed to persist stores: ');
   });
 
   it('should attach default persisted handlers on persistStore', () => {
@@ -205,7 +205,7 @@ describe('Manager', () => {
 
     const result = await manager.init();
 
-    expect(get).to.have.been.calledOnce;
+    sinon.assert.calledOnce(get);
     expect(result).to.equal(manager);
   });
 
@@ -229,7 +229,7 @@ describe('Manager', () => {
 
     await new Manager({ storage, logger: logger as never }).init();
 
-    expect(logger.err).to.have.been.calledWith('Failed initialized store manager: ');
+    sinon.assert.calledWith(logger.err, 'Failed initialized store manager: ');
   });
 
   it('should lookup relative store in parent context and report duplicates', () => {
@@ -270,7 +270,8 @@ describe('Manager', () => {
 
     expect(manager.getStore(LookupStore, { contextId: 'child-2', parentId: 'parent-many' })).to.be
       .undefined;
-    expect(logger.err).to.have.been.calledWith(
+    sinon.assert.calledWith(
+      logger.err,
       'Parent context has multiple stores with the same id, please pass key to getStore function.',
     );
   });
@@ -374,7 +375,7 @@ describe('Manager', () => {
 
     expect(manager.getStores().has(store.libStoreId!)).to.equal(false);
     expect(manager.getSuspenseRelations().get(suspenseId)?.has(store.libStoreId!)).to.equal(false);
-    expect(onDestroy).to.have.been.calledOnce;
+    sinon.assert.calledOnce(onDestroy);
 
     clock.restore();
   });

@@ -20,7 +20,7 @@ describe('AsyncStorage', () => {
     const result = await new AsyncStorage({ storage, globalKey: 'async-key' }).get();
 
     expect(result).to.deep.equal({ foo: 'bar' });
-    expect(storage.getItem).to.have.been.calledWith('async-key');
+    sinon.assert.calledWith(storage.getItem, 'async-key');
   });
 
   it('should return empty object and log error on invalid json', async () => {
@@ -34,7 +34,7 @@ describe('AsyncStorage', () => {
     const result = await new AsyncStorage({ storage }).get();
 
     expect(result).to.deep.equal({});
-    expect(error).to.have.been.calledOnce;
+    sinon.assert.calledOnce(error);
   });
 
   it('should delegate set and flush and handle storage failures', async () => {
@@ -49,8 +49,8 @@ describe('AsyncStorage', () => {
     await target.set({ foo: 'bar' });
     await target.flush();
 
-    expect(storage.setItem).to.have.been.calledWith('stores', '{"foo":"bar"}');
-    expect(storage.removeItem).to.have.been.calledWith('stores');
-    expect(error).to.have.callCount(2);
+    sinon.assert.calledWith(storage.setItem, 'stores', '{"foo":"bar"}');
+    sinon.assert.calledWith(storage.removeItem, 'stores');
+    sinon.assert.calledTwice(error);
   });
 });

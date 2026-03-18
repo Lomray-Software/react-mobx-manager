@@ -20,7 +20,7 @@ describe('CookieStorage', () => {
     const result = new CookieStorage({ storage, globalKey: 'cookie-key' }).get();
 
     expect(result).to.deep.equal({ foo: 'bar' });
-    expect(storage.get).to.have.been.calledWith('cookie-key');
+    sinon.assert.calledWith(storage.get, 'cookie-key');
   });
 
   it('should return empty object on invalid json', () => {
@@ -47,7 +47,7 @@ describe('CookieStorage', () => {
     void target.set({ foo: 'bar' });
     void target.flush();
 
-    expect(storage.set).to.have.been.calledWith('stores', '{"foo":"bar"}', cookieAttr);
-    expect(storage.remove).to.have.been.calledWith('stores', cookieAttr);
+    sinon.assert.calledWith(storage.set, 'stores', '{"foo":"bar"}', cookieAttr);
+    sinon.assert.calledWith(storage.remove, 'stores', cookieAttr);
   });
 });

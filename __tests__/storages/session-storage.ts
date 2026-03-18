@@ -21,7 +21,7 @@ describe('SessionStorage', () => {
     void target.set({ one: 1 });
     void target.flush();
 
-    expect(storage.setItem).to.have.been.calledWith(sessionKey, '{"one":1}');
-    expect(storage.removeItem).to.have.been.calledWith(sessionKey);
+    sinon.assert.calledWith(storage.setItem, sessionKey, '{"one":1}');
+    sinon.assert.calledWith(storage.removeItem, sessionKey);
   });
 });

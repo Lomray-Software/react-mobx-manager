@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
 import { afterEach, describe, it } from 'vitest';
 import Logger from '@src/logger';
@@ -16,7 +15,7 @@ describe('Logger', () => {
 
     logger.log('message', { level: 4 });
 
-    expect(log).to.have.callCount(0);
+    sinon.assert.notCalled(log);
   });
 
   it('should route log messages to mapped console methods', () => {
@@ -31,10 +30,10 @@ describe('Logger', () => {
     logger.info('info-message');
     logger.log('plain-message', { level: 4 });
 
-    expect(error).to.have.been.calledOnce;
-    expect(warn).to.have.been.calledOnce;
-    expect(info).to.have.been.calledOnce;
-    expect(log).to.have.been.calledOnce;
+    sinon.assert.calledOnce(error);
+    sinon.assert.calledOnce(warn);
+    sinon.assert.calledOnce(info);
+    sinon.assert.calledOnce(log);
   });
 
   it('should append relations snapshot in debug mode when requested', () => {
@@ -48,7 +47,8 @@ describe('Logger', () => {
 
     logger.debug('snapshot', { foo: 'bar' }, true);
 
-    expect(log).to.have.been.calledWith(
+    sinon.assert.calledWith(
+      log,
       'DEBUG: snapshot',
       sinon.match({
         foo: 'bar',

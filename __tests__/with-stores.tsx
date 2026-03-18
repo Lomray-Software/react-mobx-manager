@@ -13,11 +13,11 @@ describe('withStores', () => {
 
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('react');
-    vi.unmock('mobx-react-lite');
-    vi.unmock('hoist-non-react-statics');
-    vi.unmock('@lomray/consistent-suspense');
-    vi.unmock('@src/context');
+    vi.doUnmock('react');
+    vi.doUnmock('mobx-react-lite');
+    vi.doUnmock('hoist-non-react-statics');
+    vi.doUnmock('@lomray/consistent-suspense');
+    vi.doUnmock('@src/context');
   });
 
   it('should create and mount stores for wrapped component', async () => {
@@ -92,9 +92,10 @@ describe('withStores', () => {
 
     const result = Wrapped({ foo: 'bar' } as never);
 
-    expect(storeManager.createStores).to.have.been.calledOnce;
-    expect(mount).to.have.been.calledWith('custom-id', sinon.match.object);
-    expect(componentSpy).to.have.been.calledWith(
+    sinon.assert.calledOnce(storeManager.createStores);
+    sinon.assert.calledWith(mount, 'custom-id', sinon.match.object);
+    sinon.assert.calledWith(
+      componentSpy,
       sinon.match({
         foo: 'bar',
         globalStore: { libStoreId: 'global-store', isGlobal: true },
@@ -102,8 +103,8 @@ describe('withStores', () => {
         parentStore: { libStoreId: 'parent-store' },
       }),
     );
-    expect(parentProvider).to.have.been.calledOnce;
-    expect(hoist).to.have.been.calledOnce;
+    sinon.assert.calledOnce(parentProvider);
+    sinon.assert.calledOnce(hoist);
     expect(Wrapped.displayName).to.equal('Mobx(View)');
     expect(result).to.equal(componentResult);
   });
@@ -164,6 +165,6 @@ describe('withStores', () => {
     const Wrapped = withStores(component as never, {}, {});
 
     expect(Wrapped({} as never)).to.equal(false);
-    expect(component).to.have.callCount(0);
+    sinon.assert.notCalled(component);
   });
 });

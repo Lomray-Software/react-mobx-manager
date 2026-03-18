@@ -4,7 +4,7 @@ import { afterEach, describe, it, vi } from 'vitest';
 describe('index', () => {
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('@src/with-stores');
+    vi.doUnmock('@src/with-stores');
   });
 
   it('should re-export public api', async () => {

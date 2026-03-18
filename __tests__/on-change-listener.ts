@@ -5,7 +5,7 @@ import { afterEach, describe, it, vi } from 'vitest';
 describe('onChangeListener', () => {
   afterEach(() => {
     vi.resetModules();
-    vi.unmock('mobx');
+    vi.doUnmock('mobx');
   });
 
   it('should return undefined when persist is disabled', async () => {
@@ -45,9 +45,9 @@ describe('onChangeListener', () => {
 
     const result = listener(store, manager as never);
 
-    expect(reaction).to.have.been.calledOnce;
-    expect(toJS).to.have.been.calledWith(store);
-    expect(manager.savePersistedStore).to.have.been.calledWith(store);
+    sinon.assert.calledOnce(reaction);
+    sinon.assert.calledWith(toJS, store);
+    sinon.assert.calledWith(manager.savePersistedStore, store);
     expect(result).to.equal(dispose);
   });
 });
