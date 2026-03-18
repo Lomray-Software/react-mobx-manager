@@ -1,9 +1,12 @@
 import { expect } from 'chai';
+import { makeAutoObservable } from 'mobx';
 import sinon from 'sinon';
 import { describe, it, afterEach } from 'vitest';
+import { makeExported } from '@src/make-exported';
 import Manager from '@src/manager';
 import onChangeListener from '@src/on-change-listener';
 import CombinedStorage from '@src/storages/combined-storage';
+import StoreStatus from '@src/store-status';
 import type { IConstructableStore } from '@src/types';
 import wakeup from '@src/wakeup';
 
@@ -17,7 +20,13 @@ type TPersistedStoreCtor = IConstructableStore & {
 
 describe('Manager', () => {
   const sandbox = sinon.createSandbox();
+  const componentName = 'SampleComponent';
+  const contextId = 'current-context';
+  const managedComponentName = 'ComponentName';
+  const managedContextId = 'context-id';
+  const parentContextId = 'parent-context';
   const persistedStoreId = 'persisted-id';
+  const suspenseId = 'suspense-id';
 
   afterEach(() => {
     sandbox.restore();
@@ -77,15 +86,15 @@ describe('Manager', () => {
 
     const result = manager.createStores(
       [['parentStore', { store: RelativeStore, isParent: true }]],
-      'parent-context',
-      'current-context',
-      'suspense-id',
-      'SampleComponent',
+      parentContextId,
+      contextId,
+      suspenseId,
+      componentName,
     );
 
     expect(result.hasCreationFailure).to.equal(true);
     expect(result.parentStores).to.deep.equal({});
-    expect(manager.getStoresRelations().has('current-context')).to.equal(true);
+    expect(manager.getStoresRelations().has(contextId)).to.equal(true);
   });
 
   it('should serialize only requested stores ids', () => {
@@ -181,5 +190,236 @@ describe('Manager', () => {
 
     expect(persistedStoreCtor.prototype.wakeup).to.equal(customWakeup);
     expect(persistedStoreCtor.prototype.addOnChangeListener).to.equal(customListener);
+  });
+
+  it('should initialize storage and return manager instance', async () => {
+    const storage = new CombinedStorage({
+      local: {
+        get: sandbox.stub().resolves({}),
+        set: sandbox.stub(),
+        flush: sandbox.stub(),
+      },
+    });
+    const get = sandbox.stub(storage, 'get').resolves({});
+    const manager = new Manager({ storage });
+
+    const result = await manager.init();
+
+    expect(get).to.have.been.calledOnce;
+    expect(result).to.equal(manager);
+  });
+
+  it('should log initialization error when storage throws', async () => {
+    const logger = {
+      log: sandbox.stub(),
+      err: sandbox.stub(),
+      warn: sandbox.stub(),
+      info: sandbox.stub(),
+      debug: sandbox.stub(),
+    };
+    const storage = new CombinedStorage({
+      local: {
+        get: sandbox.stub().resolves({}),
+        set: sandbox.stub(),
+        flush: sandbox.stub(),
+      },
+    });
+
+    sandbox.stub(storage, 'get').rejects(new Error('init-failed'));
+
+    await new Manager({ storage, logger: logger as never }).init();
+
+    expect(logger.err).to.have.been.calledWith('Failed initialized store manager: ');
+  });
+
+  it('should lookup relative store in parent context and report duplicates', () => {
+    class LookupStore {
+      public libStoreId?: string;
+    }
+
+    const logger = {
+      log: sandbox.stub(),
+      err: sandbox.stub(),
+      warn: sandbox.stub(),
+      info: sandbox.stub(),
+      debug: sandbox.stub(),
+    };
+    const manager = new Manager({ logger: logger as never });
+    const stores = manager.getStores() as Map<string, { id: string }>;
+
+    stores.set('LookupStore--parent', { id: 'single' });
+    manager.getStoresRelations().set('parent', {
+      ids: new Set(['LookupStore--parent']),
+      parentId: 'root',
+      componentName: 'Parent',
+    });
+
+    expect(manager.getStore(LookupStore, { contextId: 'child', parentId: 'parent' })).to.deep.equal(
+      {
+        id: 'single',
+      },
+    );
+
+    stores.set('LookupStore--parent--a', { id: 'first' });
+    stores.set('LookupStore--parent--b', { id: 'second' });
+    manager.getStoresRelations().set('parent-many', {
+      ids: new Set(['LookupStore--parent--a', 'LookupStore--parent--b']),
+      parentId: 'root',
+      componentName: 'Parent',
+    });
+
+    expect(manager.getStore(LookupStore, { contextId: 'child-2', parentId: 'parent-many' })).to.be
+      .undefined;
+    expect(logger.err).to.have.been.calledWith(
+      'Parent context has multiple stores with the same id, please pass key to getStore function.',
+    );
+  });
+
+  it('should create dummy, parent and global stores through createStores', () => {
+    class RelativeStore {
+      public libStoreId?: string;
+
+      constructor() {}
+    }
+
+    class GlobalStore {
+      public static isGlobal = true;
+
+      public libStoreId?: string;
+
+      public isGlobal?: boolean;
+
+      constructor() {}
+    }
+
+    const manager = new Manager({
+      options: { failedCreationStrategy: 'dummy', destroyTimers: { init: 0 } },
+    });
+    const parentStoreId = 'RelativeStore--parent-context';
+    const parentStore = { libStoreId: parentStoreId };
+
+    (manager.getStores() as Map<string, unknown>).set(parentStoreId, parentStore);
+    manager.getStoresRelations().set(parentContextId, {
+      ids: new Set([parentStoreId]),
+      parentId: 'root',
+      componentName: 'Parent',
+    });
+
+    const result = manager.createStores(
+      [
+        ['parentStore', { store: RelativeStore, isParent: true }],
+        ['globalStore', GlobalStore],
+        ['dummyStore', { store: RelativeStore, isParent: true, id: 'dummy-id' }],
+        ['relativeStore', RelativeStore],
+      ],
+      parentContextId,
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+    );
+
+    expect(result.parentStores.parentStore).to.equal(parentStore);
+    expect(result.globalStores.globalStore).to.be.instanceOf(GlobalStore);
+    expect(result.parentStores.dummyStore).to.be.instanceOf(RelativeStore);
+    expect(result.relativeStores.relativeStore).to.be.instanceOf(RelativeStore);
+    expect(result.hasCreationFailure).to.equal(false);
+  });
+
+  it('should mount, touch, unmount and remove relative stores by timers', async () => {
+    const clock = sandbox.useFakeTimers();
+    const onDestroy = sandbox.stub();
+
+    class RelativeStore {
+      public libStoreId?: string;
+      public libStoreStatus?: StoreStatus;
+      public libDestroyTimer?: ReturnType<typeof setTimeout>;
+      public isGlobal?: boolean;
+      public onDestroy = onDestroy;
+
+      constructor() {}
+    }
+
+    const manager = new Manager({
+      options: {
+        destroyTimers: {
+          init: 0,
+          touched: 5,
+          unused: 5,
+        },
+      },
+    });
+    const result = manager.createStores(
+      [['relativeStore', RelativeStore]],
+      'parent-context',
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+    );
+    const store = result.relativeStores.relativeStore as RelativeStore;
+
+    expect(store.libStoreStatus).to.equal(StoreStatus.init);
+
+    manager.touchedStores({ relativeStore: store });
+    expect(store.libStoreStatus).to.equal(StoreStatus.touched);
+
+    const unmount = manager.mountStores(managedContextId, result);
+
+    expect(store.libStoreStatus).to.equal(StoreStatus.inUse);
+
+    unmount();
+
+    expect(store.libStoreStatus).to.equal(StoreStatus.unused);
+
+    await clock.tickAsync(5);
+
+    expect(manager.getStores().has(store.libStoreId!)).to.equal(false);
+    expect(manager.getSuspenseRelations().get(suspenseId)?.has(store.libStoreId!)).to.equal(false);
+    expect(onDestroy).to.have.been.calledOnce;
+
+    clock.restore();
+  });
+
+  it('should return true when persisted store is saved successfully', async () => {
+    const storage = new CombinedStorage({
+      local: {
+        get: sandbox.stub().resolves({}),
+        set: sandbox.stub(),
+        flush: sandbox.stub(),
+      },
+    });
+
+    sandbox.stub(storage, 'saveStoreData').resolves();
+
+    const shouldPersist = await new Manager({ storage }).savePersistedStore({
+      libStoreId: persistedStoreId,
+      toJSON: () => ({ value: 1 }),
+    });
+
+    expect(shouldPersist).to.equal(true);
+  });
+
+  it('should export observable props including nested exported observables', () => {
+    const store = makeAutoObservable({
+      visible: 1,
+      nested: makeAutoObservable({
+        value: 2,
+      }),
+      hidden: 3,
+      plainValue: 'plain',
+    });
+
+    makeExported(store, {
+      nested: 'observable',
+      hidden: 'excluded',
+      plainValue: 'simple',
+    });
+
+    expect(Manager.getObservableProps(store as never)).to.deep.equal({
+      visible: 1,
+      nested: {
+        value: 2,
+      },
+      plainValue: 'plain',
+    });
   });
 });
