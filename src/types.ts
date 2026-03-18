@@ -24,7 +24,9 @@ export interface IConstructorParams<TProps = any> {
 }
 
 export interface IStoreLifecycle {
+  init?: () => void | (() => void);
   onDestroy?: () => void;
+  onComponentPropsUpdate?: (props: Record<string, any>) => void;
 }
 
 export interface IStore extends IStoreLifecycle {
@@ -36,7 +38,6 @@ export interface IStore extends IStoreLifecycle {
   libStoreStatus?: StoreStatus; // static
   libDestroyTimer?: ReturnType<typeof setTimeout>;
   isGlobal?: boolean; // static
-  init?: () => void | (() => void);
   toJSON?: () => Record<string, any>;
 }
 

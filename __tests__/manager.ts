@@ -326,6 +326,47 @@ describe('Manager', () => {
     expect(result.hasCreationFailure).to.equal(false);
   });
 
+  it('should pass component props only to relative stores', () => {
+    const relativeCtor = sandbox.spy();
+    const globalCtor = sandbox.spy();
+
+    class RelativeStore {
+      public libStoreId?: string;
+
+      constructor(params: Record<string, any>) {
+        relativeCtor(params.componentProps);
+      }
+    }
+
+    class GlobalStore {
+      public static isGlobal = true;
+
+      public libStoreId?: string;
+      public isGlobal?: boolean;
+
+      constructor(params: Record<string, any>) {
+        globalCtor(params.componentProps);
+      }
+    }
+
+    const manager = new Manager();
+
+    manager.createStores(
+      [
+        ['relativeStore', RelativeStore],
+        ['globalStore', GlobalStore],
+      ],
+      parentContextId,
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+      { foo: 'bar' },
+    );
+
+    sinon.assert.calledOnceWithExactly(relativeCtor, { foo: 'bar' });
+    sinon.assert.calledOnceWithExactly(globalCtor, {});
+  });
+
   it('should mount, touch, unmount and remove relative stores by timers', async () => {
     const clock = sandbox.useFakeTimers();
     const onDestroy = sandbox.stub();

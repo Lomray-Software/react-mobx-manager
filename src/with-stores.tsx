@@ -2,7 +2,7 @@ import { useConsistentSuspense, useId } from '@lomray/consistent-suspense';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
 import type { FC } from 'react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStoreManager, useStoreManagerParent, StoreManagerParentProvider } from './context';
 import type { TMapStores, IWithStoreOptions } from './types';
 
@@ -23,31 +23,49 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     const parentId = useStoreManagerParent();
     const { suspenseId } = useConsistentSuspense();
     const id = useId();
-    const [{ contextId, hasFailure, touchableStores, componentStores, mountStores }] = useState(
-      () => {
-        const ctxId = manualContextId || id;
-        const groupedStores = storeManager.createStores(
-          Object.entries(stores),
-          parentId,
-          ctxId,
-          suspenseId,
-          componentName,
-          props,
-        );
-        const { globalStores, relativeStores, parentStores, hasCreationFailure } = groupedStores;
-        const tStores = { ...relativeStores, ...globalStores };
+    const [
+      { contextId, hasFailure, touchableStores, componentStores, relativeStores, mountStores },
+    ] = useState(() => {
+      const ctxId = manualContextId || id;
+      const groupedStores = storeManager.createStores(
+        Object.entries(stores),
+        parentId,
+        ctxId,
+        suspenseId,
+        componentName,
+        props,
+      );
+      const {
+        globalStores,
+        relativeStores: createdRelativeStores,
+        parentStores,
+        hasCreationFailure,
+      } = groupedStores;
+      const tStores = { ...createdRelativeStores, ...globalStores };
 
-        return {
-          contextId: ctxId,
-          hasFailure: hasCreationFailure,
-          touchableStores: tStores,
-          componentStores: { ...tStores, ...parentStores },
-          mountStores: () => storeManager.mountStores(ctxId, groupedStores),
-        };
-      },
-    );
+      return {
+        contextId: ctxId,
+        hasFailure: hasCreationFailure,
+        touchableStores: tStores,
+        componentStores: { ...tStores, ...parentStores },
+        relativeStores: createdRelativeStores,
+        mountStores: () => storeManager.mountStores(ctxId, groupedStores),
+      };
+    });
+    const isMounted = useRef(false);
 
     useEffect(mountStores, [mountStores]);
+    useEffect(() => {
+      if (!isMounted.current) {
+        isMounted.current = true;
+
+        return;
+      }
+
+      Object.values(relativeStores).forEach((store) => {
+        store.onComponentPropsUpdate?.(props);
+      });
+    }, [props, relativeStores]);
 
     return (
       <StoreManagerParentProvider parentId={contextId} touchableStores={touchableStores}>

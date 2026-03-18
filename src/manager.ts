@@ -381,7 +381,7 @@ class Manager {
           parentId,
           suspenseId,
           componentName,
-          componentProps,
+          componentProps: !s.isGlobal && !isParent ? componentProps : {},
         });
 
         if (isParent) {

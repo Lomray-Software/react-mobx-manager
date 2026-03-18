@@ -10,6 +10,11 @@ const contextModuleId = '@src/context';
 
 describe('withStores', () => {
   const componentResult = 'component-result';
+  const parentId = 'parent-id';
+  const suspenseId = 'suspense-id';
+  const autoId = 'auto-id';
+  const globalStoreId = 'global-store';
+  const localStoreId = 'local-store';
 
   afterEach(() => {
     vi.resetModules();
@@ -23,6 +28,7 @@ describe('withStores', () => {
   it('should create and mount stores for wrapped component', async () => {
     const mount = sinon.stub().returns(() => undefined);
     const componentSpy = sinon.stub();
+    const onComponentPropsUpdate = sinon.stub();
     const ReactMock = {
       createElement: (
         type: ((props: Record<string, unknown>) => unknown) | string,
@@ -42,12 +48,25 @@ describe('withStores', () => {
         return typeof type === 'function' ? type(nextProps) : nextProps.children;
       },
       useEffect: (callback: () => (() => void) | void) => callback(),
+      useRef: <T,>(value: T) => ({ current: value }),
       useState: (factory: () => unknown) => [factory(), sinon.stub()],
     };
     const storeManager = {
       createStores: sinon.stub().returns({
-        globalStores: { globalStore: { libStoreId: 'global-store', isGlobal: true } },
-        relativeStores: { localStore: { libStoreId: 'local-store', isGlobal: false } },
+        globalStores: {
+          globalStore: {
+            libStoreId: globalStoreId,
+            isGlobal: true,
+            onComponentPropsUpdate: sinon.stub(),
+          },
+        },
+        relativeStores: {
+          localStore: {
+            libStoreId: localStoreId,
+            isGlobal: false,
+            onComponentPropsUpdate,
+          },
+        },
         parentStores: { parentStore: { libStoreId: 'parent-store' } },
         hasCreationFailure: false,
       }),
@@ -72,12 +91,12 @@ describe('withStores', () => {
       default: hoist,
     }));
     vi.doMock(suspenseModuleId, () => ({
-      useConsistentSuspense: () => ({ suspenseId: 'suspense-id' }),
-      useId: () => 'auto-id',
+      useConsistentSuspense: () => ({ suspenseId }),
+      useId: () => autoId,
     }));
     vi.doMock(contextModuleId, () => ({
       useStoreManager: () => storeManager,
-      useStoreManagerParent: () => 'parent-id',
+      useStoreManagerParent: () => parentId,
       StoreManagerParentProvider: parentProvider,
     }));
 
@@ -98,13 +117,14 @@ describe('withStores', () => {
       componentSpy,
       sinon.match({
         foo: 'bar',
-        globalStore: { libStoreId: 'global-store', isGlobal: true },
-        localStore: { libStoreId: 'local-store', isGlobal: false },
+        globalStore: { libStoreId: globalStoreId, isGlobal: true },
+        localStore: { libStoreId: localStoreId, isGlobal: false },
         parentStore: { libStoreId: 'parent-store' },
       }),
     );
     sinon.assert.calledOnce(parentProvider);
     sinon.assert.calledOnce(hoist);
+    sinon.assert.notCalled(onComponentPropsUpdate);
     expect(Wrapped.displayName).to.equal('Mobx(View)');
     expect(result).to.equal(componentResult);
   });
@@ -130,6 +150,7 @@ describe('withStores', () => {
         return typeof type === 'function' ? type(nextProps) : nextProps.children;
       },
       useEffect: () => undefined,
+      useRef: <T,>(value: T) => ({ current: value }),
       useState: (factory: () => unknown) => [factory(), sinon.stub()],
     };
 
@@ -144,8 +165,8 @@ describe('withStores', () => {
       default: sinon.stub(),
     }));
     vi.doMock(suspenseModuleId, () => ({
-      useConsistentSuspense: () => ({ suspenseId: 'suspense-id' }),
-      useId: () => 'auto-id',
+      useConsistentSuspense: () => ({ suspenseId }),
+      useId: () => autoId,
     }));
     vi.doMock(contextModuleId, () => ({
       useStoreManager: () => ({
@@ -157,7 +178,7 @@ describe('withStores', () => {
         }),
         mountStores: sinon.stub(),
       }),
-      useStoreManagerParent: () => 'parent-id',
+      useStoreManagerParent: () => parentId,
       StoreManagerParentProvider: ({ children }: { children: unknown }) => children,
     }));
 
@@ -166,5 +187,97 @@ describe('withStores', () => {
 
     expect(Wrapped({} as never)).to.equal(false);
     sinon.assert.notCalled(component);
+  });
+
+  it('should call onComponentPropsUpdate only for relative stores on rerender', async () => {
+    const relativeStore = {
+      libStoreId: localStoreId,
+      onComponentPropsUpdate: sinon.stub(),
+    };
+    const globalStore = {
+      libStoreId: globalStoreId,
+      isGlobal: true,
+      onComponentPropsUpdate: sinon.stub(),
+    };
+    const effects: (() => (() => void) | void)[] = [];
+    const ref = { current: false };
+    let storedState: unknown;
+    const ReactMock = {
+      createElement: (
+        type: ((props: Record<string, unknown>) => unknown) | string,
+        props: Record<string, unknown> | null,
+        ...children: unknown[]
+      ) => {
+        const nextProps = {
+          ...(props ?? {}),
+          children:
+            children.length === 0
+              ? props?.children
+              : children.length === 1
+                ? children[0]
+                : children,
+        };
+
+        return typeof type === 'function' ? type(nextProps) : nextProps.children;
+      },
+      useEffect: (callback: () => (() => void) | void) => {
+        effects.push(callback);
+
+        return undefined;
+      },
+      useRef: <T,>(value: T) => {
+        if (typeof value === 'boolean') {
+          return ref as { current: T };
+        }
+
+        return { current: value };
+      },
+      useState: (factory: () => unknown) => {
+        if (storedState === undefined) {
+          storedState = factory();
+        }
+
+        return [storedState, sinon.stub()];
+      },
+    };
+
+    vi.doMock(reactModuleId, () => ({
+      default: ReactMock,
+      ...ReactMock,
+    }));
+    vi.doMock(mobxReactLiteModuleId, () => ({
+      observer: (target: unknown) => target,
+    }));
+    vi.doMock(hoistModuleId, () => ({
+      default: sinon.stub(),
+    }));
+    vi.doMock(suspenseModuleId, () => ({
+      useConsistentSuspense: () => ({ suspenseId }),
+      useId: () => autoId,
+    }));
+    vi.doMock(contextModuleId, () => ({
+      useStoreManager: () => ({
+        createStores: () => ({
+          globalStores: { globalStore },
+          relativeStores: { localStore: relativeStore },
+          parentStores: {},
+          hasCreationFailure: false,
+        }),
+        mountStores: sinon.stub().returns(() => undefined),
+      }),
+      useStoreManagerParent: () => parentId,
+      StoreManagerParentProvider: ({ children }: { children: unknown }) => children,
+    }));
+
+    const { default: withStores } = await import('@src/with-stores');
+    const Wrapped = withStores((() => componentResult) as never, {}, {});
+
+    Wrapped({ foo: 'bar' } as never);
+    effects[1]?.();
+    Wrapped({ foo: 'baz' } as never);
+    effects[3]?.();
+
+    sinon.assert.calledOnceWithExactly(relativeStore.onComponentPropsUpdate, { foo: 'baz' });
+    sinon.assert.notCalled(globalStore.onComponentPropsUpdate);
   });
 });
