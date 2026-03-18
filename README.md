@@ -35,6 +35,7 @@
 
 - [Getting started](#getting-started)
 - [Usage](#usage)
+- [Hot Module Reloading](#hot-module-reloading)
 - [Support SSR](#support-ssr)
 - [Important Tips](#important-tips)
 - [Documentation](#documentation)
@@ -249,6 +250,55 @@ export default withStores(User, stores);
 ```
 
 [See app example](https://github.com/Lomray-Software/vite-template) for a better understanding.
+
+## Hot Module Reloading
+
+For development-only HMR support you can use the dev extension bridge from `plugins/dev-extension/hmr`.
+
+This is a best-effort development helper for both global and relative stores.
+
+### Vite
+
+```typescript
+import { Manager } from '@lomray/react-mobx-manager';
+import { connectViteHmr } from '@lomray/react-mobx-manager/plugins/dev-extension/hmr';
+
+const storeManager = new Manager();
+
+if (import.meta.env.DEV) {
+  connectViteHmr(storeManager, import.meta.hot, { appId: 'app' });
+}
+```
+
+### Webpack
+
+```typescript
+import { Manager } from '@lomray/react-mobx-manager';
+import { connectWebpackHmr } from '@lomray/react-mobx-manager/plugins/dev-extension/hmr';
+
+const storeManager = new Manager();
+
+if (process.env.NODE_ENV === 'development' && module.hot) {
+  connectWebpackHmr(storeManager, module.hot, { appId: 'app' });
+}
+```
+
+### React Native / manual runtime
+
+If your environment does not provide a compatible HMR runtime object, you can still restore saved snapshot manually.
+
+```typescript
+import { Manager } from '@lomray/react-mobx-manager';
+import { connectReactNativeHmr } from '@lomray/react-mobx-manager/plugins/dev-extension/hmr';
+
+const storeManager = new Manager();
+
+if (__DEV__) {
+  connectReactNativeHmr(storeManager, undefined, { appId: 'app' });
+}
+```
+
+If you have access to a runtime object with `accept` and `dispose`, pass it as the second argument and the bridge will also save snapshot and destroy the manager on dispose.
 
 ## Support SSR
 Does this library support SSR? Short answer - yes, but we need some steps to prepare our framework.
