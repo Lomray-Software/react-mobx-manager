@@ -10,6 +10,8 @@ export { default as wakeup } from './wakeup';
 
 export { default as withStores } from './with-stores';
 
+export { default as parentStore } from './parent-store';
+
 export * from './make-exported';
 
 export * from './make-fetching';
