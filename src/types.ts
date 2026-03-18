@@ -41,6 +41,10 @@ export interface IStore extends IStoreLifecycle {
   toJSON?: () => Record<string, any>;
 }
 
+export interface IRelativeStore extends IStore {}
+
+export interface IGlobalStore extends IStore {}
+
 export interface IStorePersisted extends IStore {
   libStorageOptions?: IPersistOptions; // static
   addOnChangeListener?: (store: IStorePersisted, manager: Manager) => (() => void) | undefined;
@@ -104,7 +108,7 @@ export interface IManagerOptions {
   failedCreationStrategy?: 'none' | 'dummy' | 'empty';
 }
 
-export type TAnyStore = IStore | IStorePersisted;
+export type TAnyStore = IStore | IRelativeStore | IGlobalStore | IStorePersisted;
 
 export type TStores = { [storeKey: string]: TAnyStore };
 
