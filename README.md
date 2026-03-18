@@ -26,6 +26,19 @@ It is built for apps that want explicit store ownership, SSR support, persistenc
 - Best-effort HMR
 - And many other nice things 😎
 
+<p align="center">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=reliability_rating" alt="reliability">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=security_rating" alt="Security Rating">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=sqale_rating" alt="Maintainability Rating">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=vulnerabilities" alt="Vulnerabilities">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=bugs" alt="Bugs">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=ncloc" alt="Lines of Code">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=Lomray-Software_react-mobx-manager&metric=coverage" alt="code coverage">
+  <img src="https://img.shields.io/bundlephobia/minzip/@lomray/react-mobx-manager" alt="size">
+  <img src="https://img.shields.io/npm/l/@lomray/react-mobx-manager" alt="size">
+  <img src="https://img.shields.io/npm/v/@lomray/react-mobx-manager?label=semantic%20release&logo=semantic-release" alt="semantic version">
+</p>
+
 ## Install
 
 ```bash
