@@ -55,7 +55,7 @@ class CookieStorage implements IStorage {
   public get(): Record<string, any> | Promise<Record<string, any> | undefined> {
     try {
       return JSON.parse(this.storage.get(this.globalKey) || '{}') as Record<string, any>;
-    } catch (e) {
+    } catch {
       return {};
     }
   }

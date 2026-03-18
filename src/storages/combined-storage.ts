@@ -42,7 +42,7 @@ class CombinedStorage implements IStorage {
   public async get(): Promise<Record<string, any> | undefined> {
     try {
       const data = await Promise.all(
-        Object.values(this.storages).map((storage) => storage.get() || {}),
+        Object.values(this.storages).map((storage) => storage.get() || ({} as any)),
       );
 
       this.persistData = Object.keys(this.storages).reduce(
@@ -54,7 +54,7 @@ class CombinedStorage implements IStorage {
       );
 
       return this.persistData;
-    } catch (e) {
+    } catch {
       return {};
     }
   }
@@ -62,8 +62,8 @@ class CombinedStorage implements IStorage {
   /**
    * @inheritDoc
    */
-  public flush(): void | Promise<any> {
-    return Promise.all(Object.values(this.storages).map((storage) => storage.flush()));
+  public flush(): Promise<any> {
+    return Promise.all(Object.values(this.storages).map((storage) => storage.flush() as any));
   }
 
   /**
@@ -174,7 +174,7 @@ class CombinedStorage implements IStorage {
       return this.set(newData, storageId);
     });
 
-    await Promise.all(dataByStorages);
+    await Promise.all(dataByStorages as Promise<any>[]);
   }
 }
 

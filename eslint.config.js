@@ -6,13 +6,18 @@ import globals from 'globals';
 
 const customFilesIgnores = {
   ...baseConfig['filesIgnores'],
+  ignores: [
+    ...(baseConfig['filesIgnores'].ignores ?? []),
+    'lib/**/*',
+    '*.js',
+  ],
   files: [
     ...baseConfig['filesIgnores'].files,
     '__tests__/**/*.{ts,tsx,*.ts,*tsx}',
     '__mocks__/**/*.{ts,tsx,*.ts,*tsx}',
     '__helpers__/**/*.{ts,tsx,*.ts,*tsx}',
   ],
-}
+};
 
 export default [
   ...lomrayConfig.config(customFilesIgnores),
@@ -22,7 +27,7 @@ export default [
       globals: {
         ...globals.node,
         NodeJS: true,
-      }
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 0,

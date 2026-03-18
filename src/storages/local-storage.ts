@@ -33,7 +33,7 @@ class LocalStorage implements IStorage {
   get(): Record<string, any> | Promise<Record<string, any> | undefined> {
     try {
       return JSON.parse(this.storage.getItem(this.globalKey) || '{}') as Record<string, any>;
-    } catch (e) {
+    } catch {
       return {};
     }
   }
