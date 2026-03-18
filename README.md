@@ -4,7 +4,7 @@
     <img  src="./logo.png" alt="Mobx stores manager logo" width="250" height="253">
 </p>
 
-MobX store manager for React with relative, parent and global stores.
+Clean React components. Encapsulated business logic. No state-tree pain.
 
 It is built for apps that want explicit store ownership, SSR support, persistence, lifecycle cleanup and development tooling without forcing everything into one global state tree.
 
