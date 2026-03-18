@@ -423,6 +423,58 @@ describe('Manager', () => {
     clock.restore();
   });
 
+  it('should destroy all manager stores and call their cleanup hooks', () => {
+    const globalOnDestroy = sandbox.stub();
+    const globalInitCleanup = sandbox.stub();
+    const relativeOnDestroy = sandbox.stub();
+    const relativeInitCleanup = sandbox.stub();
+
+    class GlobalStore {
+      public static isGlobal = true;
+
+      public libStoreId?: string;
+      public libDestroyTimer?: ReturnType<typeof setTimeout>;
+      public isGlobal?: boolean;
+      public onDestroy = globalOnDestroy;
+
+      public init() {
+        return globalInitCleanup;
+      }
+    }
+
+    class RelativeStore {
+      public libStoreId?: string;
+      public libDestroyTimer?: ReturnType<typeof setTimeout>;
+      public isGlobal?: boolean;
+      public onDestroy = relativeOnDestroy;
+
+      public init() {
+        return relativeInitCleanup;
+      }
+    }
+
+    const manager = new Manager();
+
+    manager.getStore(GlobalStore);
+    manager.createStores(
+      [['relativeStore', RelativeStore]],
+      parentContextId,
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+    );
+
+    manager.destroy();
+
+    expect(manager.getStores().size).to.equal(0);
+    expect(manager.getStoresRelations().size).to.equal(0);
+    expect(manager.getSuspenseRelations().size).to.equal(0);
+    sinon.assert.calledOnce(globalInitCleanup);
+    sinon.assert.calledOnce(globalOnDestroy);
+    sinon.assert.calledOnce(relativeInitCleanup);
+    sinon.assert.calledOnce(relativeOnDestroy);
+  });
+
   it('should return true when persisted store is saved successfully', async () => {
     const storage = new CombinedStorage({
       local: {

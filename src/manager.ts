@@ -574,6 +574,19 @@ class Manager {
   }
 
   /**
+   * Destroy manager stores and detach internal relations
+   */
+  public destroy(): void {
+    for (const store of Array.from(this.stores.values())) {
+      clearTimeout(store.libDestroyTimer);
+      this.removeStore(store);
+    }
+
+    this.storesRelations.clear();
+    this.suspenseRelations.clear();
+  }
+
+  /**
    * Change the stores status to touched
    */
   public touchedStores(stores: TStores): void {
