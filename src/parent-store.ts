@@ -1,9 +1,11 @@
-import type { IConstructableStore, TAnyStore } from './types';
+import type { IConstructableStore, IStoreConfig } from './types';
 
 /**
  * Mark store definition as parent store
  */
-const parentStore = <TSto extends TAnyStore>(store: IConstructableStore<TSto>) => ({
+const parentStore = <TStore extends IConstructableStore>(
+  store: TStore,
+): { store: TStore } & IStoreConfig => ({
   store,
   isParent: true as const,
 });
