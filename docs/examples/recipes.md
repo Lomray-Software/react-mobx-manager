@@ -214,6 +214,105 @@ HMR support is experimental and is still being tested.
 - Do not connect the same non-global store to several unrelated components through `withStores`.
 - Prefer `relative` stores by default. Reach for `global` only when the state truly belongs to the whole app.
 
+## Best Practices
+
+### One store per business scope
+
+If a screen owns loading, refresh, optimistic updates, error state, and modal refs, that is usually one screen store.
+
+That is much better than:
+
+- keeping everything in `useState` and `useEffect`
+- spreading logic across many hooks
+- passing callbacks and flags through several component layers
+
+### Make a store global only when it is truly global
+
+If a store must exist in a single shared instance across the app, mark it with `static isGlobal = true`.
+
+Typical examples:
+
+- auth
+- user or session
+- app settings
+- localization
+- navigation-level coordination
+
+Do not make a store global just because it feels easier to import.
+
+### Parent-child store composition beats prop drilling
+
+If a component lives inside a feature scope, do not push `data`, `isLoading`, `error`, `refresh`, and a long list of callbacks down through props.
+
+Use `parentStore(FeatureStore)` instead.
+
+This gives you:
+
+- less prop noise
+- fewer brittle component interfaces
+- easier layout refactors without rewriting contracts
+
+### Async state should live in the store
+
+Flags like `isLoading`, `isRefreshing`, `isSubmitting`, or `isAuthProcess` should live next to the async methods that control them.
+
+Strong pattern:
+
+- `makeFetching(this, { getSomeData: 'isLoading' })`
+- `makeFetching(this, { refreshSomeData: 'isRefreshing' })`
+
+This is cleaner than repeating manual `try/finally` loading control in every screen.
+
+### Keep computed values in stores, not in JSX
+
+Derived values like:
+
+- `isAuth`
+- `isFiltersChanged`
+
+belong in the store, not inside render logic.
+
+Components should read ready answers instead of recalculating domain logic during render.
+
+### Reactions and subscriptions should live near the owning store
+
+If one piece of state should trigger another behavior, prefer `reaction` inside the store.
+
+Examples:
+
+- filters changed -> refetch the list
+- search history opened -> disable list scroll
+- parent store started refreshing -> child store loaded fresh data
+
+This is usually much clearer than scattering magic `useEffect` blocks across the component tree.
+
+### Persist only long-lived state
+
+`Manager.persistStore(...)` is a good fit for:
+
+- user
+- localization
+- debug settings
+
+Do not persist temporary screen state, loading flags, or one-off UI flows.
+
+### UI refs may live in stores when they are part of the flow
+
+Refs such as `actionMenuModalRef`, `plainNavRef`, or `flashListRef` are fine in a store when they are part of the business flow.
+
+This is especially useful in React Native, where refs often participate in navigation, modal control, and gesture-driven flows.
+
+### Stores should depend on app abstractions, not on JSX
+
+It is normal for a store to know about:
+
+- `apiService`
+- `AlertService`
+- `NavigationStore`
+- `UserStore`
+
+It is a bad sign when a store knows about specific JSX structure or layout details.
+
 ## Useful links
 
 - [Vite template example](https://github.com/Lomray-Software/vite-template)
