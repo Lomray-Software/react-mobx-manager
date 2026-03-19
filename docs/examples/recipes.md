@@ -70,6 +70,65 @@ Why:
 - `componentProps` work here
 - `onComponentPropsUpdate(props)` works here
 
+## Screen store with DI, async state, and computed values
+
+```ts
+import type { IConstructorParams, ClassReturnType } from '@lomray/react-mobx-manager';
+import { computed, makeObservable, observable } from 'mobx';
+import UserStore from './stores/user-store';
+
+class FeatureScreenStore {
+  public data = null;
+  public isLoading = false;
+  public error: string | null = null;
+
+  private readonly userStore: ClassReturnType<typeof UserStore>;
+  protected readonly endpoints: IConstructorParams['endpoints'];
+
+  constructor({ getStore, endpoints, componentProps }: IConstructorParams<{ id: string }>) {
+    this.userStore = getStore(UserStore)!;
+    this.endpoints = endpoints;
+
+    makeObservable(this, {
+      data: observable,
+      isLoading: observable,
+      error: observable,
+      isReady: computed,
+    });
+  }
+
+  public get isReady() {
+    return this.data && !this.isLoading;
+  }
+}
+```
+
+This pattern is useful when a screen needs:
+
+- injected app services
+- access to another store through `getStore(...)`
+- local async state
+- derived values kept out of JSX
+
+## Connect a screen store to a component
+
+```ts
+import { type StoresType, withStores } from '@lomray/react-mobx-manager';
+
+const stores = {
+  featureStore: FeatureScreenStore,
+};
+
+type Props = StoresType<typeof stores>;
+
+const FeatureScreen = ({ featureStore: { isReady, load } }: Props) => {
+  // UI only reads ready-to-use state
+  return null;
+};
+
+export default withStores(FeatureScreen, stores);
+```
+
 ## Reuse a parent store in children
 
 Prefer `parentStore(Store)` over inline config:
@@ -96,6 +155,25 @@ const childStores = {
 };
 ```
 
+## Nested component reads parent store without prop drilling
+
+```ts
+import { parentStore, type StoresType, withStores } from '@lomray/react-mobx-manager';
+import FeatureScreenStore from './FeatureScreen.store';
+
+const stores = {
+  featureStore: parentStore(FeatureScreenStore),
+};
+
+const FeatureCard = ({ featureStore: { data } }: StoresType<typeof stores>) => {
+  return null;
+};
+
+export default withStores(FeatureCard, stores);
+```
+
+This is a good fit when a nested UI block needs access to feature state but should not receive a long chain of props from parent components.
+
 ## Global store for app-wide state
 
 ```ts
@@ -114,6 +192,15 @@ class UserStore {
 }
 ```
 
+Minimal shape:
+
+```ts
+class UserStore {
+  public static isGlobal = true;
+  public isAuthProcess = false;
+}
+```
+
 Good fit:
 
 - current user
@@ -125,6 +212,46 @@ Bad fit:
 - form state
 - screen-specific async state
 - props-derived UI state
+
+## Local child store that depends on a parent store and a global store
+
+```ts
+import type {
+  IConstructorParams,
+  ClassReturnType,
+  IRelativeStore,
+} from '@lomray/react-mobx-manager';
+import { reaction } from 'mobx';
+import FeatureScreenStore from './FeatureScreen.store';
+import UserStore from './stores/user-store';
+
+class FeatureActionsStore implements IRelativeStore {
+  private readonly featureStore: ClassReturnType<typeof FeatureScreenStore>;
+  private readonly userStore: ClassReturnType<typeof UserStore>;
+
+  constructor({ getStore }: IConstructorParams) {
+    this.featureStore = getStore(FeatureScreenStore)!; // this is a parent store, not a global one
+    this.userStore = getStore(UserStore)!;
+  }
+
+  public init() {
+    const unsubscribe = reaction(
+      () => this.featureStore.isRefreshing,
+      (isRefreshing) => {
+        if (isRefreshing) {
+          void this.syncSomething();
+        }
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  private async syncSomething() {}
+}
+```
+
+This is a good pattern when a local UI block has its own logic but still depends on screen-level and app-level state.
 
 ## Sync component props into a relative store
 
@@ -149,6 +276,135 @@ class SomeOtherStore {
 ```
 
 This is supported only for relative stores.
+
+## Persist only truly long-lived data
+
+```ts
+import { Manager } from '@lomray/react-mobx-manager';
+
+class UserStore {
+  // profile, settings, preferences, history
+}
+
+export default Manager.persistStore(UserStore, 'user');
+```
+
+Use persistence for durable state. Avoid using it for temporary screen state, loading flags, or one-off UI flows.
+
+## Persist a store across multiple storages
+
+```ts
+export default Manager.persistStore(StorageStore, 'storage', {
+  // storage order matters when behaviour is "exclude"
+  attributes: {
+    // these props will be saved in cookies
+    cookie: ['theme', 'searchParams'],
+    // all remaining props will be saved in local storage
+    local: ['*'],
+  },
+  // disable default export of all observable props
+  // useful when you want to persist only attributes explicitly routed to storages
+  isNotExported: true,
+});
+```
+
+What this means:
+
+- `'storage'` is the persisted store id
+- `attributes` splits the persisted payload by storage id
+- `cookie: ['theme', 'searchParams']` sends these fields to the `cookie` storage
+- `local: ['*']` means all remaining exported fields go to the `local` storage
+- storage order matters because the default `behaviour` is `exclude`
+- `isNotExported: true` turns off the default “export all observable props” behavior for persistence
+- with `isNotExported: true`, persistence should be treated as explicit and controlled
+
+In the storage layer, `CombinedStorage` reads `attributes` and writes each slice of the store state into the matching storage. The first storage acts as the default target when no custom mapping is provided.
+
+## Explicit export control with `makeExported(...)`
+
+```ts
+import { makeExported } from '@lomray/react-mobx-manager';
+
+class DebugStore {
+  public filters = {};
+  public meta = { version: 1 };
+  public internalTimer = null;
+
+  constructor() {
+    makeExported(this, {
+      filters: 'observable',
+      meta: 'simple',
+      internalTimer: 'excluded',
+    });
+  }
+}
+```
+
+Use this when the default export behavior is too broad or when persistence must stay explicit and predictable.
+
+## Combined storage with cookies, local storage, and SSR init state
+
+```ts
+import Cookie from 'js-cookie';
+
+const initState = getServerState(StateKey.storeManager, IS_PROD);
+
+const storeManager = new MobxManager({
+  initState: {
+    ...initState,
+  },
+  logger: {
+    level: 4,
+  },
+  storage: new CombinedStorage({
+    cookie: new CookieStorage({
+      cookieAttr: { expires: 365 },
+      storage: Cookie,
+    }),
+    local: new MobxLocalStorage(),
+  }),
+});
+```
+
+What each part does:
+
+- `getServerState(...)` restores manager state pushed from SSR or stream rendering into the client
+- `initState` is merged into the manager so stores can restore their initial request state
+- `CombinedStorage(...)` lets one manager work with several storages at once
+- `cookie` and `local` are storage ids referenced by `attributes` in `persistStore(...)`
+- `CookieStorage(...)` persists JSON under one cookie key
+- `cookieAttr: { expires: 365 }` configures cookie lifetime
+- `MobxLocalStorage()` handles browser local storage for the remaining long-lived data
+
+This setup is useful when:
+
+- some fields must be available through cookies
+- other fields fit better in local storage
+- SSR or stream rendering must hydrate the manager before the app starts
+
+## Suspense query pattern for SSR and stream rendering
+
+If your project wraps the internal suspense helper with something like `createSuspenseQuery(this)`, the usage can look like this:
+
+```ts
+this.suspense = createSuspenseQuery(this);
+```
+
+```tsx
+suspense.query(() => getData(props), {
+  hash: JSON.stringify(props),
+});
+```
+
+Why this pattern is useful:
+
+- it runs a request and throws the promise for React Suspense
+- it stores request completion state on the store
+- it syncs suspense state between server and client
+- it avoids rerunning the same suspense query when the `hash` is unchanged
+- it can restore and rethrow serialized errors on the client
+
+Under the hood, the internal `suspense-query.ts` helper also marks its request state field with `makeExported(...)` so the suspense status can participate in serialization.
 
 ## Clean up listeners in `init`
 

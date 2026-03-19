@@ -48,3 +48,17 @@ makeExported(this, {
   someField: 'simple',
 });
 ```
+
+Use it when you want explicit control over what `Manager.toJSON()` or persistence-related export logic should include.
+
+Markers:
+
+- `'simple'` includes a plain field as-is
+- `'observable'` exports nested observable data recursively
+- `'excluded'` explicitly removes a field from export
+
+This is especially useful when:
+
+- a store uses `isNotExported: true` in `persistStore(...)`
+- only a subset of fields should be serialized
+- you need to export non-observable metadata together with observable state
