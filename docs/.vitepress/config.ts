@@ -57,6 +57,7 @@ export default defineConfig({
         text: 'Reference',
         items: [
           { text: 'AI Usage', link: '/ai-usage' },
+          { text: 'Talking Points', link: '/reference/talking-points' },
           { text: 'Useful Links', link: '/reference/useful-links' },
         ],
       },

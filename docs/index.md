@@ -110,6 +110,14 @@ In practice:
 
 That is why the library is closer to a context and dependency manager for MobX applications than to just another MobX wrapper.
 
+<div class="home-callout">
+  <p>
+    One of the biggest practical wins is simple: the store stays next to the feature instead of
+    disappearing into a global junk drawer, while nested components can still reuse it through
+    <code>parentStore(...)</code>.
+  </p>
+</div>
+
 ## Read this first
 
 - Start with [Getting Started](/guide/getting-started)
@@ -117,4 +125,5 @@ That is why the library is closer to a context and dependency manager for MobX a
 - If you work with SSR, read [SSR](/guide/ssr)
 - If you develop with fast refresh, read [HMR](/guide/hmr)
 - For common usage patterns, read [Examples / Recipes](/examples/recipes)
+- For short comparison and promo phrasing, read [Talking Points](/reference/talking-points)
 - If you want exact rules for AI agents or new team members, read [AI Usage](/ai-usage)
