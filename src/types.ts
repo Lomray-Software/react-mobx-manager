@@ -23,13 +23,13 @@ export interface IConstructorParams<TProps = any> {
   initState?: Record<string, any>;
 }
 
-export interface IStoreLifecycle<TProps = Record<string, any>> {
+export interface IStoreLifecycle {
   init?: () => void | (() => void);
   onDestroy?: () => void;
-  onComponentPropsUpdate?: (props: TProps) => void;
+  onComponentPropsUpdate?: (props: any) => void;
 }
 
-export interface IStore<TProps = Record<string, any>> extends IStoreLifecycle<TProps> {
+export interface IStore extends IStoreLifecycle {
   libStoreId?: string; // static
   libStoreContextId?: string; // static
   libStoreParentId?: string; // static
@@ -41,7 +41,7 @@ export interface IStore<TProps = Record<string, any>> extends IStoreLifecycle<TP
   toJSON?: () => Record<string, any>;
 }
 
-export interface IRelativeStore<TProps = Record<string, any>> extends IStore<TProps> {}
+export interface IRelativeStore extends IStore {}
 
 export interface IGlobalStore extends IStore {}
 
