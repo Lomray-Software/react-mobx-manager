@@ -1,5 +1,9 @@
 # Examples / Recipes
 
+## Demo
+
+Explore the [demo app](https://github.com/Lomray-Software/vite-template) to see the library in a real project setup.
+
 ## Global store with component usage
 
 ```tsx
@@ -201,6 +205,16 @@ if (import.meta.env.DEV) {
 
 This restores state by `libStoreId`. If ids change, restore is skipped.
 
+HMR support is experimental and is still being tested.
+
+## Important Tips
+
+- Create `global` stores only for things like application settings, logged user, theme, and other app-wide state.
+- To get started, stick to the concept: one component subtree owns one `relative` store subtree.
+- Do not connect the same non-global store to several unrelated components through `withStores`.
+- Prefer `relative` stores by default. Reach for `global` only when the state truly belongs to the whole app.
+
 ## Useful links
 
 - [Vite template example](https://github.com/Lomray-Software/vite-template)
+- [Reactotron React Native debug plugin](https://github.com/Lomray-Software/reactotron-mobx-store-manager)

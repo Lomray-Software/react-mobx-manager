@@ -4,6 +4,12 @@
 
 Yes, the library supports SSR, but you should treat each request as a separate manager lifecycle.
 
+For real-world integrations, look at:
+
+- [Vite demo app](https://github.com/Lomray-Software/vite-template)
+- [After.js / Razzle example](https://github.com/Lomray-Software/microservices-dashboard/blob/staging/src/pages/user/index.tsx#L82)
+- [NextJS example](https://github.com/Lomray-Software/nextjs-mobx-store-manager-example)
+
 ## Recommended pattern
 
 Create a new manager per request and destroy it at the end:
@@ -43,8 +49,11 @@ Do:
 
 - create one manager per request
 - call `manager.destroy()` in `finally`
+- keep SSR `initState` request-scoped
+- disable persist on the server when needed
 
 Do not:
 
 - share request stores across requests
 - keep request-local stores in module-level singletons
+- rely on GC as a replacement for explicit teardown

@@ -3,3 +3,5 @@
 node_modules
 lib
 coverage
+docs/.vitepress/dist
+docs/.vitepress/cache

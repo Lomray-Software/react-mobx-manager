@@ -10,10 +10,17 @@ The package ships a dev extension bridge in:
 
 It restores store state by `libStoreId` and destroys the previous manager on HMR dispose.
 
+## Status
+
+HMR support is experimental and currently in testing.
+
+Treat it as a development helper, not as a guaranteed runtime contract.
+
 This is best-effort support:
 
 - if `libStoreId` stays stable, state is restored
 - if store id changes, restore is skipped for that store
+- some environments may preserve old instances in ways that prevent a full hot update cycle
 
 ## Vite
 
@@ -56,6 +63,7 @@ if (__DEV__) {
 
 ## Notes
 
+- HMR support is experimental and may change while the integration is being tested.
 - Relative stores usually restore correctly while their ids stay stable.
 - Global stores restore especially well because their ids are naturally stable.
 - HMR support is not a guarantee of instance identity reuse. It restores state, not old object instances.
