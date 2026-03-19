@@ -9,6 +9,25 @@ In practice:
 - components describe rendering
 - stores describe state and business logic
 - the manager creates and wires stores to the right part of the tree
+- each subtree gets its own scoped dependencies instead of pulling everything from one global state layer
+
+This means the package is not only a state manager.
+
+It also gives you:
+
+- scoped DI for feature-level state
+- store-to-store composition without prop drilling
+- local stores that stay close to their UI owners
+- predictable lifecycle for screens, modals, and nested UI blocks
+- stable methods and properties on stores, so components do not have to fight hook dependency arrays
+
+Typical flow:
+
+- a screen gets a store through `withStores`
+- child components reuse that store through `parentStore(...)`
+- local child UI may own its own relative store
+- stores can reach parent or global stores through `getStore(...)`
+- truly global state like auth or user stays separate
 
 ## Relative store
 

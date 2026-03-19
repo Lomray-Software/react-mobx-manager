@@ -22,6 +22,8 @@ hero:
 features:
   - title: UI And Logic Stay Separate
     details: Components focus on rendering and layout. Stores hold state, actions and business logic.
+  - title: Scoped DI For Features
+    details: Each part of the UI gets the stores it actually needs, without pushing everything into one global layer.
   - title: Two Real Store Modes
     details: Use relative stores for component-owned state and global stores for app-wide state. Parent is a lookup mode, not a third store kind.
   - title: Ready For Production Flows
@@ -36,10 +38,12 @@ It gives you:
 
 - clean UI components that mostly describe layout
 - stores that own state and business logic
+- scoped dependency injection for feature-level state
 - relative stores for local ownership
 - global stores for app-wide ownership
 - parent lookup when a child component should reuse an ancestor relative store
 - SSR, stream rendering, persistence and development support under the hood
+- stable store methods and state access without hook dependency boilerplate in components
 
 <div class="home-callout">
   <p>
@@ -52,9 +56,12 @@ It gives you:
 
 The package is opinionated in the useful places:
 
+- it acts like scoped DI for feature-level state and logic
 - it separates `global` and `relative` store ownership
 - it lets child components reach ancestor stores through parent lookup
 - it avoids keeping unnecessary store instances alive
+- it lets stores compose with other stores without prop drilling
+- it keeps methods and state on stores, so components do not need hook dependency gymnastics
 - it works with Suspense, SSR, streams, persistence and React Native scenarios
 
 If that model matches how your app is structured, the library becomes straightforward to use and scale.
@@ -73,10 +80,35 @@ If that model matches how your app is structured, the library becomes straightfo
     Lets child components reuse ancestor relative stores without inventing another global layer.
   </div>
   <div class="item">
+    <strong>Store composition</strong>
+    Local stores can use parent or global stores through <code>getStore(...)</code> without prop drilling through component layers.
+  </div>
+  <div class="item">
     <strong>Operational support</strong>
     Persistence, SSR, stream rendering, HMR and React Native are already in the conversation.
   </div>
 </div>
+
+## Why it actually helps
+
+`@lomray/react-mobx-manager` is not just state management.
+
+It helps solve several problems at once:
+
+- scoped DI for a feature or subtree
+- store-to-store composition without manual prop drilling
+- local stores living next to the components that own them
+- predictable lifecycle for screens, modals, and nested UI blocks
+- stable methods, functions, and properties on stores without hook dependency noise in components
+
+In practice:
+
+- a screen gets its own store through `withStores`
+- child components reuse that store through `parentStore(...)`
+- local UI blocks can own their own stores and still access parent or global stores through `getStore(...)`
+- truly global things like auth, current user, or settings live separately and are not duplicated
+
+That is why the library is closer to a context and dependency manager for MobX applications than to just another MobX wrapper.
 
 ## Read this first
 
