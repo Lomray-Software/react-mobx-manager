@@ -17,7 +17,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'API', link: '/api/manager' },
       { text: 'Examples', link: '/examples/recipes' },
-      { text: 'AI Usage', link: '/ai-usage' },
+      { text: 'AI / LLM Guide', link: '/ai-usage' },
       {
         text: 'GitHub',
         link: 'https://github.com/Lomray-Software/react-mobx-manager',
@@ -56,7 +56,7 @@ export default defineConfig({
       {
         text: 'Reference',
         items: [
-          { text: 'AI Usage', link: '/ai-usage' },
+          { text: 'AI / LLM Guide', link: '/ai-usage' },
           { text: 'Talking Points', link: '/reference/talking-points' },
           { text: 'Useful Links', link: '/reference/useful-links' },
         ],

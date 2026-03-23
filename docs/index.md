@@ -126,4 +126,4 @@ That is why the library is closer to a context and dependency manager for MobX a
 - If you develop with fast refresh, read [HMR](/guide/hmr)
 - For common usage patterns, read [Examples / Recipes](/examples/recipes)
 - For short comparison and promo phrasing, read [Talking Points](/reference/talking-points)
-- If you want exact rules for AI agents or new team members, read [AI Usage](/ai-usage)
+- If you want exact rules for AI agents or new team members, read [AI / LLM Guide](/ai-usage)
