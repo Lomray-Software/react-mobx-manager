@@ -10,8 +10,10 @@ type BooleanKeys<T> = {
   [K in keyof T]-?: T[K] extends boolean ? K : never;
 }[keyof T];
 
-type StrictParams<T> = Partial<Record<MethodKeys<T>, BooleanKeys<T>>>;
-type UnsafeParams = Record<string, string>;
+type AtLeastTwo<T> = readonly [T, T, ...T[]];
+type StrictParamValue<T> = BooleanKeys<T> | AtLeastTwo<BooleanKeys<T>>;
+type StrictParams<T> = Partial<Record<MethodKeys<T>, StrictParamValue<T>>>;
+type UnsafeParams = Record<string, string | readonly string[]>;
 
 function makeFetching<T extends Record<any, any>>(
   instance: T,
@@ -29,13 +31,23 @@ function makeFetching<T extends Record<any, any>>(
   params: StrictParams<T> | UnsafeParams = {},
   hasLock = false,
 ): void {
-  Object.entries(params).forEach(([funcName, propName]) => {
+  Object.entries(params).forEach(([funcName, propNameOrNames]) => {
+    const propNames = (Array.isArray(propNameOrNames) ? propNameOrNames : [propNameOrNames]).filter(
+      Boolean,
+    ) as string[];
+
+    if (propNames.length === 0) {
+      return;
+    }
+
     const callback = instance[funcName] as (...arg: any[]) => any;
     let inFlight = 0;
     const setValue = (value: boolean): void => {
       runInAction(() => {
-        // @ts-expect-error not necessary
-        instance[propName] = value;
+        for (const propName of propNames) {
+          // @ts-expect-error not necessary
+          instance[propName] = value;
+        }
       });
     };
     const increment = (): void => {
@@ -55,7 +67,7 @@ function makeFetching<T extends Record<any, any>>(
 
     // @ts-expect-error not necessary
     instance[funcName] = (...args: any[]) => {
-      if (hasLock && instance[propName]) {
+      if (hasLock && propNames.every((name) => instance[name])) {
         return;
       }
 
