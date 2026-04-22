@@ -73,11 +73,21 @@ function makeFetching<T extends Record<any, any>>(
 
       increment();
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const result = callback(...args);
+      let result: unknown;
 
-      if (typeof result === 'object' && result.finally) {
-        result.finally(() => {
+      try {
+        result = callback.apply(instance, args);
+      } catch (error) {
+        decrement();
+        throw error;
+      }
+
+      if (
+        result &&
+        typeof result === 'object' &&
+        typeof (result as { finally?: unknown }).finally === 'function'
+      ) {
+        void (result as Promise<unknown>).finally(() => {
           decrement();
         });
       } else {
