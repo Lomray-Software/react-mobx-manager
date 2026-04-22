@@ -39,6 +39,19 @@ makeFetching(this, {
 });
 ```
 
+Each method maps to one flag — or to several flags via a `readonly` tuple. All
+flags in the tuple flip in a single `runInAction`, so observers see them change
+atomically:
+
+```ts
+makeFetching(this, {
+  verify: ['isVerifying', 'hasStartedBrowserFromModal'] as const,
+});
+```
+
+When `hasLock` is `true`, the method call is dropped only while **every** mapped
+flag is already `true`, so a partially-set state still lets the call through.
+
 ## `makeExported(store, params)`
 
 Controls what parts of the store become exportable or serializable.

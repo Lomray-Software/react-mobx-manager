@@ -401,7 +401,8 @@ The root export is the safest contract. Subpath imports are available in the pub
 - Purpose: wrap methods so they toggle boolean loading flags around sync or async execution
 - Notes:
   - supports multiple concurrent async calls
-  - with `hasLock = true`, it drops calls while the flag is already `true`
+  - each method may map to a single flag (`'isLoading'`) or to a `readonly` tuple of flags (`['isLoading', 'isRefreshing'] as const`); tuple flags flip together inside one `runInAction`
+  - with `hasLock = true`, it drops calls while **every** mapped flag is already `true`
 
 `makeExported`
 
