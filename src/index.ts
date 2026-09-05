@@ -14,7 +14,7 @@ export { default as parentStore } from './parent-store';
 
 export * from './make-exported';
 
-export * from './make-fetching';
+export { default as makeFetching } from './make-fetching';
 
 export { default as Events } from './events';
 

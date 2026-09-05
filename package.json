@@ -77,7 +77,7 @@
     "@lomray/consistent-suspense": ">=2.0.1",
     "@lomray/event-manager": ">=2.0.2",
     "hoist-non-react-statics": ">=3.3.2",
-    "lodash": ">=4.17.21",
+    "lodash": ">=4.18.1",
     "mobx": ">=6.9.0",
     "mobx-react-lite": "^3 || ^4 || ^5",
     "react": "^19 || ^18 || ^17"
@@ -87,5 +87,33 @@
       "browserslist-generator": "^3.0.0"
     }
   },
-  "packageManager": "npm@11.5.2"
+  "packageManager": "npm@11.5.2",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./plugins/vite": {
+      "types": "./plugins/vite/index.d.ts",
+      "default": "./plugins/vite/index.js"
+    },
+    "./plugins/dev-extension": {
+      "types": "./plugins/dev-extension/index.d.ts",
+      "default": "./plugins/dev-extension/index.js"
+    },
+    "./plugins/dev-extension/hmr": {
+      "types": "./plugins/dev-extension/hmr/index.d.ts",
+      "default": "./plugins/dev-extension/hmr/index.js"
+    },
+    "./package.json": "./package.json",
+    "./*.js": {
+      "types": "./*.d.ts",
+      "default": "./*.js"
+    },
+    "./*": {
+      "types": "./*.d.ts",
+      "default": "./*.js"
+    }
+  }
 }
