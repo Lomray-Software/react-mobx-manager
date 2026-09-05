@@ -243,14 +243,16 @@ class Manager {
    * Lookup store
    */
   protected lookupStore(id: string, params: IStoreParams): TInitStore<TAnyStore> | undefined {
-    const { contextId, parentId: defaultParentId } = params;
+    const { contextId, parentId: defaultParentId, key } = params;
     const clearId = id.split('--')?.[0];
     const { ids, parentId } = this.storesRelations.get(contextId!) ?? {
       ids: new Set(),
       parentId: defaultParentId,
     };
 
-    const matchedIds = [...ids].filter((storeId) => storeId.startsWith(`${clearId}--`));
+    const matchedIds = [...ids].filter(
+      (storeId) => storeId.startsWith(`${clearId}--`) && (!key || storeId.endsWith(`--${key}`)),
+    );
 
     if (matchedIds.length === 1) {
       return this.stores.get(matchedIds[0]);
@@ -266,7 +268,10 @@ class Manager {
       return undefined;
     }
 
-    return this.lookupStore(id, { contextId: this.getBiggerContext(parentId, defaultParentId) });
+    return this.lookupStore(id, {
+      contextId: this.getBiggerContext(parentId, defaultParentId),
+      key,
+    });
   }
 
   /**
@@ -301,10 +306,8 @@ class Manager {
     const newStore = new store({
       ...this.storesParams,
       storeManager: this,
-      getStore: <TS>(
-        targetStore: IConstructableStore<TS>,
-        targetParams = { contextId, parentId },
-      ) => this.getStore(targetStore, targetParams),
+      getStore: <TS>(targetStore: IConstructableStore<TS>, targetParams = {}) =>
+        this.getStore(targetStore, { contextId, parentId, ...targetParams }),
       componentProps,
       initState: this.initState[id],
     });

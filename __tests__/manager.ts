@@ -7,7 +7,7 @@ import Manager from '@src/manager';
 import onChangeListener from '@src/on-change-listener';
 import CombinedStorage from '@src/storages/combined-storage';
 import StoreStatus from '@src/store-status';
-import type { IConstructableStore } from '@src/types';
+import type { IConstructableStore, IConstructorParams } from '@src/types';
 import wakeup from '@src/wakeup';
 
 type TPersistedStoreCtor = IConstructableStore & {
@@ -310,6 +310,56 @@ describe('Manager', () => {
       logger.err,
       'Parent context has multiple stores with the same id, please pass key to getStore function.',
     );
+  });
+
+  it('should preserve store keys through ancestors and constructor helper parameters', () => {
+    class ParentStore {
+      public value = 1;
+    }
+
+    class ChildStore {
+      public parent: ParentStore | undefined;
+
+      constructor({ getStore }: IConstructorParams) {
+        this.parent = getStore(ParentStore, { key: 'second' });
+      }
+    }
+
+    const manager = new Manager();
+
+    try {
+      const { relativeStores } = manager.createStores(
+        [
+          ['first', ParentStore],
+          ['second', ParentStore],
+        ],
+        'root',
+        'parent',
+        '',
+        'Parent',
+      );
+
+      manager.createStores([], 'parent', 'middle', '', 'Middle');
+      for (const key of ['first', 'second']) {
+        expect(
+          manager.getStore(ParentStore, { contextId: 'child', parentId: 'middle', key }),
+        ).to.equal(relativeStores[key]);
+      }
+
+      expect(
+        manager.getStore(ParentStore, {
+          contextId: 'child',
+          parentId: 'middle',
+          key: 'missing',
+        }),
+      ).to.be.undefined;
+      const child = manager.createStores([['child', ChildStore]], 'middle', 'child', '', 'Child')
+        .relativeStores.child as ChildStore;
+
+      expect(child.parent).to.equal(relativeStores.second);
+    } finally {
+      manager.destroy();
+    }
   });
 
   it('should create dummy, parent and global stores through createStores', () => {
