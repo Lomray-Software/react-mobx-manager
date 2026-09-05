@@ -21,7 +21,7 @@ Returned runtime value:
 }
 ```
 
-## `Manager.persistStore(Store, id?, options?)`
+## `Manager.persistStore(Store, id, options?)`
 
 Marks store as persisted and wires default persistence hooks.
 

@@ -67,3 +67,5 @@ if (__DEV__) {
 - Relative stores usually restore correctly while their ids stay stable.
 - Global stores restore especially well because their ids are naturally stable.
 - HMR support is not a guarantee of instance identity reuse. It restores state, not old object instances.
+
+The HMR entry exports `connectHmrRuntime` by name (`import { connectHmrRuntime } from '@lomray/react-mobx-manager/plugins/dev-extension/hmr'`); it has no default export.
