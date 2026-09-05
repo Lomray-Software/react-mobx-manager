@@ -40,8 +40,14 @@ jobs:
       - name: Check eslint
         run: npm run lint:check
 
-      - name: Test
+      - name: Test (MobX 7 / mobx-react-lite 5)
         run: npm run test -- --coverage
+
+      - name: Install MobX 6 / mobx-react-lite 4
+        run: npm install --no-save --ignore-scripts mobx@6.16.1 mobx-react-lite@4.1.1
+
+      - name: Test (MobX 6 / mobx-react-lite 4)
+        run: npm test
 
       - uses: actions/upload-artifact@v4
         with:
