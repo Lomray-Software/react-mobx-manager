@@ -51,3 +51,7 @@ void [
   connectHmrRuntime,
   ManagerHmr,
 ];
+
+api.Manager.persistStore(Store, 'example');
+// @ts-expect-error A persistence ID is required.
+api.Manager.persistStore(Store);

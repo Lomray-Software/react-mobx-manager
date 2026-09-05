@@ -644,7 +644,7 @@ Behavior:
 - `connectReactNativeHmr(manager, runtime?, options?)`
 - `connectViteHmr(manager, runtime?, options?)`
 - `connectWebpackHmr(manager, runtime?, options?)`
-- default export `connectHmrRuntime(manager, runtime?, options?)`
+- named export `connectHmrRuntime(manager, runtime?, options?)`
 - `ManagerHmr`
 
 `ManagerHmr` methods:
