@@ -87,9 +87,7 @@ function makeFetching<T extends Record<any, any>>(
         typeof result === 'object' &&
         typeof (result as { finally?: unknown }).finally === 'function'
       ) {
-        void (result as Promise<unknown>).finally(() => {
-          decrement();
-        });
+        void (result as Promise<unknown>).then(decrement, decrement);
       } else {
         decrement();
       }
