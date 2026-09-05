@@ -21,6 +21,17 @@ describe('plugins/vite/id-generator', () => {
       .undefined;
   });
 
+  it('should inject an id for a tagged store without observable helper calls', async () => {
+    const { default: IdGenerator } = await import('@src/plugins/vite/id-generator');
+    const plugin = IdGenerator({ root: '/root' });
+    const code = '/** @mobx-store */ class Tagged { value = 1; }';
+    const result = callTransform(plugin.transform, code, '/root/tagged.ts') as { code: string };
+
+    expect(result.code).to.include("static id = 'tagged.ts-Tagged';");
+    expect(callTransform(plugin.transform, 'class Plain { value = 1; }', '/root/plain.ts')).to.be
+      .undefined;
+  });
+
   it('should inject id from cache or generated class match', async () => {
     const cachedFileId = '/cached.ts';
     const transformedCode = 'cached-code';

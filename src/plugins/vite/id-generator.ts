@@ -27,7 +27,7 @@ function IdGenerator({ root = cwd(), isProd = false }: IPluginOptions = {}): Plu
       if (
         id.includes('node_modules') ||
         !['.js', '.ts', '.tsx'].includes(extName) ||
-        !/(makeObservable|makeAutoObservable)\(/.test(code)
+        (!/(makeObservable|makeAutoObservable)\(/.test(code) && !code.includes('@mobx-store'))
       ) {
         return;
       }
