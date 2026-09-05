@@ -69,7 +69,7 @@ const StoreManagerProvider: FC<IStoreManagerProvider> = ({
   return (
     <StoreManagerContext.Provider value={storeManager}>
       <StoreManagerParentProvider parentId="root">
-        {isInit ? children : fallback || children}
+        {isInit ? children : (fallback ?? null)}
       </StoreManagerParentProvider>
     </StoreManagerContext.Provider>
   );

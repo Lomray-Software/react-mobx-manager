@@ -87,6 +87,24 @@ describe('context', () => {
     expect(providerResult).to.equal(fallbackNode);
     sinon.assert.calledOnce(storeManager.init);
 
+    for (const fallback of [undefined, null, false, 0, ''] as const) {
+      expect(
+        StoreManagerProvider({
+          storeManager: storeManager as never,
+          shouldInit: true,
+          fallback: fallback as never,
+          children: childNode,
+        }),
+      ).to.equal(fallback ?? null);
+    }
+
+    expect(
+      StoreManagerProvider({
+        storeManager: storeManager as never,
+        children: childNode,
+      }),
+    ).to.equal(childNode);
+
     contexts[0].value = storeManager;
     contexts[1].value = 'parent-id';
 

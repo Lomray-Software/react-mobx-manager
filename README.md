@@ -55,3 +55,5 @@ Full documentation lives in [here](https://lomray-software.github.io/react-mobx-
 Made with 💚
 
 Published under [MIT License](./LICENSE).
+
+With `shouldInit`, `StoreManagerProvider` renders only the fallback (or nothing) until initialization finishes. Consumers needing immediate content should initialize the manager before rendering and omit `shouldInit`, as the Vite template does.
