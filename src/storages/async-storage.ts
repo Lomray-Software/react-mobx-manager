@@ -65,7 +65,7 @@ class AsyncStorage implements IStorage {
    */
   async set(value: Record<string, any> | undefined): Promise<void> {
     try {
-      return await this.storage.setItem(this.globalKey, JSON.stringify(value || '{}'));
+      return await this.storage.setItem(this.globalKey, JSON.stringify(value ?? {}));
     } catch (e) {
       console.error('Failed to set value to async storage:', e);
     }

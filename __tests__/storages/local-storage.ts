@@ -38,6 +38,22 @@ describe('LocalStorage', () => {
     expect(result).to.deep.equal({});
   });
 
+  it('should round trip undefined as an empty object', async () => {
+    let raw: string | undefined;
+    const storage = {
+      getItem: sandbox.stub().callsFake(() => raw),
+      setItem: sandbox.stub().callsFake((_key: string, value: string) => {
+        raw = value;
+      }),
+      removeItem: sandbox.stub(),
+    };
+    const target = new LocalStorage({ storage: storage as unknown as Storage });
+
+    await Promise.resolve(target.set(undefined));
+    expect(raw).to.equal('{}');
+    expect(await Promise.resolve(target.get())).to.deep.equal({});
+  });
+
   it('should delegate set and flush to underlying storage', () => {
     const storage = {
       getItem: sandbox.stub(),

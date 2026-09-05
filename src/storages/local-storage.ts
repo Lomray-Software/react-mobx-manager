@@ -49,7 +49,7 @@ class LocalStorage implements IStorage {
    * @inheritDoc
    */
   set(value: Record<string, any> | undefined): void {
-    return this.storage.setItem(this.globalKey, JSON.stringify(value || '{}'));
+    return this.storage.setItem(this.globalKey, JSON.stringify(value ?? {}));
   }
 }
 

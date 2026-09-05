@@ -35,6 +35,22 @@ describe('CookieStorage', () => {
     expect(result).to.deep.equal({});
   });
 
+  it('should round trip undefined as an empty object', async () => {
+    let raw: string | undefined;
+    const storage = {
+      get: sandbox.stub().callsFake(() => raw),
+      set: sandbox.stub().callsFake((_key: string, value: string) => {
+        raw = value;
+      }),
+      remove: sandbox.stub(),
+    };
+    const target = new CookieStorage({ storage });
+
+    await Promise.resolve(target.set(undefined));
+    expect(raw).to.equal('{}');
+    expect(await Promise.resolve(target.get())).to.deep.equal({});
+  });
+
   it('should delegate set and flush with cookie attributes', () => {
     const storage = {
       get: sandbox.stub(),
