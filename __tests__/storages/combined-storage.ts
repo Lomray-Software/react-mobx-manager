@@ -129,6 +129,35 @@ describe('CombinedStorage', () => {
     sinon.assert.calledOnceWithExactly(setSecondary, { store: { bar: 2 } });
   });
 
+  it.each(['A', 'B'])(
+    'should save %s after flush without skipping or resurrecting data',
+    async (id) => {
+      let durable: Record<string, unknown> = {};
+      const set = sandbox.spy((value: Record<string, unknown> | undefined) => {
+        durable = value ?? {};
+      });
+      const target = new CombinedStorage({
+        primary: {
+          get: () => durable,
+          set,
+          flush: async () => {
+            await Promise.resolve();
+            durable = {};
+          },
+        },
+      });
+
+      await target.get();
+      await target.saveStoreData({ libStoreId: 'A' }, { count: 1 });
+      await target.flush();
+      expect(durable).to.deep.equal({});
+      expect(target.getStoreData({ libStoreId: 'A' })).to.deep.equal({});
+      await target.saveStoreData({ libStoreId: id }, { count: 1 });
+      expect(durable).to.deep.equal({ [id]: { count: 1 } });
+      sinon.assert.calledTwice(set);
+    },
+  );
+
   it('should support include behaviour and flush all storages', async () => {
     const flushPrimary = sandbox.stub().resolves();
     const flushSecondary = sandbox.stub().resolves();
