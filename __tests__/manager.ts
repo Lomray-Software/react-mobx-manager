@@ -71,6 +71,42 @@ describe('Manager', () => {
     expect(manager.getStores().has('GlobalStore')).to.equal(true);
   });
 
+  it('should serialize mutations to auto-observable store classes', () => {
+    class CounterStore {
+      public static id = 'counter';
+      public static isGlobal = true;
+
+      public count = 0;
+      public nested = { values: [1] };
+
+      constructor() {
+        makeAutoObservable(this, {}, { autoBind: true });
+      }
+
+      public increment(): void {
+        this.count += 1;
+        this.nested.values.push(this.count + 1);
+      }
+    }
+
+    const manager = new Manager();
+    const store = manager.getStore(CounterStore)!;
+
+    try {
+      const initialState = manager.toJSON();
+
+      store.increment();
+
+      expect(manager.getStore(CounterStore)).to.equal(store);
+      expect(initialState).to.deep.equal({ counter: { count: 0, nested: { values: [1] } } });
+      expect(manager.toJSON()).to.deep.equal({
+        counter: { count: 1, nested: { values: [1, 2] } },
+      });
+    } finally {
+      manager.destroy();
+    }
+  });
+
   it('should mark creation failure if parent store is not found', () => {
     class RelativeStore {
       public libStoreId?: string;

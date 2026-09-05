@@ -45,6 +45,8 @@ It is built for apps that want explicit store ownership, SSR support, persistenc
 npm i @lomray/react-mobx-manager @lomray/consistent-suspense
 ```
 
+Supports MobX 6 (>=6.9.0) and 7 with mobx-react-lite 3, 4, or 5; consumers must choose compatible peers, as mobx-react-lite 5 requires MobX 7 and React 18+ (React 17 remains supported with mobx-react-lite 3 or 4).
+
 ## Documentation
 
 Full documentation lives in [here](https://lomray-software.github.io/react-mobx-manager/)

@@ -17,13 +17,13 @@ class UserStore {
   constructor() {
     makeObservable(this, {
       name: observable,
-      setName: action.bound,
+      setName: action,
     });
   }
 
-  public setName(name: string): void {
+  public setName = (name: string): void => {
     this.name = name;
-  }
+  };
 }
 
 const stores = {
@@ -50,13 +50,13 @@ class SomeOtherStore {
   constructor() {
     makeObservable(this, {
       value: observable,
-      setValue: action.bound,
+      setValue: action,
     });
   }
 
-  public setValue(value: string): void {
+  public setValue = (value: string): void => {
     this.value = value;
-  }
+  };
 }
 
 const stores = {
