@@ -75,6 +75,59 @@ describe('makeFetching', () => {
     expect(instance.isLoading).to.equal(false);
   });
 
+  it('should clean up a caught rejection without an unhandled rejection', async () => {
+    const error = new Error('request failed');
+    const request = Promise.reject(error);
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    const instance = {
+      isLoading: false,
+      isBusy: false,
+      request,
+      run() {
+        return this.request;
+      },
+    };
+
+    process.on('unhandledRejection', onUnhandled);
+
+    try {
+      makeFetching(instance, { run: ['isLoading', 'isBusy'] });
+      const result = instance.run();
+
+      expect(result).to.equal(request);
+      expect(instance.isLoading).to.equal(true);
+      expect(instance.isBusy).to.equal(true);
+      await result.catch((reason) => expect(reason).to.equal(error));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20);
+      });
+      expect(instance.isLoading).to.equal(false);
+      expect(instance.isBusy).to.equal(false);
+      expect(unhandled).to.deep.equal([]);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+  });
+
+  it('should preserve binding and reset multiple flags after a synchronous error', () => {
+    const error = new Error('sync failure');
+    const instance = {
+      isLoading: false,
+      isBusy: false,
+      error,
+      run() {
+        throw this.error;
+      },
+    };
+
+    makeFetching(instance, { run: ['isLoading', 'isBusy'] });
+
+    expect(() => instance.run()).to.throw(error);
+    expect(instance.isLoading).to.equal(false);
+    expect(instance.isBusy).to.equal(false);
+  });
+
   it('should block repeated calls when lock is enabled', () => {
     let callCount = 0;
     const instance = {
@@ -183,7 +236,7 @@ describe('makeFetching', () => {
     let callCount = 0;
     const instance = {
       isLoading: false,
-      run() {
+      run(this: void) {
         callCount += 1;
 
         return 'done';
