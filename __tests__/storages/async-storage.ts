@@ -37,6 +37,24 @@ describe('AsyncStorage', () => {
     sinon.assert.calledOnce(error);
   });
 
+  it('should round trip undefined as an empty object', async () => {
+    let raw: string | undefined;
+    const storage = {
+      getItem: sandbox.stub().callsFake(() => Promise.resolve(raw ?? null)),
+      setItem: sandbox.stub().callsFake((_key: string, value: string) => {
+        raw = value;
+
+        return Promise.resolve();
+      }),
+      removeItem: sandbox.stub(),
+    };
+    const target = new AsyncStorage({ storage });
+
+    await Promise.resolve(target.set(undefined));
+    expect(raw).to.equal('{}');
+    expect(await Promise.resolve(target.get())).to.deep.equal({});
+  });
+
   it('should delegate set and flush and handle storage failures', async () => {
     const storage = {
       getItem: sandbox.stub().resolves('{}'),

@@ -71,7 +71,7 @@ class CookieStorage implements IStorage {
    * @inheritDoc
    */
   public set(value: Record<string, any> | undefined): void {
-    return this.storage.set(this.globalKey, JSON.stringify(value || '{}'), this.cookieAttr);
+    return this.storage.set(this.globalKey, JSON.stringify(value ?? {}), this.cookieAttr);
   }
 }
 
