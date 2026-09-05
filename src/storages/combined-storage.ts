@@ -62,8 +62,11 @@ class CombinedStorage implements IStorage {
   /**
    * @inheritDoc
    */
-  public flush(): Promise<any> {
-    return Promise.all(Object.values(this.storages).map((storage) => storage.flush() as any));
+  public async flush(): Promise<void> {
+    await Promise.all(
+      Object.values(this.storages).map((storage) => Promise.resolve(storage.flush())),
+    );
+    this.persistData = {};
   }
 
   /**
