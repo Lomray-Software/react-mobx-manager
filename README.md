@@ -57,3 +57,5 @@ Made with 💚
 Published under [MIT License](./LICENSE).
 
 With `shouldInit`, `StoreManagerProvider` renders only the fallback (or nothing) until initialization finishes. Consumers needing immediate content should initialize the manager before rendering and omit `shouldInit`, as the Vite template does.
+
+`makeFetching` is available as a named root export. Public subpaths support both extensionless imports and explicit `.js` paths (use `/index.js` for directory entries), including native Node ESM consumers.

@@ -29,5 +29,6 @@ describe('index', () => {
     expect(api.withStores).to.equal(withStores);
     expect(api.StoreManagerProvider).to.be.a('function');
     expect(api.makeExported).to.be.a('function');
+    expect(api.makeFetching).to.equal((await import('@src/make-fetching')).default);
   });
 });
