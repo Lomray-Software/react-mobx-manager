@@ -55,6 +55,49 @@ describe('plugins/helpers', () => {
     expect(generator.getProdId()).to.equal('Sb');
   });
 
+  it('should retain cached ids and allocate unused ids across production builds', async () => {
+    let saved = '[]';
+
+    vi.doMock('node:fs', () => ({
+      default: {
+        existsSync: () => true,
+        readFileSync: () => saved,
+        writeFileSync: (_file: string, value: string) => {
+          saved = value;
+        },
+      },
+    }));
+
+    const { Generator, saveCache } = await import('@src/plugins/helpers');
+    const first = new Generator('/root', true);
+
+    first.cache.set('a.ts', { classname: 'A', storeId: first.getProdId() });
+    saveCache(first.cache);
+    const second = new Generator('/root', true);
+
+    second.cache.set('b.ts', { classname: 'B', storeId: second.getProdId() });
+    expect(second.cache.get('a.ts')?.storeId).to.equal('Sa');
+    expect(second.cache.get('b.ts')?.storeId).to.equal('Sb');
+    expect(second.getProdId()).to.equal('Sc');
+  });
+
+  it('should reject duplicate ids in a loaded production cache', async () => {
+    vi.doMock('node:fs', () => ({
+      default: {
+        existsSync: () => true,
+        readFileSync: () =>
+          JSON.stringify([
+            ['a.ts', { classname: 'A', storeId: 'Sa' }],
+            ['b.ts', { classname: 'B', storeId: 'Sa' }],
+          ]),
+      },
+    }));
+
+    const { Generator } = await import('@src/plugins/helpers');
+
+    expect(() => new Generator('/root', true)).to.throw('Duplicate store ID "Sa"');
+  });
+
   it('should detect stores, inject ids and ignore unmatched classes', async () => {
     const { Generator } = await import('@src/plugins/helpers');
     const generator = new Generator('/root');
