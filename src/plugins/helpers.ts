@@ -19,7 +19,20 @@ const loadCache = (isProd = false): ICache => {
   if (isProd && fs.existsSync(cacheFile)) {
     const cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf-8' }));
 
-    return new Map(cache as any[]);
+    const result: ICache = new Map(cache as any[]);
+    const used = new Set<string>();
+
+    for (const { storeId } of result.values()) {
+      if (used.has(storeId)) {
+        throw new Error(
+          `Duplicate store ID "${storeId}" in ${cacheFile}. Remove the cache and rebuild.`,
+        );
+      }
+
+      used.add(storeId);
+    }
+
+    return result;
   }
 
   return new Map();
@@ -99,10 +112,13 @@ class Generator {
    * Get production store id
    */
   public getProdId = (): string => {
-    const nextLetter = getNextLetter(this.lastId);
-    const id = `S${nextLetter}`;
+    const used = new Set([...this.cache.values()].map(({ storeId }) => storeId));
+    let id: string;
 
-    this.lastId = nextLetter;
+    do {
+      this.lastId = getNextLetter(this.lastId);
+      id = `S${this.lastId}`;
+    } while (used.has(id));
 
     return id;
   };
