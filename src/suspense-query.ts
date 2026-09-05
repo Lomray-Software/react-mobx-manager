@@ -144,13 +144,22 @@ class SuspenseQuery {
     }
 
     if (!this.promise) {
-      this.promise = promise();
+      const pending = promise();
 
-      this.promise.then(
+      this.promise = pending;
+      pending.then(
         () => {
+          if (this.promise !== pending) {
+            return;
+          }
+
           this.store[fieldName] = { hash, done: true };
         },
         (e) => {
+          if (this.promise !== pending) {
+            return;
+          }
+
           this.errorJson(e);
 
           this.store[fieldName] = { error: e };

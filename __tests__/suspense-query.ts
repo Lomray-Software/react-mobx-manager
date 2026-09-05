@@ -47,6 +47,49 @@ describe('SuspenseQuery', () => {
     expect(target.query(() => Promise.resolve('unused'), { hash: 'hash-1' })).to.be.undefined;
   });
 
+  it.each(['resolve', 'reject'] as const)(
+    'should ignore an obsolete query that settles with %s',
+    async (settlement) => {
+      let resolveOld!: () => void;
+      let rejectOld!: (reason: Error) => void;
+      let resolveNew!: () => void;
+      const old = new Promise<void>((resolve, reject) => {
+        resolveOld = resolve;
+        rejectOld = reject;
+      });
+      const current = new Promise<void>((resolve) => {
+        resolveNew = resolve;
+      });
+      const store: Record<string, unknown> = {};
+      const query = new SuspenseQuery(store);
+
+      for (const [hash, promise] of [
+        ['A', old],
+        ['B', current],
+      ] as const) {
+        try {
+          query.query(() => promise, { hash });
+        } catch (pending) {
+          expect(pending).to.equal(promise);
+        }
+      }
+
+      resolveNew();
+      await current;
+      expect(store.sR).to.deep.equal({ hash: 'B', done: true });
+
+      if (settlement === 'resolve') {
+        resolveOld();
+      } else {
+        rejectOld(new Error('obsolete A failed'));
+      }
+
+      await old.catch(() => undefined);
+      expect(store.sR).to.deep.equal({ hash: 'B', done: true });
+      expect(query.query(() => Promise.resolve(), { hash: 'B' })).to.be.undefined;
+    },
+  );
+
   it('should serialize error and rethrow it from init wrapper', async () => {
     const store: Record<string, any> = {
       init: () => 'init-called',
