@@ -5,7 +5,7 @@ on:
     branches: [ prod, staging ]
 
 env:
-  NODE_VERSION: 22.21.0
+  NODE_VERSION: 22.23.2
   ENABLE_CACHE: yes
   NPM_VERSION: 11.5.2
 
@@ -67,6 +67,10 @@ jobs:
         with:
           name: coverage-lcov
           path: coverage
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - id: package-version
         run: npx @lomray/microservices-cli package-version
