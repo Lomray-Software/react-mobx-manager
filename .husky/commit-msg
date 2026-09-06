@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # validate commit
 npx --no-install commitlint -g commitlint.config.js --edit "$1"
 
