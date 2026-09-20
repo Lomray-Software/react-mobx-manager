@@ -100,7 +100,7 @@ describe('plugins/helpers', () => {
 
     expect([...generator.cache.keys()]).to.deep.equal(['a.ts']);
     expect(generator.getProdId()).to.equal('Sb');
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Duplicate store ID "Sa"'));
+    expect(warn.mock.calls[0][0]).to.contain('Duplicate store ID "Sa"');
   });
 
   it('should detect stores, inject ids and ignore unmatched classes', async () => {
