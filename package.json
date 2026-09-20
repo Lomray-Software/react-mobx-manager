@@ -45,7 +45,7 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@lomray/eslint-config-react": "^6.0.3",
-    "@lomray/prettier-config": "^2.1.0",
+    "@lomray/prettier-config": "^3.0.0",
     "@rollup/plugin-terser": "^1.0.0",
     "@types/chai": "^5.2.3",
     "@types/hoist-non-react-statics": "^3.3.7",
