@@ -81,7 +81,7 @@ describe('plugins/helpers', () => {
     expect(second.getProdId()).to.equal('Sc');
   });
 
-  it('should reject duplicate ids in a loaded production cache', async () => {
+  it('should regenerate duplicate ids from a loaded production cache', async () => {
     vi.doMock('node:fs', () => ({
       default: {
         existsSync: () => true,
@@ -95,7 +95,12 @@ describe('plugins/helpers', () => {
 
     const { Generator } = await import('@src/plugins/helpers');
 
-    expect(() => new Generator('/root', true)).to.throw('Duplicate store ID "Sa"');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const generator = new Generator('/root', true);
+
+    expect([...generator.cache.keys()]).to.deep.equal(['a.ts']);
+    expect(generator.getProdId()).to.equal('Sb');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Duplicate store ID "Sa"'));
   });
 
   it('should detect stores, inject ids and ignore unmatched classes', async () => {

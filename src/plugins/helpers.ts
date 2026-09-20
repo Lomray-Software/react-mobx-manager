@@ -22,10 +22,12 @@ const loadCache = (isProd = false): ICache => {
     const result: ICache = new Map(cache as any[]);
     const used = new Set<string>();
 
-    for (const { storeId } of result.values()) {
+    // Older versions could persist one ID for two stores: keep the first owner, regenerate the rest.
+    for (const [fileId, { storeId }] of result) {
       if (used.has(storeId)) {
-        throw new Error(
-          `Duplicate store ID "${storeId}" in ${cacheFile}. Remove the cache and rebuild.`,
+        result.delete(fileId);
+        console.warn(
+          `Duplicate store ID "${storeId}" in ${cacheFile}: a new ID will be generated for ${fileId}.`,
         );
       }
 
