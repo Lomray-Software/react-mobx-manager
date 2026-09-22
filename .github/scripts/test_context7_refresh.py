@@ -151,6 +151,39 @@ class RefreshTests(unittest.TestCase):
                 self.assertNotIn("Traceback", output.getvalue())
                 client.open.assert_called_once()
 
+    def check_deep_json_cli(self, status):
+        canary = "OFFLINE_DEEP_JSON_CANARY_NOT_A_SECRET"
+        body = b'{"error":' + b'[' * 16000 + b'0' + b']' * 16000 + b'}'
+        self.assertLess(len(body), 65536)
+        client = Mock()
+        response = Mock(status=status)
+        response.read.return_value = body
+        if status == 400:
+            client.open.side_effect = urllib.error.HTTPError(ENDPOINT, status, canary, {}, response)
+        else:
+            client.open.return_value.__enter__ = Mock(return_value=response)
+            client.open.return_value.__exit__ = Mock(return_value=False)
+        output = io.StringIO()
+        env = {**self.env, "CONTEXT7_API_KEY": canary}
+        with patch.dict("os.environ", env, clear=True), patch("urllib.request.build_opener", return_value=client), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            with self.assertRaises(SystemExit) as stopped:
+                runpy.run_path(str(pathlib.Path(__file__).with_name("context7_refresh.py")), run_name="__main__")
+        self.assertEqual(stopped.exception.code, 1)
+        text = output.getvalue()
+        self.assertIn("acceptance unknown", text.lower())
+        self.assertIn("inspect before retrying", text.lower())
+        self.assertNotIn("Traceback", text)
+        self.assertNotIn(canary, text)
+        self.assertNotIn("Refresh accepted", text)
+        response.read.assert_called_once_with(65537)
+        client.open.assert_called_once()
+
+    def test_deep_error_json_is_safe_in_cli(self):
+        self.check_deep_json_cli(400)
+
+    def test_deep_success_json_is_safe_in_cli(self):
+        self.check_deep_json_cli(200)
+
     def test_redirect_handler_does_not_forward_request(self):
         self.assertIsNone(NoRedirect().redirect_request(None, None, 302, "redirect", {}, "https://other.example"))
 

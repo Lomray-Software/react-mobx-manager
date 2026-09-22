@@ -32,7 +32,7 @@ def safe_error_reason(error):
             return "Requested named branch is not registered in Context7."
         if code == "library_not_found":
             return "Library identifier not found or not accessible."
-    except (ValueError, UnicodeDecodeError, OSError, http.client.HTTPException):
+    except (ValueError, UnicodeDecodeError, RecursionError, OSError, http.client.HTTPException):
         pass
     return "Unclassified error."
 
@@ -69,7 +69,7 @@ def refresh(env, opener=None):
         raise RefreshError("Unexpected response; acceptance unknown. Inspect before retrying.")
     try:
         payload = json.loads(body)
-    except (ValueError, UnicodeDecodeError):
+    except (ValueError, UnicodeDecodeError, RecursionError):
         raise RefreshError("Invalid JSON response; acceptance unknown. Inspect before retrying.") from None
     if not isinstance(payload, dict) or payload.get("message") != "Refresh started successfully":
         raise RefreshError("Unrecognized response; acceptance unknown. Inspect before retrying.")
