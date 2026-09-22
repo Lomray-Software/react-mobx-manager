@@ -46,7 +46,7 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@lomray/consistent-suspense": "^2.0.8",
-    "@lomray/eslint-config": "^5.0.3",
+    "@lomray/eslint-config": "^7.0.0",
     "@lomray/eslint-config-react": "^5.0.6",
     "@lomray/event-manager": "^2.0.2",
     "@lomray/prettier-config": "^2.1.0",
