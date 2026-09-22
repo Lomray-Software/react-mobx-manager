@@ -1,10 +1,14 @@
 """Offline tests: no real API key and no external request."""
 
+import contextlib
+import http.client
 import io
+import pathlib
+import runpy
 import json
 import unittest
 import urllib.error
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from context7_refresh import ENDPOINT, NoRedirect, RefreshError, refresh
 
@@ -22,7 +26,7 @@ class RefreshTests(unittest.TestCase):
     def test_exact_request_and_acceptance(self):
         message = refresh(self.env, self.client)
         request = self.client.open.call_args.args[0]
-        self.assertEqual(request.full_url, ENDPOINT)
+        self.assertEqual(request.full_url, "https://context7.com/api/v1/refresh")
         self.assertEqual(request.method, "POST")
         self.assertEqual(json.loads(request.data), {"libraryName": "/example/library", "branch": "prod"})
         self.assertEqual(request.get_header("Authorization"), "Bearer test-only-key")
@@ -66,6 +70,43 @@ class RefreshTests(unittest.TestCase):
                 with self.assertRaisesRegex(RefreshError, "acceptance unknown") as result:
                     refresh(self.env, self.client)
                 self.assertNotIn("test-only-key", str(result.exception))
+
+    def test_production_builder_installs_redirect_guard(self):
+        with patch("urllib.request.build_opener", return_value=self.client) as build:
+            refresh(self.env)
+        build.assert_called_once()
+        self.assertEqual(len(build.call_args.args), 1)
+        self.assertIsInstance(build.call_args.args[0], NoRedirect)
+        self.client.open.assert_called_once()
+
+    def test_http_parser_failures_are_safe_in_cli(self):
+        for stage in ("open", "read"):
+            with self.subTest(stage=stage):
+                client = Mock()
+                response = Mock(status=200)
+                client.open.return_value.__enter__ = Mock(return_value=response)
+                client.open.return_value.__exit__ = Mock(return_value=False)
+                if stage == "open":
+                    class FakeSocket:
+                        def makefile(self, *args, **kwargs):
+                            return io.BytesIO(b"test-only-key\r\n")
+                    try:
+                        http.client.HTTPResponse(FakeSocket()).begin()
+                    except http.client.BadStatusLine as error:
+                        client.open.side_effect = error
+                    else:
+                        self.fail("Expected malformed status line to fail")
+                else:
+                    response.read.side_effect = http.client.IncompleteRead(b"test-only-key", 100)
+                output = io.StringIO()
+                with patch.dict("os.environ", self.env, clear=True), patch("urllib.request.build_opener", return_value=client), contextlib.redirect_stderr(output):
+                    with self.assertRaises(SystemExit) as stopped:
+                        runpy.run_path(str(pathlib.Path(__file__).with_name("context7_refresh.py")), run_name="__main__")
+                self.assertEqual(stopped.exception.code, 1)
+                self.assertIn("acceptance unknown", output.getvalue())
+                self.assertNotIn("test-only-key", output.getvalue())
+                self.assertNotIn("Traceback", output.getvalue())
+                client.open.assert_called_once()
 
     def test_redirect_handler_does_not_forward_request(self):
         self.assertIsNone(NoRedirect().redirect_request(None, None, 302, "redirect", {}, "https://other.example"))

@@ -1,5 +1,6 @@
 """Submit one Context7 refresh; acceptance is not completed indexing."""
 
+import http.client
 import json
 import os
 import re
@@ -41,8 +42,8 @@ def refresh(env, opener=None):
             status = response.status
             body = response.read(65537)
     except urllib.error.HTTPError as exc:
-        raise RefreshError(f"Context7 HTTP {exc.code}; no automatic retry.") from None
-    except (urllib.error.URLError, TimeoutError, OSError):
+        raise RefreshError(f"Context7 HTTP {exc.code}; no automatic retry. Acceptance unknown; inspect before retrying.") from None
+    except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException):
         raise RefreshError("Transport failed; acceptance unknown. Inspect before retrying.") from None
     if status != 200 or len(body) > 65536:
         raise RefreshError("Unexpected response; acceptance unknown. Inspect before retrying.")
