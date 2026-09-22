@@ -43,8 +43,8 @@
     "test:package": "node scripts/test-package.mjs"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@lomray/consistent-suspense": "^2.0.8",
     "@lomray/eslint-config": "^5.0.3",
     "@lomray/eslint-config-react": "^5.0.6",
