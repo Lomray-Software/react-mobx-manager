@@ -58,8 +58,6 @@ try {
   const dependencies = Object.fromEntries(
     [
       ...Object.keys(manifest.peerDependencies),
-      '@types/hoist-non-react-statics',
-      '@types/lodash',
       '@types/node',
       '@types/react',
       '@types/react-dom',

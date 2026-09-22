@@ -1,9 +1,9 @@
 import { useConsistentSuspense, useId } from '@lomray/consistent-suspense';
-import hoistNonReactStatics from 'hoist-non-react-statics';
 import { observer } from 'mobx-react-lite';
 import type { FC } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useStoreManager, useStoreManagerParent, StoreManagerParentProvider } from './context';
+import hoistStatics from './hoist-statics';
 import type { TMapStores, IWithStoreOptions } from './types';
 
 /**
@@ -75,7 +75,7 @@ const withStores = <T extends Record<string, any>, TS extends TMapStores>(
     );
   };
 
-  hoistNonReactStatics(Element, Component);
+  hoistStatics(Element, Component);
   Element.displayName = `Mobx(${componentName})`;
 
   return Object.defineProperty(Element, 'name', {

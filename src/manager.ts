@@ -689,21 +689,23 @@ class Manager {
    */
   public static getObservableProps(store: TAnyStore, withNotExported = false): Record<string, any> {
     const props = toJS(store) as Record<string, unknown>;
+    const result: Record<string, any> = {};
 
-    return Object.entries(props).reduce(
-      (res, [prop, value]) => ({
-        ...res,
-        ...((isObservableProp(store, prop) &&
+    for (const prop of Object.keys(props)) {
+      if (
+        (isObservableProp(store, prop) &&
           !isPropExcludedFromExport(store, prop, withNotExported)) ||
         isPropSimpleExported(store, prop)
-          ? { [prop]: value }
-          : {}),
-        ...(isPropObservableExported(store, prop)
-          ? { [prop]: Manager.getObservableProps((store as Record<string, TAnyStore>)[prop]) }
-          : {}),
-      }),
-      {},
-    );
+      ) {
+        result[prop] = props[prop];
+      }
+
+      if (isPropObservableExported(store, prop)) {
+        result[prop] = Manager.getObservableProps((store as Record<string, TAnyStore>)[prop]);
+      }
+    }
+
+    return result;
   }
 
   /**
