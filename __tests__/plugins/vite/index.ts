@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { afterEach, describe, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('plugins/vite/index', () => {
   const callConfigResolved = (hook: unknown, config: unknown) =>

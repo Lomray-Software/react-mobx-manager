@@ -19,10 +19,17 @@ function ViteReactMobxManager(): Plugin[] {
         idGeneratorPlugin = IdGenerator({ root, isProd: isProduction() });
       },
       transform(...args) {
-        return idGeneratorPlugin.transform?.['call'](this, ...args) as TransformResult | undefined;
+        return (
+          idGeneratorPlugin.transform as Extract<
+            Plugin['transform'],
+            (...params: never[]) => unknown
+          >
+        )?.['call'](this, ...args) as TransformResult | undefined;
       },
       buildEnd(...args) {
-        idGeneratorPlugin.buildEnd?.['call'](this, ...args);
+        (
+          idGeneratorPlugin.buildEnd as Extract<Plugin['buildEnd'], (...params: never[]) => unknown>
+        )?.['call'](this, ...args);
       },
     },
   ];

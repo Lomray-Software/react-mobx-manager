@@ -24,3 +24,33 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
+      # Development majors of peers and their types change only by hand.
+      - dependency-name: react
+        update-types: ['version-update:semver-major']
+      - dependency-name: react-dom
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: mobx
+        update-types: ['version-update:semver-major']
+      - dependency-name: mobx-react-lite
+        update-types: ['version-update:semver-major']
+
+  # Workflows pin actions by commit, so Dependabot keeps the pins current.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: prod
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions:
+        patterns: ['*']

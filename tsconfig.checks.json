@@ -3,6 +3,7 @@
   "include": [
     "src/**/*",
     "__tests__/**/*",
-    "__helpers__/**/*"
+    "__helpers__/**/*",
+    "typing/**/*"
   ]
 }

@@ -39,39 +39,54 @@
     "lint:format": "eslint --fix \"src/**/*.{ts,tsx,*.ts,*tsx}\"",
     "ts:check": "tsc --project ./tsconfig.checks.json --skipLibCheck --noemit",
     "test": "vitest run",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:package": "node scripts/test-package.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
-    "@lomray/eslint-config-react": "^6.0.3",
+    "@lomray/consistent-suspense": "^2.0.8",
+    "@lomray/eslint-config": "^5.0.3",
+    "@lomray/eslint-config-react": "^5.0.6",
+    "@lomray/event-manager": "^2.0.2",
     "@lomray/prettier-config": "^2.1.0",
     "@rollup/plugin-terser": "^1.0.0",
-    "@types/chai": "^5.2.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.10",
+    "@semantic-release/npm": "^13.2.0",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/hoist-non-react-statics": "^3.3.7",
     "@types/lodash": "^4.17.24",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.2.47",
-    "@types/sinon": "^21.0.0",
-    "@vitest/coverage-v8": "^4.1.0",
-    "chai": "^6.2.2",
-    "eslint": "^9.39.4",
+    "@types/react-dom": "^18.2.19",
+    "@types/sinon": "^22.0.0",
+    "@vitest/coverage-v8": "^5.0.1",
+    "eslint": "^8.57.0",
+    "globals": "^17.12.0",
+    "hoist-non-react-statics": "^3.3.2",
     "husky": "^9.1.7",
     "jsdom": "^29.0.0",
     "lint-staged": "^16.4.0",
+    "lodash": "^4.18.1",
     "mobx": "^7.0.3",
     "mobx-react-lite": "^5.0.3",
     "prettier": "^3.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.2.0",
     "rollup": "^4.59.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-folder-input": "^1.0.1",
-    "rollup-plugin-ts": "^3.4.5",
-    "semantic-release": "^25.0.3",
-    "sinon": "^21.0.3",
-    "typescript": "4.9.5",
-    "vite": "^7.3.1",
+    "semantic-release": "^25.0.9",
+    "sinon": "^22.1.0",
+    "tsc-alias": "^1.8.16",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitepress": "^1.6.4",
-    "vitest": "^4.1.0"
+    "vitest": "^5.0.1"
   },
   "peerDependencies": {
     "@lomray/consistent-suspense": ">=2.0.1",
@@ -81,11 +96,6 @@
     "mobx": ">=6.9.0",
     "mobx-react-lite": "^3 || ^4 || ^5",
     "react": "^19 || ^18 || ^17"
-  },
-  "overrides": {
-    "rollup-plugin-ts": {
-      "browserslist-generator": "^3.0.0"
-    }
   },
   "packageManager": "npm@11.5.2",
   "types": "./index.d.ts",
@@ -114,6 +124,11 @@
     "./*": {
       "types": "./*.d.ts",
       "default": "./*.js"
+    }
+  },
+  "overrides": {
+    "vitepress": {
+      "vite": "^6.4.3"
     }
   }
 }

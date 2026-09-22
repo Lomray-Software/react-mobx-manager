@@ -2,46 +2,81 @@ name: Check PR
 
 on:
   pull_request:
-    branches: [ staging, prod ]
+    branches: [prod, staging]
     types: [opened, synchronize, reopened]
+
+permissions: {}
 
 env:
   NODE_VERSION: 22.23.2
   ENABLE_CACHE: yes
-  NPM_VERSION: 11.5.2
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: ${{ github.ref }}-prepare
+      cancel-in-progress: true
+    outputs:
+      node-version: ${{ steps.variable.outputs.node-version }}
+      enable-cache: ${{ steps.variable.outputs.enable-cache }}
+
+    steps:
+      - name: Define variables
+        id: variable
+        run: |
+          echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "enable-cache=$ENABLE_CACHE" >> $GITHUB_OUTPUT
+
   check:
     name: Check PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [prepare]
+    concurrency:
+      group: ${{ github.ref }}-check
+      cancel-in-progress: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ env.ENABLE_CACHE == 'yes' && 'npm' || '' }}
-
-      - run: npm i -g npm@${{ env.NPM_VERSION }}
+          node-version: ${{ needs.prepare.outputs.node-version }}
+          cache: ${{ needs.prepare.outputs.enable-cache == 'yes' && 'npm' || '' }}
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
       - name: Commit lint PR title
-        run: echo "${{ github.event.pull_request.title }}" | npx --no-install commitlint -g commitlint.config.js
-
-      - name: Build lib
-        run: npm run build
-
-      - name: Typescript check
-        run: npm run ts:check
+        run: printf '%s\n' "$PR_TITLE" | npx --no-install commitlint -g commitlint.config.js
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
 
       - name: Check eslint
         run: npm run lint:check
 
+      - name: Typescript check
+        run: npm run ts:check
+
       - name: Test (MobX 7 / mobx-react-lite 5)
         run: npm run test -- --coverage
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-lcov
+          path: coverage
+
+      - name: Build
+        run: |
+          npm pkg delete scripts.prepare
+          npm run build
+
+      - name: Test packed package and probes
+        run: npm run test:package
 
       - name: Install MobX 6 / mobx-react-lite 4
         run: npm install --no-save --ignore-scripts mobx@6.16.1 mobx-react-lite@4.1.1
@@ -49,29 +84,29 @@ jobs:
       - name: Test (MobX 6 / mobx-react-lite 4)
         run: npm test
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-lcov
-          path: coverage
-
   sonarcube:
+    # Dependabot runs have no access to the analysis token.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     needs: [check]
     concurrency:
       group: ${{ github.ref }}-sonarcube
       cancel-in-progress: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: coverage-lcov
           path: coverage
 
-      - uses: SonarSource/sonarcloud-github-action@master
+      - uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}

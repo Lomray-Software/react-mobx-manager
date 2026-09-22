@@ -141,7 +141,9 @@ class StateListener {
         storesState: this.getStoresState(),
       };
 
-      this.manager?.['__devOnChange']?.(payload);
+      (this.manager as Manager & { __devOnChange?: (value: typeof payload) => void })?.[
+        '__devOnChange'
+      ]?.(payload);
       this._lastEvent = null;
     },
     this._throttleMs,

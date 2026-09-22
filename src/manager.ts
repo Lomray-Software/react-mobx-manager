@@ -201,7 +201,8 @@ class Manager {
       return store.libStoreId;
     }
 
-    let storeId = (store['id'] as string) || (store['name'] as string) || store.constructor.name;
+    let storeId =
+      (store as { id?: string }).id || (store as { name?: string }).name || store.constructor.name;
 
     if (store.isGlobal) {
       return storeId;
@@ -343,7 +344,7 @@ class Manager {
   ): IGroupedStores {
     const { failedCreationStrategy } = this.options;
 
-    const result = map.reduce(
+    const result = map.reduce<IGroupedStores>(
       (res, [key, store]) => {
         const {
           id,
@@ -646,7 +647,7 @@ class Manager {
    * Get store's state
    */
   public toJSON(ids?: string[], isIncludeExported = false): Record<string, any> {
-    const result = {};
+    const result: Record<string, any> = {};
     const stores = Array.isArray(ids)
       ? ids.reduce((res, id) => {
           if (this.stores.has(id)) {
@@ -698,7 +699,7 @@ class Manager {
           ? { [prop]: value }
           : {}),
         ...(isPropObservableExported(store, prop)
-          ? { [prop]: Manager.getObservableProps(store[prop] as TAnyStore) }
+          ? { [prop]: Manager.getObservableProps((store as Record<string, TAnyStore>)[prop]) }
           : {}),
       }),
       {},

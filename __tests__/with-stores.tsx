@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { afterEach, describe, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const reactModuleId = 'react';
 const mobxReactLiteModuleId = 'mobx-react-lite';

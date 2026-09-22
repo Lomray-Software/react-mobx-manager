@@ -1,9 +1,11 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { afterEach, describe, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('plugins/dev-extension/state-listener', () => {
+  const sandbox = sinon.createSandbox();
+
   afterEach(() => {
+    sandbox.restore();
     vi.resetModules();
     vi.doUnmock('mobx');
   });
@@ -53,8 +55,7 @@ describe('plugins/dev-extension/state-listener', () => {
   });
 
   it('should subscribe on spy events and emit safe payloads', async () => {
-    const sandbox = sinon.createSandbox();
-    const clock = sandbox.useFakeTimers();
+    const clock = sandbox.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
     let listener: ((event: Record<string, unknown>) => void) | undefined;
     const unsubscribe = sandbox.stub();
 

@@ -39,7 +39,7 @@ class Logger {
       return;
     }
 
-    let type = 'log';
+    let type: 'log' | 'error' | 'warn' | 'info' = 'log';
 
     switch (level) {
       case 1:
