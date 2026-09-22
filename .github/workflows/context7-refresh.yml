@@ -1,0 +1,38 @@
+name: Refresh Context7 Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [prod]
+    paths:
+      - 'README.md'
+      - 'context7.json'
+      - 'docs/**'
+      - '_autodocs/**'
+      - '.github/scripts/context7_refresh.py'
+      - '.github/scripts/test_context7_refresh.py'
+      - '.github/workflows/context7-refresh.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: context7-refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Test refresh client without credentials
+        run: python3 -m unittest discover -s .github/scripts -p 'test_context7_refresh.py' -v
+      - name: Submit one refresh request
+        env:
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT_7 }}
+          CONTEXT7_BRANCH: prod
+        run: python3 .github/scripts/context7_refresh.py
