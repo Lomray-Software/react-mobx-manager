@@ -92,6 +92,11 @@ class Manager {
   /**
    * @constructor
    */
+  /**
+   * Detect server side: stores live until the manager is destroyed, no timers are armed
+   */
+  public isServer = typeof window === 'undefined';
+
   public constructor({ initState, storesParams, storage, options, logger }: IManagerParams = {}) {
     this.initState = initState || {};
     this.storesParams = storesParams || {};
@@ -612,6 +617,11 @@ class Manager {
     store.libStoreStatus = status;
 
     clearTimeout(store.libDestroyTimer);
+
+    // A request renders once and calls destroy(): timers would only keep the state alive longer.
+    if (this.isServer) {
+      return;
+    }
 
     let destroyTime = 0;
 

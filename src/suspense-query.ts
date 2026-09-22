@@ -16,6 +16,12 @@ interface ISuspenseQueryOptions {
   hash?: unknown;
 }
 
+/**
+ * Objects and arrays are compared by content: a fresh hash object on every render must still match.
+ */
+const normalizeHash = (hash: unknown): unknown =>
+  typeof hash === 'object' && hash !== null ? JSON.stringify(hash) : hash;
+
 interface ISuspenseSubqueryOptions {
   id: string;
   hash: unknown;
@@ -142,7 +148,7 @@ class SuspenseQuery {
     promise: () => Promise<TReturn>,
     options: ISuspenseQueryOptions = {},
   ): TReturn | undefined => {
-    const { hash = '' } = options;
+    const hash = normalizeHash(options.hash ?? '');
     const { fieldName } = this.params;
 
     if (this.isComplete(hash)) {
@@ -190,7 +196,8 @@ class SuspenseQuery {
     promise: () => Promise<TReturn>,
     options: ISuspenseSubqueryOptions,
   ): TReturn | undefined => {
-    const { id, hash } = options;
+    const { id } = options;
+    const hash = normalizeHash(options.hash);
     const subquery = this.subqueries.get(id);
 
     // skip first run
