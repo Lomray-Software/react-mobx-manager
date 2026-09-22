@@ -64,6 +64,7 @@ class CookieStorage implements IStorage {
    * @inheritDoc
    */
   public flush(): void | Promise<any> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- cookie adapters (js-cookie, universal-cookie) return library-specific values that are passed through as-is.
     return this.storage.remove(this.globalKey, this.cookieAttr);
   }
 
@@ -71,6 +72,7 @@ class CookieStorage implements IStorage {
    * @inheritDoc
    */
   public set(value: Record<string, any> | undefined): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- cookie adapters (js-cookie, universal-cookie) return library-specific values that are passed through as-is.
     return this.storage.set(this.globalKey, JSON.stringify(value ?? {}), this.cookieAttr);
   }
 }

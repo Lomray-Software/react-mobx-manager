@@ -1,38 +1,27 @@
 import lomrayConfig from '@lomray/eslint-config-react';
-import baseConfig from '@lomray/eslint-config';
 import globals from 'globals';
 
-const customFilesIgnores = {
-  ...baseConfig.filesIgnores,
-  ignores: [
-    ...(baseConfig.filesIgnores.ignores ?? []),
-    'lib/**/*',
-    '*.js',
-  ],
-  files: [
-    ...baseConfig.filesIgnores.files,
-    '__tests__/**/*.{ts,tsx,*.ts,*tsx}',
-    '__mocks__/**/*.{ts,tsx,*.ts,*tsx}',
-    '__helpers__/**/*.{ts,tsx,*.ts,*tsx}',
-  ],
-};
-
 export default [
-  ...lomrayConfig.config(customFilesIgnores),
-  {
-    ...customFilesIgnores,
+  { ignores: ['node_modules/**', 'lib/**', 'coverage/**', 'docs/**'] },
+  ...lomrayConfig.config({
+    files: ['src/**/*.{ts,tsx}', '__tests__/**/*.{ts,tsx}', '__helpers__/**/*.{ts,tsx}'],
     languageOptions: {
-      globals: {
-        ...globals.node,
-        NodeJS: true,
-      },
+      globals: { ...globals.node, ...globals.browser, NodeJS: true },
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    settings: {
+      'import-x/resolver': { typescript: { project: './tsconfig.json' } },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 0,
-      '@typescript-eslint/no-unsafe-assignment': 0,
-      '@typescript-eslint/no-unsafe-member-access': 0,
-      '@typescript-eslint/no-unsafe-call': 0,
-      '@typescript-eslint/no-unsafe-return': 0,
-    }
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  }),
+  {
+    files: ['__tests__/**/*.{ts,tsx}', '__helpers__/**/*.{ts,tsx}'],
+    rules: {
+      'sonarjs/no-duplicate-string': 'off',
+      // Vitest convention directories are wrapped in double underscores.
+      'unicorn/filename-case': 'off',
+    },
   },
 ];

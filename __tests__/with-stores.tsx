@@ -71,7 +71,9 @@ describe('withStores', () => {
       }),
       mountStores: mount,
     };
-    const parentProvider = sinon.stub().callsFake(({ children }) => children);
+    const parentProvider = sinon
+      .stub()
+      .callsFake(({ children }: { children: unknown }) => children);
     const hoist = sinon.stub();
     const component = function View(props: Record<string, unknown>) {
       componentSpy(props);

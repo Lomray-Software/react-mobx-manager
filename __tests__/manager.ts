@@ -187,7 +187,7 @@ describe('Manager', () => {
 
     sandbox.stub(storage, 'saveStoreData').rejects(new Error('boom'));
 
-    const manager = new Manager({ storage, logger: logger as any });
+    const manager = new Manager({ storage, logger: logger as never });
 
     const shouldPersist = await manager.savePersistedStore({
       libStoreId: persistedStoreId,

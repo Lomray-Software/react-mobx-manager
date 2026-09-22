@@ -2,6 +2,15 @@ import type { IStorePersisted, TAnyStore } from '@src/types';
 
 const exportedPropName = 'libExported';
 
+type TExportedKind = 'observable' | 'simple' | 'excluded';
+
+/**
+ * Store shape after makeExported marked its props
+ */
+interface IExportedStore {
+  [exportedPropName]?: Record<string, TExportedKind | undefined>;
+}
+
 /**
  * Make store props exported for Manager.toJSON
  * @see Manager.toJSON
@@ -9,12 +18,12 @@ const exportedPropName = 'libExported';
 const makeExported = <T extends object>(
   store: T,
   props: {
-    [P in Exclude<keyof T, 'toString'>]?: 'observable' | 'simple' | 'excluded';
+    [P in Exclude<keyof T, 'toString'>]?: TExportedKind;
   },
   shouldExtend = true,
 ): void => {
-  (store as Record<string, any>)[exportedPropName] = {
-    ...(shouldExtend ? ((store as Record<string, any>)?.[exportedPropName] ?? {}) : {}),
+  (store as IExportedStore)[exportedPropName] = {
+    ...(shouldExtend ? ((store as IExportedStore)?.[exportedPropName] ?? {}) : {}),
     ...props,
   };
 };
@@ -31,13 +40,13 @@ const isPropExcludedInPersist = (store: TAnyStore): boolean => {
  * Check if store prop is observable exported
  */
 const isPropObservableExported = (store: TAnyStore, prop: string): boolean =>
-  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'observable';
+  (store as IExportedStore)?.[exportedPropName]?.[prop] === 'observable';
 
 /**
  * Check if store prop is simple exported
  */
 const isPropSimpleExported = (store: TAnyStore, prop: string): boolean =>
-  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'simple';
+  (store as IExportedStore)?.[exportedPropName]?.[prop] === 'simple';
 
 /**
  * Check if store prop is excluded from export
@@ -47,7 +56,7 @@ const isPropExcludedFromExport = (
   prop: string,
   withNotExported = false,
 ): boolean =>
-  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'excluded' ||
+  (store as IExportedStore)?.[exportedPropName]?.[prop] === 'excluded' ||
   (!withNotExported && isPropExcludedInPersist(store));
 
 export { makeExported, isPropObservableExported, isPropSimpleExported, isPropExcludedFromExport };

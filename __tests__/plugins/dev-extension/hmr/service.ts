@@ -22,7 +22,9 @@ describe('plugins/dev-extension/hmr/service', () => {
   it('should save and restore stores state by libStoreId', () => {
     const saveManager = {
       destroy: sandbox.stub(),
-      getStoreState: sandbox.stub().callsFake((store) => ({ value: store.value })),
+      getStoreState: sandbox
+        .stub()
+        .callsFake((store: { value: number }) => ({ value: store.value })),
       getStores: () =>
         new Map([
           ['GlobalStore', { libStoreId: 'GlobalStore', value: 1 }],
