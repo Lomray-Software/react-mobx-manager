@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { spy, untracked } from 'mobx';
 import { ROOT_CONTEXT_ID } from '@src/constants';
 import Manager from '../../manager';
@@ -8,6 +7,26 @@ enum Listeners {
 }
 
 type SpyEvent = Parameters<Parameters<typeof spy>[0]>[0];
+
+/**
+ * Assign a value at a dot separated path, creating the objects on the way
+ */
+const setPath = (target: Record<string, any>, path: string, value: unknown): void => {
+  const keys = path.split('.');
+  let current = target;
+
+  for (let index = 0; index < keys.length - 1; index++) {
+    const key = keys[index];
+
+    if (current[key] === null || typeof current[key] !== 'object') {
+      current[key] = {};
+    }
+
+    current = current[key] as Record<string, any>;
+  }
+
+  current[keys[keys.length - 1]] = value;
+};
 
 /**
  * State listener
@@ -34,6 +53,12 @@ class StateListener {
    * @private
    */
   private readonly _throttleMs = 16;
+
+  /**
+   * Pending batch
+   * @private
+   */
+  private _emitTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * @constructor
@@ -83,8 +108,8 @@ class StateListener {
             if (store) {
               const storeState = store?.toJSON?.() ?? Manager.getObservableProps(store);
 
-              _.set(state, `${key}.stores.${id}`, storeState);
-              _.set(state, `${key}.componentName`, componentName);
+              setPath(state, `${key}.stores.${id}`, storeState);
+              setPath(state, `${key}.componentName`, componentName);
             }
           });
         });
@@ -101,41 +126,45 @@ class StateListener {
    * @private
    */
   private getSafeEvent(event: SpyEvent): SpyEvent {
-    const normalized = _.mapValues(event, (v) => {
-      if (v == null) {
-        return v;
+    const safe: Record<string, unknown> = {};
+
+    for (const [key, v] of Object.entries(event as Record<string, unknown>)) {
+      if (v === undefined) {
+        continue;
+      }
+
+      if (v === null) {
+        safe[key] = v;
+
+        continue;
       }
 
       const t = typeof v;
 
       if (t === 'string' || t === 'number' || t === 'boolean') {
-        return v;
+        safe[key] = v;
+      } else if (Array.isArray(v)) {
+        safe[key] = { length: v.length };
+      } else if (t === 'object') {
+        safe[key] = { objectType: v.constructor?.name ?? 'Object' };
       }
+    }
 
-      if (Array.isArray(v)) {
-        return { length: v.length };
-      }
-
-      if (t === 'function' || t === 'symbol') {
-        return undefined;
-      }
-
-      if (t === 'object') {
-        return { objectType: v?.constructor?.name ?? 'Object' };
-      }
-
-      return undefined;
-    });
-
-    return _.pickBy(normalized, (v) => v !== undefined) as SpyEvent;
+    return safe as SpyEvent;
   }
 
   /**
-   * Batch sending
+   * Batch sending: one trailing call per throttle window
    * @private
    */
-  private emitChange = _.throttle(
-    () => {
+  private emitChange = (): void => {
+    if (this._emitTimer) {
+      return;
+    }
+
+    this._emitTimer = setTimeout(() => {
+      this._emitTimer = null;
+
       const payload = {
         event: this._lastEvent,
         storesState: this.getStoresState(),
@@ -145,10 +174,8 @@ class StateListener {
         '__devOnChange'
       ]?.(payload);
       this._lastEvent = null;
-    },
-    this._throttleMs,
-    { leading: false, trailing: true },
-  );
+    }, this._throttleMs);
+  };
 
   /**
    * Subscribe on stores changes

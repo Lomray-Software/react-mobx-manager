@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const reactModuleId = 'react';
 const mobxReactLiteModuleId = 'mobx-react-lite';
-const hoistModuleId = 'hoist-non-react-statics';
 const suspenseModuleId = '@lomray/consistent-suspense';
 const contextModuleId = '@src/context';
 
@@ -19,7 +18,6 @@ describe('withStores', () => {
     vi.resetModules();
     vi.doUnmock('react');
     vi.doUnmock('mobx-react-lite');
-    vi.doUnmock('hoist-non-react-statics');
     vi.doUnmock('@lomray/consistent-suspense');
     vi.doUnmock('@src/context');
   });
@@ -74,12 +72,15 @@ describe('withStores', () => {
     const parentProvider = sinon
       .stub()
       .callsFake(({ children }: { children: unknown }) => children);
-    const hoist = sinon.stub();
-    const component = function View(props: Record<string, unknown>) {
-      componentSpy(props);
+    const getInitialProps = sinon.stub();
+    const component = Object.assign(
+      function View(props: Record<string, unknown>) {
+        componentSpy(props);
 
-      return componentResult;
-    };
+        return componentResult;
+      },
+      { getInitialProps },
+    );
 
     vi.doMock(reactModuleId, () => ({
       default: ReactMock,
@@ -87,9 +88,6 @@ describe('withStores', () => {
     }));
     vi.doMock(mobxReactLiteModuleId, () => ({
       observer: (target: unknown) => target,
-    }));
-    vi.doMock(hoistModuleId, () => ({
-      default: hoist,
     }));
     vi.doMock(suspenseModuleId, () => ({
       useConsistentSuspense: () => ({ suspenseId }),
@@ -124,7 +122,9 @@ describe('withStores', () => {
       }),
     );
     sinon.assert.calledOnce(parentProvider);
-    sinon.assert.calledOnce(hoist);
+    expect((Wrapped as unknown as { getInitialProps: unknown }).getInitialProps).to.equal(
+      getInitialProps,
+    );
     sinon.assert.notCalled(onComponentPropsUpdate);
     expect(Wrapped.displayName).to.equal('Mobx(View)');
     expect(result).to.equal(componentResult);
@@ -161,9 +161,6 @@ describe('withStores', () => {
     }));
     vi.doMock(mobxReactLiteModuleId, () => ({
       observer: (target: unknown) => target,
-    }));
-    vi.doMock(hoistModuleId, () => ({
-      default: sinon.stub(),
     }));
     vi.doMock(suspenseModuleId, () => ({
       useConsistentSuspense: () => ({ suspenseId }),
@@ -248,9 +245,6 @@ describe('withStores', () => {
     }));
     vi.doMock(mobxReactLiteModuleId, () => ({
       observer: (target: unknown) => target,
-    }));
-    vi.doMock(hoistModuleId, () => ({
-      default: sinon.stub(),
     }));
     vi.doMock(suspenseModuleId, () => ({
       useConsistentSuspense: () => ({ suspenseId }),

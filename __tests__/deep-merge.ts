@@ -40,4 +40,20 @@ describe('deepMerge', () => {
     expect(target).to.deep.equal({ array: { next: true }, object: [] });
     expect(deepMerge(null, {})).to.equal(false);
   });
+
+  it('should restore arrays larger than the call stack allows to spread', () => {
+    const size = 300_000;
+    const source = Array.from({ length: size }, (_, index) => index);
+    const plain = { items: [0] };
+    const store = observable({ items: [0] });
+
+    expect(deepMerge(plain, { items: source })).to.equal(true);
+    expect(plain.items.length).to.equal(size);
+    expect(plain.items[size - 1]).to.equal(size - 1);
+    runInAction(() => {
+      deepMerge(store, { items: source });
+    });
+    expect(store.items.length).to.equal(size);
+    expect(store.items[size - 1]).to.equal(size - 1);
+  });
 });

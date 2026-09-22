@@ -1,3 +1,5 @@
+import { isObservableArray } from 'mobx';
+
 /**
  * Helper function to check if a variable is an object
  */
@@ -13,7 +15,18 @@ const deepMerge = (target: unknown, source: unknown): boolean => {
   }
 
   if (Array.isArray(target) && Array.isArray(source)) {
-    target.splice(0, target.length, ...(source as unknown[]));
+    // Spreading the source into splice() overflows the call stack for very large arrays.
+    const items = source as unknown[];
+
+    if (isObservableArray(target)) {
+      target.replace(items);
+    } else {
+      target.length = items.length;
+
+      for (let index = 0; index < items.length; index++) {
+        target[index] = items[index];
+      }
+    }
 
     return true;
   }
