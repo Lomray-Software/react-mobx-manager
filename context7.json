@@ -1,4 +1,24 @@
 {
   "url": "https://context7.com/lomray-software/react-mobx-manager",
-  "public_key": "pk_9IAtRK9ehH9s9ktsgMjAJ"
+  "public_key": "pk_9IAtRK9ehH9s9ktsgMjAJ",
+  "$schema": "https://context7.com/schema/context7.json",
+  "branch": "prod",
+  "folders": [
+    "docs"
+  ],
+  "excludeFolders": [
+    "node_modules",
+    "lib",
+    "src",
+    "__tests__",
+    "__type_tests__",
+    "docs-tests",
+    ".github",
+    "docs/.vitepress"
+  ],
+  "excludeFiles": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "CODE_OF_CONDUCT.md"
+  ]
 }
