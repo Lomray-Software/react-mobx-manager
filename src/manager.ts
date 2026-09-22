@@ -57,7 +57,7 @@ class Manager {
   /**
    * Initial stores state (local storage, custom etc.)
    */
-  protected readonly initState: Record<string, any>;
+  protected readonly initState: Record<string, Record<string, unknown>>;
 
   /**
    * Storage for persisted stores
@@ -178,9 +178,9 @@ class Manager {
    * Push initial state dynamically
    * E.g. when stream html
    */
-  public pushInitState = (storesState: Record<string, any> = {}): void => {
+  public pushInitState = (storesState: Record<string, unknown> = {}): void => {
     for (const [storeId, state] of Object.entries(storesState)) {
-      this.initState[storeId] = state;
+      this.initState[storeId] = state as Record<string, unknown>;
     }
   };
 
@@ -326,7 +326,7 @@ class Manager {
     this.prepareStore(newStore);
     EventManager.publish(Events.CREATE_STORE, { store });
 
-    return newStore as T;
+    return newStore;
   }
 
   /**
@@ -354,7 +354,7 @@ class Manager {
         let storeId =
           id ||
           (isParent
-            ? (this.getStore(s, { contextId, parentId })?.libStoreId as string)
+            ? this.getStore<TAnyStore>(s, { contextId, parentId })?.libStoreId
             : this.getStoreId(s, { key, contextId }));
 
         if (!storeId) {
@@ -379,7 +379,7 @@ class Manager {
           }
         }
 
-        const storeInstance = this.createStore(s, {
+        const storeInstance = this.createStore<TAnyStore>(s, {
           id: storeId,
           contextId,
           parentId,
@@ -447,7 +447,7 @@ class Manager {
       return;
     }
 
-    const onDestroyDefault = store.onDestroy?.bind(store);
+    const onDestroyDefault = store.onDestroy?.bind(store) as TAnyStore['onDestroy'];
 
     store.onDestroy = (): void => {
       callback();
@@ -688,7 +688,7 @@ class Manager {
    * Get observable store props (fields)
    */
   public static getObservableProps(store: TAnyStore, withNotExported = false): Record<string, any> {
-    const props = toJS(store);
+    const props = toJS(store) as Record<string, unknown>;
 
     return Object.entries(props).reduce(
       (res, [prop, value]) => ({
@@ -720,17 +720,17 @@ class Manager {
 
     // add storage options
     if (!('libStorageOptions' in store.prototype)) {
-      store.prototype.libStorageOptions = options;
+      (store.prototype as IStorePersisted).libStorageOptions = options;
     }
 
     // add default wakeup handler
     if (!('wakeup' in store.prototype)) {
-      store.prototype.wakeup = wakeup;
+      (store.prototype as IStorePersisted).wakeup = wakeup;
     }
 
     // add default changes listener
     if (!('addOnChangeListener' in store.prototype)) {
-      store.prototype.addOnChangeListener = onChangeListener;
+      (store.prototype as IStorePersisted).addOnChangeListener = onChangeListener;
     }
 
     return store;

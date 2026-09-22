@@ -1,5 +1,4 @@
 import deepMerge from '@src/deep-merge';
-import type { TAnyStore } from '@src/types';
 import type { IHmrOptions, IHmrRuntime, IHmrSnapshot } from './types';
 
 const HMR_GLOBAL_KEY = '__MOBX_STORE_MANAGER_HMR__';
@@ -66,7 +65,7 @@ class ManagerHmr {
           return result;
         }
 
-        result[storeId] = this.manager.getStoreState(store as TAnyStore, true);
+        result[storeId] = this.manager.getStoreState(store, true);
 
         return result;
       },

@@ -22,7 +22,7 @@ class StateListener {
    * Store global listeners
    * @protected
    */
-  protected static listeners: Record<Listeners | string, () => void> = {} as never;
+  protected static listeners: Record<Listeners | string, () => void> = {};
 
   /**
    * Last mobx event

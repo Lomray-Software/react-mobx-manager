@@ -15,9 +15,7 @@ rmSync(dest, { force: true, recursive: true });
 const typescriptPlugin = typescript({ tsconfig: './tsconfig.build.json', filterRoot: '.' });
 
 export default {
-  input: [
-    'src/**/*.ts*',
-  ],
+  input: ['src/**/*.ts*'],
   output: {
     dir: dest,
     format: 'es',
@@ -48,7 +46,7 @@ export default {
         { src: 'package.json', dest: dest },
         { src: 'README.md', dest: dest },
         { src: 'LICENSE', dest: dest },
-      ]
+      ],
     }),
     {
       name: 'resolve-declaration-imports',

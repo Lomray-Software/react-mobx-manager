@@ -20,7 +20,7 @@ describe('onChangeListener', () => {
 
   it('should subscribe with reaction and persist store changes', async () => {
     const dispose = sinon.stub();
-    const reaction = sinon.stub().callsFake((track, effect) => {
+    const reaction = sinon.stub().callsFake((track: () => void, effect: () => void) => {
       track();
       effect();
 

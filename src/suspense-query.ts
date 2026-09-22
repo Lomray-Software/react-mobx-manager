@@ -22,6 +22,17 @@ interface ISuspenseSubqueryOptions {
 }
 
 /**
+ * Suspense state kept on the target store under params.fieldName
+ */
+interface ISuspenseState {
+  hash?: unknown;
+  done?: boolean;
+  error?: Record<string, unknown>;
+}
+
+type TSuspenseStore = Record<string, ISuspenseState | undefined>;
+
+/**
  * Run request and cache promise
  * Sync suspense status between server and client
  */
@@ -56,7 +67,7 @@ class SuspenseQuery {
     this.store = store;
     this.params = { fieldName, errorFields };
 
-    const defaultInit = store.init?.bind(store);
+    const defaultInit = store.init?.bind(store) as TInitStore['init'];
 
     store.init = () => {
       this.throwError(); // throw error immediately from server side if exist
@@ -70,7 +81,7 @@ class SuspenseQuery {
   /**
    * Error to json
    */
-  protected errorJson(e: any): void {
+  protected errorJson(e: Record<string, unknown>): void {
     e.toJSON = () =>
       this.params.errorFields.reduce(
         (res, name) => ({
@@ -84,9 +95,9 @@ class SuspenseQuery {
   /**
    * Assign custom error fields to error
    */
-  protected jsonToError(e: Error, values: Record<string, any>): Error {
+  protected jsonToError(e: Error, values: Record<string, unknown>): Error {
     this.params.errorFields.forEach((name) => {
-      (e as unknown as Record<string, any>)[name] = values?.[name];
+      (e as unknown as Record<string, unknown>)[name] = values?.[name];
     });
 
     return e;
@@ -96,13 +107,13 @@ class SuspenseQuery {
    * Throw suspense error
    */
   protected throwError(): void {
-    const value = (this.store as Record<string, any>)[this.params.fieldName];
+    const value = (this.store as TSuspenseStore)[this.params.fieldName];
 
     // pass error to error boundary
     if (value?.error) {
       throw this.jsonToError(
         new Error((value?.error?.message ?? value?.error?.name) as string),
-        value?.error as Record<string, any>,
+        value?.error,
       );
     }
   }
@@ -113,7 +124,7 @@ class SuspenseQuery {
    *  - skip run suspense if already completed
    */
   protected isComplete(hash: unknown): boolean {
-    const value = (this.store as Record<string, any>)[this.params.fieldName];
+    const value = (this.store as TSuspenseStore)[this.params.fieldName];
 
     // pass error to error boundary
     if (value?.error) {
@@ -138,8 +149,8 @@ class SuspenseQuery {
       return;
     }
 
-    if ((this.store as Record<string, any>)[fieldName]?.hash !== hash) {
-      (this.store as Record<string, any>)[fieldName] = { hash, done: false };
+    if ((this.store as TSuspenseStore)[fieldName]?.hash !== hash) {
+      (this.store as TSuspenseStore)[fieldName] = { hash, done: false };
       this.promise = undefined;
     }
 
@@ -153,16 +164,16 @@ class SuspenseQuery {
             return;
           }
 
-          (this.store as Record<string, any>)[fieldName] = { hash, done: true };
+          (this.store as TSuspenseStore)[fieldName] = { hash, done: true };
         },
-        (e) => {
+        (e: Record<string, unknown>) => {
           if (this.promise !== pending) {
             return;
           }
 
           this.errorJson(e);
 
-          (this.store as Record<string, any>)[fieldName] = { error: e };
+          (this.store as TSuspenseStore)[fieldName] = { error: e };
         },
       );
     }
@@ -227,7 +238,7 @@ class SuspenseQuery {
             promise.status = 'fulfilled';
             promise.value = result;
           },
-          (reason) => {
+          (reason: unknown) => {
             promise.status = 'rejected';
             promise.reason = reason;
           },

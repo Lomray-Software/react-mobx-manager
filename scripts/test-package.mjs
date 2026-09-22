@@ -69,7 +69,8 @@ try {
       'vite',
     ].map((name) => [
       name,
-      JSON.parse(readFileSync(path.join(root, 'node_modules', name, 'package.json'), 'utf8')).version,
+      JSON.parse(readFileSync(path.join(root, 'node_modules', name, 'package.json'), 'utf8'))
+        .version,
     ]),
   );
 
@@ -82,7 +83,14 @@ try {
     path.join(temporary, 'package.json'),
     JSON.stringify({ name: 'mobx-manager-consumer', private: true, type: 'module', dependencies }),
   );
-  run([npmCli, 'install', '--ignore-scripts', '--no-audit', '--no-fund', path.join(temporary, pack.filename)]);
+  run([
+    npmCli,
+    'install',
+    '--ignore-scripts',
+    '--no-audit',
+    '--no-fund',
+    path.join(temporary, pack.filename),
+  ]);
 
   const installed = JSON.parse(
     readFileSync(path.join(temporary, 'node_modules', manifest.name, 'package.json'), 'utf8'),
@@ -91,14 +99,22 @@ try {
     assert.deepEqual(installed[field], manifest[field], `Changed public metadata: ${field}`);
   }
   cpSync(path.join(root, '__probes__'), temporary, { recursive: true });
-  for (const probe of ['package-imports', 'docs-probes', 'vite-cache', 'provider-init', 'ssr-isolated']) {
+  for (const probe of [
+    'package-imports',
+    'docs-probes',
+    'vite-cache',
+    'provider-init',
+    'ssr-isolated',
+  ]) {
     run([`${probe}.mjs`]);
   }
   for (const resolution of ['bundler', 'node16']) {
     run(['node_modules/typescript/bin/tsc', '--project', `tsconfig.${resolution}.json`]);
     console.info(`PASS ${resolution} declarations (skipLibCheck=false).`);
   }
-  console.info(`PASS packed package: ${modules.length} modules, declarations, maps, and all probes.`);
+  console.info(
+    `PASS packed package: ${modules.length} modules, declarations, maps, and all probes.`,
+  );
 } finally {
   rmSync(temporary, { recursive: true, force: true });
 }

@@ -1,12 +1,13 @@
 /**
  * Helper function to check if a variable is an object
  */
-const isObject = (obj: any) => obj !== null && typeof obj === 'object';
+const isObject = (obj: unknown): obj is Record<string, unknown> =>
+  obj !== null && typeof obj === 'object';
 
 /**
  * Custom small deep merge function for restore store state
  */
-const deepMerge = (target: any, source: any): boolean => {
+const deepMerge = (target: unknown, source: unknown): boolean => {
   if (!isObject(target) || !isObject(source)) {
     return false;
   }
@@ -24,7 +25,7 @@ const deepMerge = (target: any, source: any): boolean => {
         isObject(source[key]) &&
         Array.isArray(target[key]) === Array.isArray(source[key])
       ) {
-        deepMerge(target[key] as Record<string, any>, source[key] as Record<string, any>);
+        deepMerge(target[key], source[key]);
       } else {
         target[key] = source[key];
       }

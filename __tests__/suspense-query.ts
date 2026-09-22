@@ -10,7 +10,7 @@ describe('SuspenseQuery', () => {
   it('should mark exported suspense field on store', () => {
     const store = {};
 
-    new SuspenseQuery(store as never, { fieldName: 'requestState' });
+    new SuspenseQuery(store, { fieldName: 'requestState' });
 
     expect(store).to.deep.include({
       libExported: {
@@ -22,7 +22,7 @@ describe('SuspenseQuery', () => {
   it('should throw pending promise and mark query as done after resolve', async () => {
     let resolvePromise: ((value: string) => void) | undefined;
     const store: Record<string, unknown> = {};
-    const target = new SuspenseQuery(store as never);
+    const target = new SuspenseQuery(store);
 
     try {
       target.query(
@@ -104,12 +104,12 @@ describe('SuspenseQuery', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(store.sR.error.toJSON()).to.deep.equal({
+    expect((store.sR as { error: { toJSON: () => unknown } }).error.toJSON()).to.deep.equal({
       name: 'TypeError',
       message: 'broken',
     });
 
-    expect(() => store.init()).to.throw('broken');
+    expect(() => (store.init as () => unknown)()).to.throw('broken');
   });
 
   it('should preserve cleanup callback returned from init wrapper', () => {
@@ -120,12 +120,12 @@ describe('SuspenseQuery', () => {
 
     new SuspenseQuery(store);
 
-    expect(store.init()).to.equal(cleanup);
+    expect((store.init as () => unknown)()).to.equal(cleanup);
   });
 
   it('should manage subqueries by id and hash', async () => {
     let resolvePromise: ((value: string) => void) | undefined;
-    const target = new SuspenseQuery({} as never);
+    const target = new SuspenseQuery({});
 
     expect(target.subquery(() => Promise.resolve('first'), { id: subqueryId, hash: 'hash-1' })).to
       .be.undefined;

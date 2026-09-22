@@ -17,9 +17,12 @@ const cacheFile = `${cacheFolder}/store-ids.json`;
  */
 const loadCache = (isProd = false): ICache => {
   if (isProd && fs.existsSync(cacheFile)) {
-    const cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf-8' }));
+    const cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf-8' })) as [
+      string,
+      { storeId: string; classname: string },
+    ][];
 
-    const result: ICache = new Map(cache as any[]);
+    const result: ICache = new Map(cache);
     const used = new Set<string>();
 
     // Older versions could persist one ID for two stores: keep the first owner, regenerate the rest.

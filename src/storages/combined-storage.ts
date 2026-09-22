@@ -6,6 +6,11 @@ interface ICombinedStorage {
 }
 
 /**
+ * Persisted data of one storage: store id => store attributes
+ */
+type TStorageData = Record<string, Record<string, unknown>>;
+
+/**
  * Combined storage for mobx store manager
  */
 class CombinedStorage implements IStorage {
@@ -18,7 +23,7 @@ class CombinedStorage implements IStorage {
    * Restored persist storage data
    * @protected
    */
-  protected persistData: Record<string, any> = {};
+  protected persistData: Record<string, TStorageData> = {};
 
   /**
    * Default storage id
@@ -42,7 +47,8 @@ class CombinedStorage implements IStorage {
   public async get(): Promise<Record<string, any> | undefined> {
     try {
       const data = await Promise.all(
-        Object.values(this.storages).map((storage) => storage.get() || ({} as any)),
+        // eslint-disable-next-line @typescript-eslint/await-thenable -- IStorage.get may be synchronous; Promise.all accepts plain values.
+        Object.values(this.storages).map((storage) => storage.get() || ({} as TStorageData)),
       );
 
       this.persistData = Object.keys(this.storages).reduce(
@@ -105,8 +111,8 @@ class CombinedStorage implements IStorage {
     const storeId = store.libStoreId!;
     const { attributes } = this.getStoreOptions(store);
 
-    return Object.entries(attributes!).reduce((res, [storageId, attr]) => {
-      const storageData = this.persistData[storageId]?.[storeId] ?? {};
+    return Object.entries(attributes!).reduce<Record<string, unknown>>((res, [storageId, attr]) => {
+      const storageData: Record<string, unknown> = this.persistData[storageId]?.[storeId] ?? {};
       const allowedData =
         attr[0] === '*'
           ? storageData
@@ -132,7 +138,7 @@ class CombinedStorage implements IStorage {
    */
   public async saveStoreData(
     store: IStorePersisted,
-    data: Record<string, any> | undefined,
+    data: Record<string, unknown> | undefined,
   ): Promise<void> {
     const storeId = store.libStoreId!;
     const { attributes, behaviour } = this.getStoreOptions(store);
