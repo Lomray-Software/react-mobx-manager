@@ -31,8 +31,8 @@ jobs:
           persist-credentials: false
       - name: Test refresh client without credentials
         run: python3 -m unittest discover -s .github/scripts -p 'test_context7_refresh.py' -v
+      # Context7 default is prod; use the documented default-branch request.
       - name: Submit one refresh request
         env:
           CONTEXT7_API_KEY: ${{ secrets.CONTEXT_7 }}
-          CONTEXT7_BRANCH: prod
         run: python3 .github/scripts/context7_refresh.py
