@@ -35,8 +35,51 @@ class RefreshTests(unittest.TestCase):
         self.assertIn("verification is still required", message)
         self.assertNotIn(self.env["CONTEXT7_API_KEY"], message)
 
+    def test_default_branch_omits_named_version_selector(self):
+        env = {k: v for k, v in self.env.items() if k != "CONTEXT7_BRANCH"}
+        message = refresh(env, self.client)
+        self.assertEqual(json.loads(self.client.open.call_args.args[0].data), {"libraryName": "/example/library"})
+        self.assertIn("configured default branch", message)
+        self.client.open.assert_called_once()
+
+    def test_error_body_only_emits_fixed_diagnostics(self):
+        cases = [
+            (b'{"error":"branch_not_found","message":"test-only-key"}', "Requested named branch"),
+            (b'{"error":"library_not_found","message":"test-only-key"}', "Library identifier"),
+            (b'{"error":"test-only-key"}', "Unclassified"),
+            (b'{"error":["branch_not_found"]}', "Unclassified"),
+            (b'{"error":{"secret":"test-only-key"}}', "Unclassified"),
+            (b'[]', "Unclassified"),
+            (b'\xff', "Unclassified"),
+            (b'x' * 65537, "Unclassified"),
+        ]
+        for body, expected in cases:
+            with self.subTest(expected=expected, size=len(body)):
+                client = Mock()
+                response = Mock()
+                response.read.return_value = body
+                client.open.side_effect = urllib.error.HTTPError(ENDPOINT, 400, "test-only-key", {}, response)
+                with self.assertRaisesRegex(RefreshError, expected) as caught:
+                    refresh(self.env, client)
+                self.assertNotIn("test-only-key", str(caught.exception))
+                self.assertTrue(caught.exception.__suppress_context__)
+                response.read.assert_called_once_with(65537)
+                client.open.assert_called_once()
+
+    def test_error_body_read_failure_is_sanitized(self):
+        for error in [http.client.IncompleteRead(b"test-only-key", 42), OSError("test-only-key"), TimeoutError("test-only-key")]:
+            client = Mock()
+            response = Mock()
+            response.read.side_effect = error
+            client.open.side_effect = urllib.error.HTTPError(ENDPOINT, 400, "test-only-key", {}, response)
+            with self.assertRaisesRegex(RefreshError, "Unclassified") as caught:
+                refresh(self.env, client)
+            self.assertNotIn("test-only-key", str(caught.exception))
+            self.assertTrue(caught.exception.__suppress_context__)
+            client.open.assert_called_once()
+
     def test_invalid_inputs_never_send(self):
-        for field, value in [("CONTEXT7_API_KEY", ""), ("CONTEXT7_API_KEY", "a\nb"), ("GITHUB_REPOSITORY", "https://bad.example"), ("GITHUB_REPOSITORY", "owner/repo/extra"), ("CONTEXT7_BRANCH", ""), ("CONTEXT7_BRANCH", "prod\n")]:
+        for field, value in [("CONTEXT7_API_KEY", ""), ("CONTEXT7_API_KEY", "a\nb"), ("GITHUB_REPOSITORY", "https://bad.example"), ("GITHUB_REPOSITORY", "owner/repo/extra"), ("CONTEXT7_BRANCH", "prod\n")]:
             with self.subTest(field=field, value=value):
                 with self.assertRaises(RefreshError):
                     refresh({**self.env, field: value}, self.client)
