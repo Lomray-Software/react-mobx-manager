@@ -506,6 +506,52 @@ describe('Manager', () => {
     clock.restore();
   });
 
+  it('should not arm destroy timers on the server and remove stores on destroy', async () => {
+    const clock = sandbox.useFakeTimers();
+    const onDestroy = sandbox.stub();
+
+    class RelativeStore {
+      public libStoreId?: string;
+      public libStoreStatus?: StoreStatus;
+      public libDestroyTimer?: ReturnType<typeof setTimeout>;
+      public isGlobal?: boolean;
+      public onDestroy = onDestroy;
+
+      constructor() {}
+    }
+
+    const manager = new Manager({ options: { destroyTimers: { init: 1, touched: 1, unused: 1 } } });
+
+    manager.isServer = true;
+
+    const result = manager.createStores(
+      [['relativeStore', RelativeStore]],
+      parentContextId,
+      managedContextId,
+      suspenseId,
+      managedComponentName,
+    );
+    const store = result.relativeStores.relativeStore as RelativeStore;
+
+    manager.touchedStores({ relativeStore: store });
+    manager.mountStores(managedContextId, result)();
+
+    expect(store.libStoreStatus).to.equal(StoreStatus.unused);
+    expect(store.libDestroyTimer).to.equal(undefined);
+
+    await clock.tickAsync(100);
+
+    expect(manager.getStores().has(store.libStoreId!)).to.equal(true);
+    sinon.assert.notCalled(onDestroy);
+
+    manager.destroy();
+
+    expect(manager.getStores().size).to.equal(0);
+    sinon.assert.calledOnce(onDestroy);
+
+    clock.restore();
+  });
+
   it('should run cleanup returned from init when store is destroyed', async () => {
     const clock = sandbox.useFakeTimers();
     const onDestroy = sandbox.stub();

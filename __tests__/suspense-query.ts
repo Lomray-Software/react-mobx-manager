@@ -46,6 +46,24 @@ describe('SuspenseQuery', () => {
     expect(target.query(() => Promise.resolve('unused'), { hash: 'hash-1' })).to.be.undefined;
   });
 
+  it('should treat object hashes by content for queries and subqueries', async () => {
+    const store: Record<string, unknown> = {};
+    const target = new SuspenseQuery(store);
+    const request = () => Promise.resolve('done');
+
+    expect(() => target.query(request, { hash: { page: 1, tags: ['a'] } })).to.throw();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(store.sR).to.deep.equal({ hash: '{"page":1,"tags":["a"]}', done: true });
+    expect(target.query(request, { hash: { page: 1, tags: ['a'] } })).to.be.undefined;
+    expect(() => target.query(request, { hash: { page: 2, tags: ['a'] } })).to.throw();
+
+    expect(target.subquery(request, { id: subqueryId, hash: { page: 1 } })).to.be.undefined;
+    expect(target.subquery(request, { id: subqueryId, hash: { page: 1 } })).to.be.undefined;
+    expect(() => target.subquery(request, { id: subqueryId, hash: { page: 2 } })).to.throw();
+  });
+
   it.each(['resolve', 'reject'] as const)(
     'should ignore an obsolete query that settles with %s',
     async (settlement) => {

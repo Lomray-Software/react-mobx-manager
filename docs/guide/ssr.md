@@ -43,6 +43,8 @@ Examples that need cleanup:
 - cleanup returned from `init`
 - internal store cleanup
 
+On the server the manager arms no destroy timers (`destroyTimers` only apply in the browser): stores live exactly as long as the request, and `destroy()` is the only teardown.
+
 ## Practical guidance
 
 Do:
