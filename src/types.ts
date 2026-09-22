@@ -64,8 +64,7 @@ export type IConstructableStore<TSto = IStore> = (new (
 export type IStoreConfig = { id?: string; isParent?: boolean };
 
 export type TStoreDefinition<TSto extends TAnyStore = any> =
-  | IConstructableStore<TSto>
-  | ({ store: IConstructableStore<TSto> } & IStoreConfig);
+  IConstructableStore<TSto> | ({ store: IConstructableStore<TSto> } & IStoreConfig);
 
 export type TMapStores = Record<string, TStoreDefinition>;
 

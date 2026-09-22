@@ -1,4 +1,4 @@
-import type { TAnyStore } from '@src/types';
+import type { IStorePersisted, TAnyStore } from '@src/types';
 
 const exportedPropName = 'libExported';
 
@@ -13,8 +13,8 @@ const makeExported = <T extends object>(
   },
   shouldExtend = true,
 ): void => {
-  store[exportedPropName] = {
-    ...(shouldExtend ? (store?.[exportedPropName] ?? {}) : {}),
+  (store as Record<string, any>)[exportedPropName] = {
+    ...(shouldExtend ? ((store as Record<string, any>)?.[exportedPropName] ?? {}) : {}),
     ...props,
   };
 };
@@ -24,20 +24,20 @@ const makeExported = <T extends object>(
  * @see IPersistOptions
  */
 const isPropExcludedInPersist = (store: TAnyStore): boolean => {
-  return store?.['libStorageOptions']?.isNotExported || false;
+  return (store as IStorePersisted)?.['libStorageOptions']?.isNotExported || false;
 };
 
 /**
  * Check if store prop is observable exported
  */
 const isPropObservableExported = (store: TAnyStore, prop: string): boolean =>
-  store?.[exportedPropName]?.[prop] === 'observable';
+  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'observable';
 
 /**
  * Check if store prop is simple exported
  */
 const isPropSimpleExported = (store: TAnyStore, prop: string): boolean =>
-  store?.[exportedPropName]?.[prop] === 'simple';
+  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'simple';
 
 /**
  * Check if store prop is excluded from export
@@ -47,7 +47,7 @@ const isPropExcludedFromExport = (
   prop: string,
   withNotExported = false,
 ): boolean =>
-  store?.[exportedPropName]?.[prop] === 'excluded' ||
+  (store as Record<string, any>)?.[exportedPropName]?.[prop] === 'excluded' ||
   (!withNotExported && isPropExcludedInPersist(store));
 
 export { makeExported, isPropObservableExported, isPropSimpleExported, isPropExcludedFromExport };

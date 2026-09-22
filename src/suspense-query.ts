@@ -86,7 +86,7 @@ class SuspenseQuery {
    */
   protected jsonToError(e: Error, values: Record<string, any>): Error {
     this.params.errorFields.forEach((name) => {
-      e[name] = values?.[name];
+      (e as unknown as Record<string, any>)[name] = values?.[name];
     });
 
     return e;
@@ -96,7 +96,7 @@ class SuspenseQuery {
    * Throw suspense error
    */
   protected throwError(): void {
-    const value = this.store[this.params.fieldName];
+    const value = (this.store as Record<string, any>)[this.params.fieldName];
 
     // pass error to error boundary
     if (value?.error) {
@@ -113,7 +113,7 @@ class SuspenseQuery {
    *  - skip run suspense if already completed
    */
   protected isComplete(hash: unknown): boolean {
-    const value = this.store[this.params.fieldName];
+    const value = (this.store as Record<string, any>)[this.params.fieldName];
 
     // pass error to error boundary
     if (value?.error) {
@@ -138,8 +138,8 @@ class SuspenseQuery {
       return;
     }
 
-    if (this.store[fieldName]?.hash !== hash) {
-      this.store[fieldName] = { hash, done: false };
+    if ((this.store as Record<string, any>)[fieldName]?.hash !== hash) {
+      (this.store as Record<string, any>)[fieldName] = { hash, done: false };
       this.promise = undefined;
     }
 
@@ -153,7 +153,7 @@ class SuspenseQuery {
             return;
           }
 
-          this.store[fieldName] = { hash, done: true };
+          (this.store as Record<string, any>)[fieldName] = { hash, done: true };
         },
         (e) => {
           if (this.promise !== pending) {
@@ -162,7 +162,7 @@ class SuspenseQuery {
 
           this.errorJson(e);
 
-          this.store[fieldName] = { error: e };
+          (this.store as Record<string, any>)[fieldName] = { error: e };
         },
       );
     }

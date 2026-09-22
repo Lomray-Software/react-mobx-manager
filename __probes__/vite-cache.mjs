@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { build } from 'vite';
+import { build, version } from 'vite';
 import plugin from '@lomray/react-mobx-manager/plugins/vite/index.js';
 const root = path.resolve('vite-app');
 fs.mkdirSync(root, { recursive: true });
@@ -34,8 +34,8 @@ fs.writeFileSync(
 fs.writeFileSync(root + '/entry.js', 'export {A} from "./a.js";export {B} from "./b.js";');
 const b = await compile();
 const ids = (s) => [...s.matchAll(/static id = ["'](.*?)["']/g)].map((m) => m[1]);
-console.log('Vite 8.2.2 first build static IDs: ' + JSON.stringify(ids(a)));
-console.log('Vite 8.2.2 second build static IDs: ' + JSON.stringify(ids(b)));
+console.log(`Vite ${version} first build static IDs: ` + JSON.stringify(ids(a)));
+console.log(`Vite ${version} second build static IDs: ` + JSON.stringify(ids(b)));
 assert.deepEqual(ids(a), ['Sa']);
 assert.deepEqual(ids(b), ['Sa', 'Sb']);
 
@@ -61,6 +61,9 @@ const cacheFile = 'node_modules/.cache/@lomray/react-mobx-manager/store-ids.json
 const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
 cache[1][1].storeId = cache[0][1].storeId;
 fs.writeFileSync(cacheFile, JSON.stringify(cache));
-await assert.rejects(compile, /Duplicate store ID/);
+const repaired = await compile();
+assert.deepEqual(ids(repaired), ['Sa', 'Sb']);
+const repairedCache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+assert.deepEqual(repairedCache.map(([, entry]) => entry.storeId), ['Sa', 'Sb']);
 fs.rmSync(cacheFile);
-console.log('Duplicate loaded cache rejected');
+console.log('Duplicate loaded cache repaired with distinct store IDs');

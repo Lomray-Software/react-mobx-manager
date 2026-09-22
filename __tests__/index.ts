@@ -1,5 +1,4 @@
-import { expect } from 'chai';
-import { afterEach, describe, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('index', () => {
   afterEach(() => {

@@ -19,7 +19,7 @@
       "webworker"
     ],
     "module": "ES2022",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "target": "ESNext",
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -29,7 +29,6 @@
     "strictNullChecks": true,
     "strict": false,
     "pretty": true,
-    "suppressImplicitAnyIndexErrors": true,
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {

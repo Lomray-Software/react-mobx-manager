@@ -1,5 +1,4 @@
-import { expect } from 'chai';
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import parentStore from '@src/parent-store';
 
 describe('parentStore', () => {

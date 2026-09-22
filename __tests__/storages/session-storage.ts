@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import SessionStorage from '@src/storages/session-storage';
 
 describe('SessionStorage', () => {

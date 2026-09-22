@@ -1,18 +1,16 @@
 import lomrayConfig from '@lomray/eslint-config-react';
-// noinspection NpmUsedModulesInstalled
 import baseConfig from '@lomray/eslint-config';
-// noinspection NpmUsedModulesInstalled
 import globals from 'globals';
 
 const customFilesIgnores = {
-  ...baseConfig['filesIgnores'],
+  ...baseConfig.filesIgnores,
   ignores: [
-    ...(baseConfig['filesIgnores'].ignores ?? []),
+    ...(baseConfig.filesIgnores.ignores ?? []),
     'lib/**/*',
     '*.js',
   ],
   files: [
-    ...baseConfig['filesIgnores'].files,
+    ...baseConfig.filesIgnores.files,
     '__tests__/**/*.{ts,tsx,*.ts,*tsx}',
     '__mocks__/**/*.{ts,tsx,*.ts,*tsx}',
     '__helpers__/**/*.{ts,tsx,*.ts,*tsx}',

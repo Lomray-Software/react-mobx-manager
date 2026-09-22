@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { afterEach, describe, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import CookieStorage from '@src/storages/cookie-storage';
 
 describe('CookieStorage', () => {

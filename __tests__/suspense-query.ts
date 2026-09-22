@@ -1,5 +1,4 @@
-import { expect } from 'chai';
-import { afterEach, describe, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import SuspenseQuery from '@src/suspense-query';
 import type { IPromise } from '@src/suspense-query';
 

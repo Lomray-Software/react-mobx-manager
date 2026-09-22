@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import { observable, runInAction } from 'mobx';
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import deepMerge from '@src/deep-merge';
 
 describe('deepMerge', () => {

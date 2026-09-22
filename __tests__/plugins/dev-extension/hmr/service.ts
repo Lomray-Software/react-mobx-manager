@@ -1,6 +1,5 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import { afterEach, describe, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import ManagerHmr from '@src/plugins/dev-extension/hmr/service';
 
 describe('plugins/dev-extension/hmr/service', () => {

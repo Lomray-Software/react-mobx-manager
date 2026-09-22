@@ -6,9 +6,7 @@ on:
     workflows: [ Check PR ]
     types: [ completed ]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   merge:
@@ -17,10 +15,13 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       startsWith(github.event.workflow_run.head_branch, 'dependabot/')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
-      # Only the grouped "non-major" development update merges on its own.
-      # Anything Dependabot opens outside a group is a major update and stays for a manual review.
+      # Only the grouped updates merge on their own: "non-major" development packages and pinned actions.
+      # Anything Dependabot opens outside a group is a major package update and stays for a manual review.
       - name: Merge the grouped update
         env:
           GH_TOKEN: ${{ github.token }}
@@ -29,7 +30,7 @@ jobs:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           case "$HEAD_BRANCH" in
-            */non-major-*) ;;
+            */non-major-*|*/actions-*) ;;
             *) echo "Not a grouped update: $HEAD_BRANCH"; exit 0 ;;
           esac
 

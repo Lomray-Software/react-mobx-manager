@@ -1,7 +1,6 @@
-import { expect } from 'chai';
 import { makeAutoObservable } from 'mobx';
 import sinon from 'sinon';
-import { describe, it, afterEach } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { makeExported } from '@src/make-exported';
 import Manager from '@src/manager';
 import onChangeListener from '@src/on-change-listener';
