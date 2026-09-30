@@ -263,6 +263,7 @@ Runtime behavior:
 - queued stores are serialized once per `options.persistDelay` (default `100` ms) and each storage is written once; unchanged stores are skipped
 - the queue is flushed when the page is hidden, before a store is destroyed, on `manager.destroy()` and on `manager.flushPersist()`; on the server and with `persistDelay: 0` every change is saved immediately
 - React Native has no page events: call `manager.flushPersist()` when `AppState` leaves `active`
+- tests that read a storage right after a change: `await manager.flushPersist()` first, or use `persistDelay: 0`
 - `manager.savePersistedStore(...)` saves one store immediately, without batching
 
 `IPersistOptions`:

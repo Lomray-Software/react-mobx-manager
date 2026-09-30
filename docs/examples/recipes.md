@@ -421,6 +421,20 @@ AppState.addEventListener('change', (state) => {
 });
 ```
 
+Tests that read a storage right after a store change should wait for the write:
+
+```ts
+store.setTheme('dark');
+
+await manager.flushPersist();
+
+expect(JSON.parse(localStorage.getItem('stores') ?? '{}')).toMatchObject({
+  settings: { theme: 'dark' },
+});
+```
+
+or create the test manager with `options: { persistDelay: 0 }`.
+
 ## Save every store under its own key
 
 `LocalStorage`, `SessionStorage`, `CookieStorage` and `AsyncStorage` keep all persisted stores in one value, so every save rewrites all of them. With many or large stores use `KeyValueStorage`: each store is a separate key and a save writes only the changed stores. It also keeps values small, which matters for Android AsyncStorage, where a single large row (around 2 MB) may fail to load.

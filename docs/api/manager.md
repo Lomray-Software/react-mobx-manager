@@ -25,7 +25,7 @@ new Manager({
 });
 ```
 
-- `persistDelay` (default `100`): changes of persisted stores are collected and written at most once per this delay. `0` saves on every change, as older versions did. On the server (`manager.isServer`) changes are always saved immediately.
+- `persistDelay` (default `100`): changes of persisted stores are collected and written at most once per this delay. `0` saves on every change, as older versions did. On the server (`manager.isServer`) changes are always saved immediately. In tests that read a storage right after a change, `await manager.flushPersist()` first or use `0`.
 
 ## Important methods
 
