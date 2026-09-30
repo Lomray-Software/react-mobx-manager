@@ -17,7 +17,7 @@ function wakeup(
   deepMerge(this, resState);
 
   if (shouldSave) {
-    void manager.savePersistedStore(this);
+    manager.schedulePersist(this);
   }
 }
 

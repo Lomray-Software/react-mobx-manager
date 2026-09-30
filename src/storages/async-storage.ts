@@ -1,4 +1,4 @@
-import type { IStorage } from '../types';
+import type { IStorage, IStorageChanges } from '../types';
 
 interface IAsyncStorage {
   getItem: (key: string) => Promise<string | null>;
@@ -66,6 +66,22 @@ class AsyncStorage implements IStorage {
   async set(value: Record<string, any> | undefined): Promise<void> {
     try {
       return await this.storage.setItem(this.globalKey, JSON.stringify(value ?? {}));
+    } catch (e) {
+      console.error('Failed to set value to async storage:', e);
+    }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  async saveChanges({ value, toJSON }: IStorageChanges): Promise<void> {
+    // keep custom serialization of subclasses
+    if (this.set !== AsyncStorage.prototype.set) {
+      return this.set(value);
+    }
+
+    try {
+      return await this.storage.setItem(this.globalKey, toJSON());
     } catch (e) {
       console.error('Failed to set value to async storage:', e);
     }

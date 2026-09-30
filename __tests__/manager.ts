@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, makeObservable, observable, reaction, runInAction } from 'mobx';
 import sinon from 'sinon';
 import { afterEach, describe, expect, it } from 'vitest';
 import { makeExported } from '@src/make-exported';
@@ -689,5 +689,139 @@ describe('Manager', () => {
       },
       plainValue: 'plain',
     });
+  });
+
+  it('should not traverse other stores referenced by plain fields', () => {
+    const other = makeAutoObservable({ counter: 0 });
+    const store = makeAutoObservable({ value: 1 });
+    const effect = sandbox.stub();
+
+    Object.assign(store, { other });
+
+    const dispose = reaction(() => Manager.getObservableProps(store as never), effect);
+
+    runInAction(() => {
+      other.counter += 1;
+    });
+    sinon.assert.notCalled(effect);
+
+    runInAction(() => {
+      store.value += 1;
+    });
+    sinon.assert.calledOnce(effect);
+    expect(effect.firstCall.args[0]).to.deep.equal({ value: 2 });
+
+    dispose();
+  });
+
+  it('should get and save only persisted attributes', async () => {
+    const set = sandbox.stub();
+    const manager = new Manager({
+      storage: new CombinedStorage({ local: { get: () => ({}), set, flush: sandbox.stub() } }),
+    });
+
+    class ListStore {
+      public libStoreId = 'list';
+
+      public libStorageOptions = {
+        behaviour: 'include' as const,
+        attributes: { local: ['items', 'missing'] },
+      };
+
+      public items = [1];
+
+      public isFetching = true;
+
+      constructor() {
+        makeObservable(this, { items: observable, isFetching: observable });
+      }
+    }
+
+    const store = new ListStore();
+
+    expect(manager.getPersistState(store)).to.deep.equal({ items: [1] });
+    expect(await manager.savePersistedStore(store)).to.equal(true);
+    sinon.assert.calledOnceWithExactly(set, { list: { items: [1] } });
+  });
+
+  it('should flush through overridden single store saving', async () => {
+    const storage = new CombinedStorage({
+      local: { get: () => ({}), set: sandbox.stub(), flush: sandbox.stub() },
+    });
+    const saveStoreData = sandbox.stub(storage, 'saveStoreData').resolves();
+    const manager = new Manager({ storage });
+    const store = { libStoreId: 'store', toJSON: () => ({ value: 1 }) };
+
+    manager.schedulePersist(store);
+
+    expect(await manager.flushPersist()).to.equal(true);
+    sinon.assert.calledOnceWithExactly(saveStoreData, store, { value: 1 });
+
+    const savePersistedStore = sandbox.stub(manager, 'savePersistedStore').resolves(false);
+
+    manager.schedulePersist(store);
+
+    expect(await manager.flushPersist()).to.equal(false);
+    sinon.assert.calledOnceWithExactly(savePersistedStore, store);
+  });
+
+  it('should ignore scheduled persist when persist is disabled', async () => {
+    const set = sandbox.stub();
+    const manager = new Manager({
+      storage: new CombinedStorage({ local: { get: () => ({}), set, flush: sandbox.stub() } }),
+      options: { shouldDisablePersist: true },
+    });
+
+    manager.schedulePersist({ libStoreId: 'store', toJSON: () => ({ value: 1 }) });
+
+    expect(await manager.flushPersist()).to.equal(false);
+    sinon.assert.notCalled(set);
+  });
+
+  it('should wait for storage writes in progress on flush', async () => {
+    let finishWrite: () => void = () => undefined;
+    const set = sandbox.stub().callsFake(
+      () =>
+        new Promise<void>((resolve) => {
+          finishWrite = resolve;
+        }),
+    );
+    const manager = new Manager({
+      storage: new CombinedStorage({ local: { get: () => ({}), set, flush: sandbox.stub() } }),
+    });
+    const isFlushed = sandbox.stub();
+
+    manager.schedulePersist({ libStoreId: 'store', toJSON: () => ({ value: 1 }) });
+    void manager.flushPersist();
+    void manager.flushPersist().then(isFlushed);
+
+    await Promise.resolve();
+    sinon.assert.calledOnce(set);
+    sinon.assert.notCalled(isFlushed);
+
+    finishWrite();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+    sinon.assert.calledOnceWithExactly(isFlushed, true);
+  });
+
+  it('should remove page listeners on destroy', () => {
+    const set = sandbox.stub();
+    const manager = new Manager({
+      storage: new CombinedStorage({ local: { get: () => ({}), set, flush: sandbox.stub() } }),
+    });
+
+    manager.schedulePersist({ libStoreId: 'store', toJSON: () => ({ value: 1 }) });
+    manager.destroy();
+
+    sinon.assert.calledOnce(set);
+
+    const flushPersist = sandbox.spy(manager, 'flushPersist');
+
+    window.dispatchEvent(new Event('pagehide'));
+
+    sinon.assert.notCalled(flushPersist);
   });
 });
