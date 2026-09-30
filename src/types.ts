@@ -82,12 +82,34 @@ export type TWakeup = (state: {
   persistedState?: Record<string, any>;
 }) => void;
 
+/**
+ * Changes of one storage passed to IStorage.saveChanges
+ */
+export interface IStorageChanges {
+  /**
+   * Whole storage state after the changes: store id => store state (same value `set` receives)
+   */
+  value: Record<string, any>;
+  /**
+   * Changed stores: store id => store state JSON
+   */
+  changes: Map<string, string>;
+  /**
+   * Whole state JSON, equal to JSON.stringify(value) but assembled from cached store JSON
+   */
+  toJSON: () => string;
+}
+
 export interface IStorage {
   get: () => Record<string, any> | undefined | Promise<Record<string, any> | undefined>;
   set: (
     value: Record<string, any> | undefined,
   ) => Record<string, any> | undefined | Promise<any> | void;
   flush: () => void | Promise<any>;
+  /**
+   * Optional incremental save. When defined, CombinedStorage calls it instead of `set`
+   */
+  saveChanges?: (changes: IStorageChanges) => void | Promise<any>;
 }
 
 export interface IManagerOptions {
@@ -105,6 +127,12 @@ export interface IManagerOptions {
    * empty (default): don't render component if any of the stores not created
    */
   failedCreationStrategy?: 'none' | 'dummy' | 'empty';
+  /**
+   * Batch persisted stores changes and save them at most once per this delay (ms).
+   * 0 - save on every change. Server side always saves immediately.
+   * Default: 100
+   */
+  persistDelay?: number;
 }
 
 export type TAnyStore = IStore | IRelativeStore | IGlobalStore | IStorePersisted;

@@ -1,4 +1,4 @@
-import type { IStorage } from '../types';
+import type { IStorage, IStorageChanges } from '../types';
 
 export interface ILocalStorageOptions {
   globalKey?: string;
@@ -50,6 +50,18 @@ class LocalStorage implements IStorage {
    */
   set(value: Record<string, any> | undefined): void {
     return this.storage.setItem(this.globalKey, JSON.stringify(value ?? {}));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  saveChanges({ value, toJSON }: IStorageChanges): void {
+    // keep custom serialization of subclasses
+    if (this.set !== LocalStorage.prototype.set) {
+      return this.set(value);
+    }
+
+    return this.storage.setItem(this.globalKey, toJSON());
   }
 }
 

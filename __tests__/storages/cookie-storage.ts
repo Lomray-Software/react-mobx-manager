@@ -65,4 +65,22 @@ describe('CookieStorage', () => {
     sinon.assert.calledWith(storage.set, 'stores', '{"foo":"bar"}', cookieAttr);
     sinon.assert.calledWith(storage.remove, 'stores', cookieAttr);
   });
+
+  it('should save assembled json and warn once about big cookie', () => {
+    const storage = { get: sandbox.stub(), set: sandbox.stub(), remove: sandbox.stub() };
+    const warn = sandbox.stub(console, 'warn');
+    const target = new CookieStorage({ storage, cookieAttr: { path: '/' } });
+    const big = JSON.stringify({ store: { value: 'x'.repeat(5000) } });
+
+    target.saveChanges({ value: {}, changes: new Map(), toJSON: () => '{"a":1}' });
+
+    sinon.assert.calledOnceWithExactly(storage.set, 'stores', '{"a":1}', { path: '/' });
+    sinon.assert.notCalled(warn);
+
+    target.saveChanges({ value: {}, changes: new Map(), toJSON: () => big });
+    target.set({ store: { value: 'x'.repeat(5000) } });
+
+    sinon.assert.calledOnce(warn);
+    sinon.assert.calledWith(storage.set.thirdCall, 'stores', big, { path: '/' });
+  });
 });

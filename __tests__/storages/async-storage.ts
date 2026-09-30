@@ -70,4 +70,47 @@ describe('AsyncStorage', () => {
     sinon.assert.calledWith(storage.removeItem, 'stores');
     sinon.assert.calledTwice(error);
   });
+
+  it('should save assembled json on incremental save and log errors', async () => {
+    const storage = {
+      getItem: sandbox.stub().resolves(null),
+      setItem: sandbox.stub().resolves(),
+      removeItem: sandbox.stub().resolves(),
+    };
+    const error = sandbox.stub(console, 'error');
+    const target = new AsyncStorage({ storage });
+
+    await target.saveChanges({ value: {}, changes: new Map(), toJSON: () => '{"a":1}' });
+
+    sinon.assert.calledOnceWithExactly(storage.setItem, 'stores', '{"a":1}');
+
+    storage.setItem.rejects(new Error('disk'));
+    await target.saveChanges({ value: {}, changes: new Map(), toJSON: () => '{}' });
+
+    sinon.assert.calledOnce(error);
+  });
+
+  it('should keep overridden set of subclasses on incremental save', async () => {
+    const storage = {
+      getItem: sandbox.stub().resolves(null),
+      setItem: sandbox.stub().resolves(),
+      removeItem: sandbox.stub().resolves(),
+    };
+    const set = sandbox.stub().resolves();
+
+    class CustomStorage extends AsyncStorage {
+      set(value: Record<string, any> | undefined): Promise<void> {
+        return set(value) as Promise<void>;
+      }
+    }
+
+    await new CustomStorage({ storage }).saveChanges({
+      value: { a: 1 },
+      changes: new Map(),
+      toJSON: () => '',
+    });
+
+    sinon.assert.calledOnceWithExactly(set, { a: 1 });
+    sinon.assert.notCalled(storage.setItem);
+  });
 });

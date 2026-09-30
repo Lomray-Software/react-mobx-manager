@@ -21,7 +21,7 @@ It is built for apps that want explicit store ownership, SSR support, persistenc
 - Support code splitting out of the box.
 - Access stores from other stores.
 - Can be a replacement for react context.
-- Persistence support
+- Persistence with batched writes: local/session storage, cookies, AsyncStorage, per-store key-value (AsyncStorage, MMKV) and IndexedDB
 - Vite plugin support
 - Best-effort HMR
 - And many other nice things 😎

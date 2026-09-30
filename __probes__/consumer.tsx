@@ -9,6 +9,8 @@ import SessionStorage from '@lomray/react-mobx-manager/storages/session-storage'
 import CookieStorage from '@lomray/react-mobx-manager/storages/cookie-storage';
 import AsyncStorage from '@lomray/react-mobx-manager/storages/async-storage';
 import CombinedStorage from '@lomray/react-mobx-manager/storages/combined-storage';
+import KeyValueStorage from '@lomray/react-mobx-manager/storages/key-value-storage';
+import IndexedDBStorage from '@lomray/react-mobx-manager/storages/indexed-db-storage';
 import vitePlugin from '@lomray/react-mobx-manager/plugins/vite';
 import connectDevExtension from '@lomray/react-mobx-manager/plugins/dev-extension';
 import {
@@ -44,6 +46,8 @@ void [
   CookieStorage,
   AsyncStorage,
   CombinedStorage,
+  KeyValueStorage,
+  IndexedDBStorage,
   connectDevExtension,
   connectViteHmr,
   connectWebpackHmr,
@@ -51,6 +55,18 @@ void [
   connectHmrRuntime,
   ManagerHmr,
 ];
+
+const persisted = new api.Manager({
+  storage: new CombinedStorage({
+    local: new IndexedDBStorage({ migrateFrom: new LocalStorage({ storage: localStorage }) }),
+    native: new KeyValueStorage({
+      storage: { getItem: () => null, setItem: () => undefined, removeItem: () => undefined },
+    }),
+  }),
+  options: { persistDelay: 200 },
+});
+const isFlushed: Promise<boolean> = persisted.flushPersist();
+void isFlushed;
 
 api.Manager.persistStore(Store, 'example');
 // @ts-expect-error A persistence ID is required.
