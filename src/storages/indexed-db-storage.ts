@@ -81,49 +81,47 @@ class IndexedDBStorage extends StoreRecordsStorage {
       return Promise.resolve(this.db);
     }
 
-    if (!this.opening) {
-      this.opening = new Promise<IDBDatabase | undefined>((resolve) => {
-        if (!this.factory) {
+    this.opening ??= new Promise<IDBDatabase | undefined>((resolve) => {
+      if (!this.factory) {
+        resolve(undefined);
+
+        return;
+      }
+
+      try {
+        const request = this.factory.open(this.dbName, 1);
+
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains(STORE_NAME)) {
+            request.result.createObjectStore(STORE_NAME);
+          }
+        };
+        request.onsuccess = () => {
+          const db = request.result;
+          const reset = (): void => {
+            this.db = undefined;
+            this.opening = undefined;
+          };
+
+          // let other tabs upgrade the database
+          db.onversionchange = () => {
+            db.close();
+            reset();
+          };
+          // e.g. database is deleted: reopen on the next save
+          db.onclose = reset;
+          this.db = db;
+          resolve(db);
+        };
+        request.onerror = () => {
+          console.error('Failed to open IndexedDB:', request.error);
           resolve(undefined);
-
-          return;
-        }
-
-        try {
-          const request = this.factory.open(this.dbName, 1);
-
-          request.onupgradeneeded = () => {
-            if (!request.result.objectStoreNames.contains(STORE_NAME)) {
-              request.result.createObjectStore(STORE_NAME);
-            }
-          };
-          request.onsuccess = () => {
-            const db = request.result;
-            const reset = (): void => {
-              this.db = undefined;
-              this.opening = undefined;
-            };
-
-            // let other tabs upgrade the database
-            db.onversionchange = () => {
-              db.close();
-              reset();
-            };
-            // e.g. database is deleted: reopen on the next save
-            db.onclose = reset;
-            this.db = db;
-            resolve(db);
-          };
-          request.onerror = () => {
-            console.error('Failed to open IndexedDB:', request.error);
-            resolve(undefined);
-          };
-        } catch (e) {
-          console.error('Failed to open IndexedDB:', e);
-          resolve(undefined);
-        }
-      });
-    }
+        };
+      } catch (e) {
+        console.error('Failed to open IndexedDB:', e);
+        resolve(undefined);
+      }
+    });
 
     return this.opening;
   }

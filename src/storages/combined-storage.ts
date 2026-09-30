@@ -212,11 +212,60 @@ class CombinedStorage implements IStorage {
    * Serialized stores of storage
    */
   protected getStorageJSON(storageId: string): Map<string, string> {
-    if (!this.persistJSON[storageId]) {
-      this.persistJSON[storageId] = new Map();
-    }
+    this.persistJSON[storageId] ??= new Map();
 
     return this.persistJSON[storageId];
+  }
+
+  /**
+   * Serialized store data which is saved in storage
+   */
+  protected getSavedJSON(storageId: string, storeId: string): string {
+    const storageJSON = this.getStorageJSON(storageId);
+    const savedJSON = storageJSON.get(storeId);
+
+    if (savedJSON !== undefined) {
+      return savedJSON;
+    }
+
+    const savedData = this.persistData[storageId]?.[storeId];
+
+    if (!savedData) {
+      return '{}';
+    }
+
+    const json = JSON.stringify(savedData);
+
+    storageJSON.set(storeId, json);
+
+    return json;
+  }
+
+  /**
+   * Pick store attributes of storage
+   * Picked attributes are removed from dataKeys for 'exclude' behaviour.
+   */
+  protected pickStorageData(
+    attr: string[],
+    data: Record<string, unknown> | undefined,
+    dataKeys: Set<string>,
+    behaviour: IPersistOptions['behaviour'],
+  ): Record<string, unknown> {
+    const storeData: Record<string, unknown> = {};
+
+    for (const attrName of attr[0] === '*' ? [...dataKeys] : attr) {
+      if (!dataKeys.has(attrName)) {
+        continue;
+      }
+
+      if (behaviour === 'exclude') {
+        dataKeys.delete(attrName);
+      }
+
+      storeData[attrName] = data?.[attrName];
+    }
+
+    return storeData;
   }
 
   /**
@@ -232,32 +281,11 @@ class CombinedStorage implements IStorage {
     const dataKeys = new Set(Object.keys(data ?? {}));
 
     for (const [storageId, attr] of Object.entries(attributes!)) {
-      const storeData: Record<string, unknown> = {};
-
-      for (const attrName of attr[0] === '*' ? [...dataKeys] : attr) {
-        if (!dataKeys.has(attrName)) {
-          continue;
-        }
-
-        if (behaviour === 'exclude') {
-          dataKeys.delete(attrName);
-        }
-
-        storeData[attrName] = data?.[attrName];
-      }
-
+      const storeData = this.pickStorageData(attr, data, dataKeys, behaviour);
       const storeJSON = JSON.stringify(storeData);
-      const storageJSON = this.getStorageJSON(storageId);
-      const prevData = this.persistData[storageId]?.[storeId];
-      let prevJSON = storageJSON.get(storeId);
-
-      if (prevJSON === undefined && prevData) {
-        prevJSON = JSON.stringify(prevData);
-        storageJSON.set(storeId, prevJSON);
-      }
 
       // skip updating if nothing changed
-      if (storeJSON === (prevJSON ?? '{}')) {
+      if (storeJSON === this.getSavedJSON(storageId, storeId)) {
         continue;
       }
 
@@ -266,7 +294,7 @@ class CombinedStorage implements IStorage {
       }
 
       this.persistData[storageId][storeId] = storeData;
-      storageJSON.set(storeId, storeJSON);
+      this.getStorageJSON(storageId).set(storeId, storeJSON);
 
       if (!changed.has(storageId)) {
         changed.set(storageId, new Map());
