@@ -291,6 +291,18 @@ export default Manager.persistStore(UserStore, 'user');
 
 Use persistence for durable state. Avoid using it for temporary screen state, loading flags, or one-off UI flows.
 
+When a persisted store also has short-lived fields, keep them out of storage: list the persisted fields explicitly, or mark the others as excluded. Changes of fields that are not persisted don't trigger any persist work.
+
+```ts
+export default Manager.persistStore(FeedStore, 'feed', {
+  behaviour: 'include',
+  attributes: { local: ['items', 'filters'] },
+});
+
+// or inside the store constructor
+makeExported(this, { isFetching: 'excluded' });
+```
+
 ## Persist a store across multiple storages
 
 ```ts
@@ -381,6 +393,137 @@ This setup is useful when:
 - some fields must be available through cookies
 - other fields fit better in local storage
 - SSR or stream rendering must hydrate the manager before the app starts
+
+## How persisted changes are saved
+
+- the change listener tracks only persisted fields of the store; other stores referenced from its fields are not traversed
+- changes are batched: all persisted stores changed during `options.persistDelay` (100 ms by default) are serialized once and every storage gets one write
+- a store whose persisted state didn't change is not written again
+- queued changes are written right away when the page is hidden, before a store is destroyed, on `manager.destroy()` and on `manager.flushPersist()`
+- on the server changes are saved immediately; `persistDelay: 0` does the same in the browser
+
+```ts
+const manager = new Manager({
+  storage,
+  options: { persistDelay: 300 },
+});
+```
+
+React Native has no page events, so flush when the app goes to background:
+
+```ts
+import { AppState } from 'react-native';
+
+AppState.addEventListener('change', (state) => {
+  if (state !== 'active') {
+    void manager.flushPersist();
+  }
+});
+```
+
+Tests that read a storage right after a store change should wait for the write:
+
+```ts
+store.setTheme('dark');
+
+await manager.flushPersist();
+
+expect(JSON.parse(localStorage.getItem('stores') ?? '{}')).toMatchObject({
+  settings: { theme: 'dark' },
+});
+```
+
+or create the test manager with `options: { persistDelay: 0 }`.
+
+## Save every store under its own key
+
+`LocalStorage`, `SessionStorage`, `CookieStorage` and `AsyncStorage` keep all persisted stores in one value, so every save rewrites all of them. With many or large stores use `KeyValueStorage`: each store is a separate key and a save writes only the changed stores. It also keeps values small, which matters for Android AsyncStorage, where a single large row (around 2 MB) may fail to load.
+
+```ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Manager } from '@lomray/react-mobx-manager';
+import MobxAsyncStorage from '@lomray/react-mobx-manager/storages/async-storage';
+import CombinedStorage from '@lomray/react-mobx-manager/storages/combined-storage';
+import KeyValueStorage from '@lomray/react-mobx-manager/storages/key-value-storage';
+
+const manager = new Manager({
+  storage: new CombinedStorage({
+    local: new KeyValueStorage({
+      storage: AsyncStorage,
+      // stores saved by the previous setup are moved on the first start
+      migrateFrom: new MobxAsyncStorage({ storage: AsyncStorage }),
+    }),
+  }),
+});
+```
+
+Any key-value backend with `getItem`, `setItem` and `removeItem` works, sync or async. For example, MMKV:
+
+```ts
+import { createMMKV } from 'react-native-mmkv';
+
+const mmkv = createMMKV();
+
+const storage = new KeyValueStorage({
+  storage: {
+    getItem: (key) => mmkv.getString(key),
+    setItem: (key, value) => mmkv.set(key, value),
+    removeItem: (key) => mmkv.remove(key),
+  },
+});
+```
+
+What to know:
+
+- stores are saved as `stores:<storeId>` plus the `stores-keys` index; change the prefix with `prefix`
+- `migrateFrom` is read only when there is no index yet, i.e. on the first start with the new storage
+- migrated data is kept by default, so an app version rollback still finds it; pass `shouldRemoveMigrated: true` to remove it right after migration
+- if the migrated stores can't be saved, the app still starts with the old data, and all stores are saved again on the next change
+- `flush()` removes the stores, the index and the `migrateFrom` data
+
+## IndexedDB storage for the web
+
+`IndexedDBStorage` saves every store as its own record. Writes are asynchronous and don't block the main thread, and the quota is much larger than the ~5 MB of `localStorage`.
+
+```ts
+import CombinedStorage from '@lomray/react-mobx-manager/storages/combined-storage';
+import IndexedDBStorage from '@lomray/react-mobx-manager/storages/indexed-db-storage';
+import LocalStorage from '@lomray/react-mobx-manager/storages/local-storage';
+
+const storage = new CombinedStorage({
+  local: new IndexedDBStorage({
+    // moved on the first start and used when IndexedDB is not available
+    migrateFrom: new LocalStorage(),
+  }),
+});
+```
+
+- options: `dbName` (default `'mobx-manager'`), `migrateFrom`, `shouldRemoveMigrated`, `indexedDB` (custom factory, e.g. for tests)
+- state is restored asynchronously on `manager.init()`: wait for it before rendering persisted stores, e.g. with `shouldInit` on `StoreManagerProvider`
+- when IndexedDB can't be opened (private mode restrictions, old browsers), the storage reads and writes `migrateFrom`
+
+## Custom storage with incremental saves
+
+A storage only needs `get`, `set` and `flush`. `set` receives all stores of that storage on every save. Implement the optional `saveChanges` to write only what changed:
+
+```ts
+import type { IStorage } from '@lomray/react-mobx-manager';
+
+const storage: IStorage = {
+  get: () => readAllStores(),
+  set: (value) => writeAllStores(value),
+  flush: () => removeAllStores(),
+  // called instead of `set` when defined
+  saveChanges: ({ changes, value, toJSON }) => {
+    // changes: store id => store state JSON, only stores changed in this batch
+    // value: all stores of this storage, the same object `set` receives
+    // toJSON(): JSON of `value`, assembled from already serialized stores
+    changes.forEach((json, storeId) => writeStore(storeId, json));
+  },
+};
+```
+
+Built-in single-value storages use `toJSON()`, so unchanged stores are not serialized again. Keep cookie storage for small fields only: browsers ignore cookies larger than ~4 KB, and `CookieStorage` warns once in the console when the value is bigger.
 
 ## Suspense query pattern for SSR and stream rendering
 

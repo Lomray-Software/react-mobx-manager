@@ -1,16 +1,11 @@
 import EventManager from '@lomray/event-manager';
-import { isObservableProp, toJS } from 'mobx';
 import { ROOT_CONTEXT_ID } from './constants';
 import deepMerge from './deep-merge';
 import Events from './events';
 import Logger from './logger';
-import {
-  isPropExcludedFromExport,
-  isPropObservableExported,
-  isPropSimpleExported,
-} from './make-exported';
 import onChangeListener from './on-change-listener';
-import CombinedStorage from './storages/combined-storage';
+import CombinedStorage, { type TStoreStateEntry } from './storages/combined-storage';
+import { getObservableProps, getPersistState } from './store-state';
 import StoreStatus from './store-status';
 import type {
   IConstructableStore,
@@ -26,6 +21,8 @@ import type {
   TStores,
 } from './types';
 import wakeup from './wakeup';
+
+const PERSIST_ERROR = 'Failed to persist stores: ';
 
 /**
  * Mobx stores manager
@@ -76,7 +73,32 @@ class Manager {
     shouldDisablePersist: false,
     shouldRemoveInitState: true,
     failedCreationStrategy: 'empty',
+    persistDelay: 100,
   };
+
+  /**
+   * Persisted stores waiting to be saved: store => state getter
+   * @see schedulePersist
+   */
+  protected readonly persistQueue = new Map<
+    IStorePersisted,
+    (() => Record<string, any> | undefined) | undefined
+  >();
+
+  /**
+   * Scheduled persist flush
+   */
+  protected persistTimer?: ReturnType<typeof setTimeout>;
+
+  /**
+   * Storage writes in progress
+   */
+  protected readonly persistWrites = new Set<Promise<boolean>>();
+
+  /**
+   * Remove page lifecycle listeners
+   */
+  protected removePageListeners?: () => void;
 
   /**
    * Suspense stores relations
@@ -90,13 +112,13 @@ class Manager {
   protected readonly logger: Logger;
 
   /**
-   * @constructor
-   */
-  /**
    * Detect server side: stores live until the manager is destroyed, no timers are armed
    */
   public isServer = typeof window === 'undefined';
 
+  /**
+   * @constructor
+   */
   public constructor({ initState, storesParams, storage, options, logger }: IManagerParams = {}) {
     this.initState = initState || {};
     this.storesParams = storesParams || {};
@@ -537,6 +559,11 @@ class Manager {
 
     this.removeRelationContext(store.libStoreContextId!);
 
+    // save scheduled changes before the store stops tracking them
+    if (this.persistQueue.has(store)) {
+      void this.flushPersist();
+    }
+
     if ('onDestroy' in store) {
       store.onDestroy?.();
     }
@@ -591,6 +618,12 @@ class Manager {
       this.removeStore(store);
     }
 
+    if (this.persistQueue.size > 0) {
+      void this.flushPersist();
+    }
+
+    this.removePageListeners?.();
+    this.removePageListeners = undefined;
     this.storesRelations.clear();
     this.suspenseRelations.clear();
   }
@@ -676,7 +709,14 @@ class Manager {
   }
 
   /**
-   * Save persisted store state to provided storage
+   * Get store state saved by persist: only attributes of storages
+   */
+  public getPersistState(store: IStorePersisted): Record<string, any> {
+    return getPersistState(store, this.storage?.getStoreAttributes(store));
+  }
+
+  /**
+   * Save persisted store state to provided storage right now
    */
   public async savePersistedStore(store: IStorePersisted): Promise<boolean> {
     if (this.options.shouldDisablePersist || !this.storage) {
@@ -684,38 +724,177 @@ class Manager {
     }
 
     try {
-      await this.storage.saveStoreData(store, this.getStoreState(store, true));
+      await this.storage.saveStoreData(store, this.getPersistState(store));
 
       return true;
     } catch (e) {
-      this.logger.err('Failed to persist stores: ', e);
+      this.logger.err(PERSIST_ERROR, e);
     }
 
     return false;
   }
 
   /**
-   * Get observable store props (fields)
+   * Schedule saving persisted store state.
+   * Changes are collected and saved at most once per options.persistDelay.
+   * @param store
+   * @param getState - returns collected store state, by default: getPersistState
    */
-  public static getObservableProps(store: TAnyStore, withNotExported = false): Record<string, any> {
-    const props = toJS(store) as Record<string, unknown>;
-    const result: Record<string, any> = {};
+  public schedulePersist(
+    store: IStorePersisted,
+    getState?: () => Record<string, any> | undefined,
+  ): void {
+    if (this.options.shouldDisablePersist || !this.storage) {
+      this.skipPersist(getState);
 
-    for (const prop of Object.keys(props)) {
-      if (
-        (isObservableProp(store, prop) &&
-          !isPropExcludedFromExport(store, prop, withNotExported)) ||
-        isPropSimpleExported(store, prop)
-      ) {
-        result[prop] = props[prop];
-      }
+      return;
+    }
 
-      if (isPropObservableExported(store, prop)) {
-        result[prop] = Manager.getObservableProps((store as Record<string, TAnyStore>)[prop]);
+    if (getState || !this.persistQueue.has(store)) {
+      this.persistQueue.set(store, getState);
+    }
+
+    const delay = this.isServer ? 0 : (this.options.persistDelay ?? 100);
+
+    if (delay <= 0) {
+      void this.flushPersist();
+
+      return;
+    }
+
+    if (this.persistTimer === undefined) {
+      this.persistTimer = setTimeout(() => void this.flushPersist(), delay);
+      this.listenPageHide();
+    }
+  }
+
+  /**
+   * Save scheduled persisted stores right now.
+   * E.g. call it when a mobile app goes to background.
+   * Resolves when all storage writes are finished: true - saved, false - failed or disabled.
+   */
+  public async flushPersist(): Promise<boolean> {
+    clearTimeout(this.persistTimer);
+    this.persistTimer = undefined;
+
+    const { storage } = this;
+    const queue = [...this.persistQueue];
+    const pendingWrites = [...this.persistWrites];
+
+    this.persistQueue.clear();
+
+    if (this.options.shouldDisablePersist || !storage) {
+      queue.forEach(([, getState]) => this.skipPersist(getState));
+
+      return false;
+    }
+
+    const entries: TStoreStateEntry[] = [];
+    let isSaved = true;
+
+    for (const [store, getState] of queue) {
+      try {
+        entries.push([store, getState?.() ?? this.getPersistState(store)]);
+      } catch (e) {
+        isSaved = false;
+        this.logger.err(PERSIST_ERROR, e);
       }
     }
 
-    return result;
+    if (entries.length > 0) {
+      this.logger.debug('Persist stores.', {
+        stores: entries.map(([store]) => store.libStoreId),
+      });
+
+      const write = this.writePersisted(storage, entries);
+
+      this.persistWrites.add(write);
+      isSaved = (await write) && isSaved;
+      this.persistWrites.delete(write);
+    }
+
+    await Promise.all(pendingWrites);
+
+    return isSaved;
+  }
+
+  /**
+   * Persist is disabled (e.g. at runtime): nothing to save,
+   * but collecting the state keeps store changes listener subscribed
+   */
+  protected skipPersist(getState?: () => unknown): void {
+    try {
+      getState?.();
+    } catch {
+      // nothing to save
+    }
+  }
+
+  /**
+   * Write stores state to storage
+   */
+  protected async writePersisted(
+    storage: CombinedStorage,
+    entries: TStoreStateEntry[],
+  ): Promise<boolean> {
+    try {
+      // respect overridden or mocked saving of a single store
+      if (this.savePersistedStore !== Manager.prototype.savePersistedStore) {
+        const results = await Promise.all(entries.map(([store]) => this.savePersistedStore(store)));
+
+        return results.every(Boolean);
+      }
+
+      if (storage.saveStoreData !== CombinedStorage.prototype.saveStoreData) {
+        await Promise.all(entries.map(([store, data]) => storage.saveStoreData(store, data)));
+      } else {
+        await storage.saveStoresData(entries);
+      }
+
+      return true;
+    } catch (e) {
+      this.logger.err(PERSIST_ERROR, e);
+
+      return false;
+    }
+  }
+
+  /**
+   * Save scheduled changes when the page is hidden or unloaded
+   */
+  protected listenPageHide(): void {
+    if (
+      this.removePageListeners ||
+      typeof window === 'undefined' ||
+      typeof window.addEventListener !== 'function'
+    ) {
+      return;
+    }
+
+    const doc = typeof document !== 'undefined' ? document : undefined;
+    const onPageHide = (): void => {
+      void this.flushPersist();
+    };
+    const onVisibilityChange = (): void => {
+      if (doc?.visibilityState === 'hidden') {
+        void this.flushPersist();
+      }
+    };
+
+    window.addEventListener('pagehide', onPageHide);
+    doc?.addEventListener?.('visibilitychange', onVisibilityChange);
+
+    this.removePageListeners = () => {
+      window.removeEventListener('pagehide', onPageHide);
+      doc?.removeEventListener?.('visibilitychange', onVisibilityChange);
+    };
+  }
+
+  /**
+   * Get observable store props (fields)
+   */
+  public static getObservableProps(store: TAnyStore, withNotExported = false): Record<string, any> {
+    return getObservableProps(store, withNotExported);
   }
 
   /**

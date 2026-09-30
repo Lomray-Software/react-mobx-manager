@@ -259,7 +259,12 @@ Runtime behavior:
 - it sets `store.libStoreId = id`
 - it adds default `wakeup` and `addOnChangeListener` handlers if the store does not already define them
 - `CombinedStorage` loads all registered storages on `manager.init()`
-- store changes are saved through `manager.savePersistedStore(...)`
+- the default listener tracks only persisted fields (not other stores referenced from the store) and queues the store through `manager.schedulePersist(...)`
+- queued stores are serialized once per `options.persistDelay` (default `100` ms) and each storage is written once; unchanged stores are skipped
+- the queue is flushed when the page is hidden, before a store is destroyed, on `manager.destroy()` and on `manager.flushPersist()`; on the server and with `persistDelay: 0` every change is saved immediately
+- React Native has no page events: call `manager.flushPersist()` when `AppState` leaves `active`
+- tests that read a storage right after a change: `await manager.flushPersist()` first, or use `persistDelay: 0`
+- `manager.savePersistedStore(...)` saves one store immediately, without batching
 
 `IPersistOptions`:
 
@@ -375,7 +380,13 @@ The root export is the safest contract. Subpath imports are available in the pub
   - `touchedStores(stores: TStores): void`
   - `getStoreState(store: TAnyStore, withNotExported?: boolean): Record<string, any>`
   - `toJSON(ids?: string[], isIncludeExported?: boolean): Record<string, any>`
+  - `getPersistState(store: IStorePersisted): Record<string, any>`
   - `savePersistedStore(store: IStorePersisted): Promise<boolean>`
+  - `schedulePersist(store: IStorePersisted, getState?: () => Record<string, any> | undefined): void`
+  - `flushPersist(): Promise<boolean>`
+- Key options (`IManagerOptions`):
+  - `shouldDisablePersist?: boolean`
+  - `persistDelay?: number` (default `100`, `0` saves on every change)
 - Key static methods:
   - `Manager.get(): Manager`
   - `Manager.getPersistedStoresIds(): Set<string>`
@@ -447,7 +458,7 @@ The root export is the safest contract. Subpath imports are available in the pub
 `onChangeListener`
 
 - Signature: `(store, manager) => (() => void) | undefined`
-- Purpose: default persisted-store change subscription using MobX `reaction(...)`
+- Purpose: default persisted-store change subscription using MobX `reaction(...)`; tracks only persisted fields and schedules batched saves
 
 #### React Context Exports
 
@@ -506,6 +517,7 @@ These are re-exported from `src/types.ts` at the package root:
 - `IManagerParams`
 - `TWakeup`
 - `IStorage`
+- `IStorageChanges`
 - `IManagerOptions`
 - `TAnyStore`
 - `TStores`
@@ -603,6 +615,25 @@ The package build preserves module paths under `src/`, so these imports are avai
 
 - default export `AsyncStorage`
 
+`@lomray/react-mobx-manager/storages/key-value-storage`
+
+- `IKeyValueAdapter`, `IKeyValueStorageOptions`
+- default export `KeyValueStorage`
+- every store under its own key (`stores:<storeId>` plus the `stores-keys` index), for AsyncStorage, MMKV or any `getItem`/`setItem`/`removeItem` backend
+- options: `storage`, `prefix?`, `migrateFrom?: IStorage`, `shouldRemoveMigrated?: boolean`
+
+`@lomray/react-mobx-manager/storages/indexed-db-storage`
+
+- `IIndexedDBStorageOptions`
+- default export `IndexedDBStorage`
+- every store as its own IndexedDB record, falls back to `migrateFrom` when IndexedDB is not available
+- options: `dbName?`, `indexedDB?: IDBFactory`, `migrateFrom?: IStorage`, `shouldRemoveMigrated?: boolean`
+
+`@lomray/react-mobx-manager/storages/store-records-storage`
+
+- `IStoreRecordsStorageOptions`, `serializeStores`
+- default export `StoreRecordsStorage`: abstract base of `KeyValueStorage` and `IndexedDBStorage` (migration from `migrateFrom`, retried on the next save when it fails)
+
 `@lomray/react-mobx-manager/storages/combined-storage`
 
 - default export `CombinedStorage`
@@ -611,7 +642,10 @@ The package build preserves module paths under `src/`, so these imports are avai
   - `flush()`
   - `set(value, storageId?)`
   - `getStoreData(store)`
+  - `getStoreAttributes(store)`
   - `saveStoreData(store, data)`
+  - `saveStoresData(entries)`: many stores at once, every changed storage written once
+- calls the optional `IStorage.saveChanges({ value, changes, toJSON })` instead of `set` when a storage defines it
 
 #### Vite Plugin
 

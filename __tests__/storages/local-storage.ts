@@ -67,4 +67,41 @@ describe('LocalStorage', () => {
     sinon.assert.calledWith(storage.setItem, 'stores', '{"foo":"bar"}');
     sinon.assert.calledWith(storage.removeItem, 'stores');
   });
+
+  it('should save assembled json on incremental save', () => {
+    const storage = {
+      getItem: sandbox.stub(),
+      removeItem: sandbox.stub(),
+      setItem: sandbox.stub(),
+    };
+    const target = new LocalStorage({ storage: storage as unknown as Storage });
+
+    target.saveChanges({ value: { a: {} }, changes: new Map(), toJSON: () => '{"a":{}}' });
+
+    sinon.assert.calledOnceWithExactly(storage.setItem, 'stores', '{"a":{}}');
+  });
+
+  it('should keep overridden set of subclasses on incremental save', () => {
+    const storage = {
+      getItem: sandbox.stub(),
+      removeItem: sandbox.stub(),
+      setItem: sandbox.stub(),
+    };
+    const toJSON = sandbox.stub();
+
+    class EncodedStorage extends LocalStorage {
+      set(value: Record<string, any> | undefined): void {
+        this.storage.setItem(this.globalKey, btoa(JSON.stringify(value)));
+      }
+    }
+
+    new EncodedStorage({ storage: storage as unknown as Storage }).saveChanges({
+      value: { a: 1 },
+      changes: new Map(),
+      toJSON,
+    });
+
+    sinon.assert.notCalled(toJSON);
+    sinon.assert.calledOnceWithExactly(storage.setItem, 'stores', btoa('{"a":1}'));
+  });
 });
